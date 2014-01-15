@@ -42,16 +42,15 @@
       IMPLICIT NONE
       PRIVATE
 
-      CHARACTER ( LEN = * ), PARAMETER :: VERSION_NUMBER = '0.0.3'
+      CHARACTER ( LEN = * ), PARAMETER :: VERSION_NUMBER = '0.0.4'
 
       REAL, PARAMETER, PUBLIC :: PI = 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534
 
       PUBLIC :: factorial
 
       PUBLIC :: alaguerre
-!      PUBLIC :: hermite
+      PUBLIC :: hermite
       PUBLIC :: laguerre
-!     PUBLIC :: gamma
 
       CONTAINS
 
@@ -150,6 +149,38 @@
             END IF
 
             RETURN 
+
+         END FUNCTION
+
+         REAL RECURSIVE FUNCTION hermite ( n , x ) RESULT ( hermiteN )
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: n
+
+            REAL, INTENT ( IN ) :: x
+
+            hermiteN = 0.0
+
+            IF ( n == 0 ) THEN
+
+               hermiteN = 1.0
+
+            ELSE IF ( n == 1 ) THEN
+
+               hermiteN = 2.0 * x 
+
+            ELSE IF ( n >= 2 ) THEN
+
+               hermiteN = 2.0 * x * hermite ( n - 1 , x ) - 2.0 * REAL ( n - 1 ) * hermite ( n - 2 , x )    
+
+            ELSE
+
+               ! ERROR
+
+            END IF
+
+            RETURN
 
          END FUNCTION
 
