@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Thursday, January 9th, 2014
+!     Wednesday, January 15th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -42,14 +42,15 @@
       IMPLICIT NONE
       PRIVATE
 
-      CHARACTER ( LEN = * ), PARAMETER :: VERSION_NUMBER = '0.0.2'
+      CHARACTER ( LEN = * ), PARAMETER :: VERSION_NUMBER = '0.0.3'
 
-      REAL, PARAMETER, PUBLIC :: PI = 3.14159265358979323846264338327950288
+      REAL, PARAMETER, PUBLIC :: PI = 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534
 
       PUBLIC :: factorial
-!      PUBLIC :: alaguerre
+
+      PUBLIC :: alaguerre
 !      PUBLIC :: hermite
-!      PUBLIC :: laguerre
+      PUBLIC :: laguerre
 !     PUBLIC :: gamma
 
       CONTAINS
@@ -103,6 +104,81 @@
                nFactorial = -1
                !WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - KIND ( n ) != INT32 .OR. INT64'
                STOP
+
+            END IF
+
+            RETURN
+
+         END FUNCTION
+
+         REAL RECURSIVE FUNCTION alaguerre ( n , k , x ) RESULT ( alaguerreNK ) 
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: n
+            INTEGER, INTENT ( IN ) :: k
+
+            REAL, INTENT ( IN ) :: x
+
+            alaguerreNK = 0.0
+
+            IF ( k > -1 ) THEN
+
+               IF ( n == 0 ) THEN
+
+                  alaguerreNK = 1.0
+
+               ELSE IF ( n == 1 ) THEN
+
+                  alaguerreNK = 1.0 + REAL ( k ) - x
+
+               ELSE IF ( n >= 2 ) THEN
+
+                  alaguerreNK = ( ( 2.0 * REAL ( n ) + REAL ( k ) - 1.0 - x ) * alaguerre ( n - 1 , k , x ) - & 
+                     & ( REAL ( n ) + REAL ( k ) - 1.0 ) * alaguerre ( n - 2 , k , x ) ) / REAL ( n )
+
+               ELSE
+
+                  ! ERROR
+
+               END IF
+            
+            ELSE
+
+               ! ERROR 
+
+            END IF
+
+            RETURN 
+
+         END FUNCTION
+
+         REAL RECURSIVE FUNCTION laguerre ( n , x ) RESULT ( laguerreN )
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: n
+
+            REAL, INTENT ( IN ) :: x
+
+            laguerreN = 0.0
+
+            IF ( n == 0 ) THEN
+
+               laguerreN = 1.0
+
+            ELSE IF ( n == 1 ) THEN
+
+               laguerreN = 1.0 - x
+
+            ELSE IF ( n >= 2 ) THEN
+
+               laguerreN = ( ( 2.0 * REAL ( n ) - 1.0 - x ) * laguerre ( n - 1 , x ) - & 
+                  & ( REAL ( n ) - 1.0 ) * laguerre ( n - 2 , x ) ) / REAL ( n )
+
+            ELSE
+
+               ! ERROR
 
             END IF
 
