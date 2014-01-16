@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Wednesday, January 15th, 2014
+!     Thursday, January 16th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -42,7 +42,7 @@
       IMPLICIT NONE
       PRIVATE
 
-      CHARACTER ( LEN = * ), PARAMETER :: VERSION_NUMBER = '0.0.4'
+      CHARACTER ( LEN = * ), PARAMETER :: VERSION_NUMBER = '0.0.5'
 
       REAL, PARAMETER, PUBLIC :: PI = 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534
 
