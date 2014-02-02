@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Thursday, January 16th, 2014
+!     Monday, January 20th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -42,42 +42,57 @@
          IMPLICIT NONE
          PRIVATE
 
-         CHARACTER ( LEN = * ), PARAMETER :: VERSION_NUMBER = '0.0.5'
+         CHARACTER ( LEN = * ), PARAMETER :: VERSION_NUMBER = '0.0.6'
+
+         INTEGER, PUBLIC :: nX = 0
+         INTEGER, PUBLIC :: nY = 0 
+         INTEGER, PUBLIC :: nZ = 0
+
+         REAL, PRIVATE :: xO = 0.0
+         REAL, PRIVATE :: yO = 0.0
+         REAL, PRIVATE :: zO = 0.0 
+         REAL, PUBLIC :: dX = 0.0
+         REAL, PUBLIC :: dY = 0.0
+         REAL, PUBLIC :: dZ = 0.0 
+
+         REAL, DIMENSION ( : ), PUBLIC :: X
+         REAL, DIMENSION ( : ), PUBLIC :: Y
+         REAL, DIMENSION ( : ), PUBLIC :: Z
 
          CONTAINS
 
-            SUBROUTINE regular_grid_axis ( nX , xO , dX , X )
+            SUBROUTINE regular_grid_axis ( nQ , qO , dQ , Q )
 
                IMPLICIT NONE
 
-               INTEGER, INTENT ( IN ) :: nX
+               INTEGER, INTENT ( IN ) :: nQ
 
-               REAL, INTENT ( IN ) :: xO
-               REAL, INTENT ( IN ) :: dX
+               REAL, INTENT ( IN ) :: qO
+               REAL, INTENT ( IN ) :: dQ
  
-               REAL, DIMENSION ( : ), INTENT ( INOUT ) :: X
+               REAL, DIMENSION ( : ), INTENT ( INOUT ) :: Q
 
-               INTEGER :: j
+               INTEGER :: i
 
-               IF ( nX > 0 ) THEN
+               IF ( nQ > 0 ) THEN
 
-                  IF ( dX > 0.0 ) THEN
+                  IF ( dQ > 0.0 ) THEN
 
-                     IF ( SIZE ( X ) >= nX ) THEN ! maximum value of loop index is less than array upper bound. 
+                     IF ( SIZE ( Q ) >= nQ ) THEN ! maximum value of loop index is less than array upper bound. 
 
-                        IF ( MODULO ( nX , 2 ) == 0 ) THEN ! nX is even.
+                        IF ( MODULO ( nQ , 2 ) == 0 ) THEN ! nQ is even.
 
-                           DO j = 1 , nX
+                           DO i = 1 , nQ
 
-                              X ( j ) = xO + ( REAL ( j - nX / 2 ) - 0.5 ) * dX
+                              Q ( i ) = qO + ( REAL ( i - nQ / 2 ) - 0.5 ) * dQ
 
                            END DO
 
-                        ELSE ! nX is odd. 
+                        ELSE ! nQ is odd. 
 
-                           DO j = 1 , nX
+                           DO i = 1 , nQ
 
-                              X ( j ) = xO + REAL ( j - ( nX + 1 ) / 2 ) * dX
+                              Q ( i ) = qO + REAL ( i - ( nQ + 1 ) / 2 ) * dQ
 
                            END DO
 
