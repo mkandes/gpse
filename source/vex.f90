@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Sunday, February 9th, 2014
+!     Wednesday, March 5th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -47,8 +47,6 @@
          PUBLIC :: vex_3d_lin
          PUBLIC :: vex_3d_sho
          PUBLIC :: vex_3d_shor
-
-         CHARACTER ( LEN = * ), PARAMETER :: VERSION_NUMBER = '0.0.7'
 
          CONTAINS
 

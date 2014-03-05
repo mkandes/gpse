@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Monday, January 20th, 2014
+!     Wednesday, March 5th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -42,22 +42,20 @@
          IMPLICIT NONE
          PRIVATE
 
-         CHARACTER ( LEN = * ), PARAMETER :: VERSION_NUMBER = '0.0.6'
-
          INTEGER, PUBLIC :: nX = 0
-         INTEGER, PUBLIC :: nY = 0 
+         INTEGER, PUBLIC :: nY = 0
          INTEGER, PUBLIC :: nZ = 0
-
+          
          REAL, PRIVATE :: xO = 0.0
          REAL, PRIVATE :: yO = 0.0
-         REAL, PRIVATE :: zO = 0.0 
+         REAL, PRIVATE :: zO = 0.0
          REAL, PUBLIC :: dX = 0.0
          REAL, PUBLIC :: dY = 0.0
-         REAL, PUBLIC :: dZ = 0.0 
+         REAL, PUBLIC :: dZ = 0.0
 
-         REAL, DIMENSION ( : ), PUBLIC :: X
-         REAL, DIMENSION ( : ), PUBLIC :: Y
-         REAL, DIMENSION ( : ), PUBLIC :: Z
+         REAL, ALLOCATABLE, DIMENSION ( : ), PUBLIC :: X
+         REAL, ALLOCATABLE, DIMENSION ( : ), PUBLIC :: Y
+         REAL, ALLOCATABLE, DIMENSION ( : ), PUBLIC :: Z
 
          CONTAINS
 

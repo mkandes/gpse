@@ -1,5 +1,5 @@
-FC=gfortran
-FFLAGS=-ffree-form -ffree-line-length-none -fimplicit-none -O3 -fdefault-integer-8 -fdefault-real-8 -fdefault-double-8 -pedantic-errors -Wall
+FC=mpif90
+FFLAGS=-ffree-form -ffree-line-length-none -fimplicit-none -O3 -pedantic-errors -Wall
 
 all : gpse.x
 
