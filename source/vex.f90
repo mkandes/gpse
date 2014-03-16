@@ -39,8 +39,6 @@
 
          USE, INTRINSIC :: ISO_FORTRAN_ENV
 
-         USE MATH
-
          IMPLICIT NONE
          PRIVATE
 
@@ -54,6 +52,9 @@
 
                IMPLICIT NONE
 
+               REAL, INTENT ( IN ) :: x
+               REAL, INTENT ( IN ) :: y
+               REAL, INTENT ( IN ) :: z
                REAL, INTENT ( IN ) :: fX
                REAL, INTENT ( IN ) :: fY
                REAL, INTENT ( IN ) :: fZ

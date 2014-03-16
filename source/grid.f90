@@ -31,86 +31,88 @@
 !
 ! LAST UPDATED
 !
-!     Wednesday, March 5th, 2014
+!     Tuesday, March 11th, 2014
 !
 ! -------------------------------------------------------------------------
 
       MODULE GRID
 
-         USE, INTRINSIC :: ISO_FORTRAN_ENV
+      USE, INTRINSIC :: ISO_FORTRAN_ENV
+
+      IMPLICIT NONE
+      PRIVATE
+
+      INTEGER, PUBLIC :: nX = 0
+      INTEGER, PUBLIC :: nY = 0
+      INTEGER, PUBLIC :: nZ = 0
+        
+      REAL, PUBLIC :: xO = 0.0
+      REAL, PUBLIC :: yO = 0.0
+      REAL, PUBLIC :: zO = 0.0
+      REAL, PUBLIC :: dX = 0.0
+      REAL, PUBLIC :: dY = 0.0
+      REAL, PUBLIC :: dZ = 0.0
+
+      REAL, ALLOCATABLE, DIMENSION ( : ), PUBLIC :: X
+      REAL, ALLOCATABLE, DIMENSION ( : ), PUBLIC :: Y
+      REAL, ALLOCATABLE, DIMENSION ( : ), PUBLIC :: Z
+
+      PUBLIC :: regular_grid_axis
+
+      CONTAINS
+
+         SUBROUTINE regular_grid_axis ( nQ , qO , dQ , Q )
 
          IMPLICIT NONE
-         PRIVATE
 
-         INTEGER, PUBLIC :: nX = 0
-         INTEGER, PUBLIC :: nY = 0
-         INTEGER, PUBLIC :: nZ = 0
-          
-         REAL, PRIVATE :: xO = 0.0
-         REAL, PRIVATE :: yO = 0.0
-         REAL, PRIVATE :: zO = 0.0
-         REAL, PUBLIC :: dX = 0.0
-         REAL, PUBLIC :: dY = 0.0
-         REAL, PUBLIC :: dZ = 0.0
+         INTEGER, INTENT ( IN ) :: nQ
 
-         REAL, ALLOCATABLE, DIMENSION ( : ), PUBLIC :: X
-         REAL, ALLOCATABLE, DIMENSION ( : ), PUBLIC :: Y
-         REAL, ALLOCATABLE, DIMENSION ( : ), PUBLIC :: Z
-
-         CONTAINS
-
-            SUBROUTINE regular_grid_axis ( nQ , qO , dQ , Q )
-
-               IMPLICIT NONE
-
-               INTEGER, INTENT ( IN ) :: nQ
-
-               REAL, INTENT ( IN ) :: qO
-               REAL, INTENT ( IN ) :: dQ
+         REAL, INTENT ( IN ) :: qO
+         REAL, INTENT ( IN ) :: dQ
  
-               REAL, DIMENSION ( : ), INTENT ( INOUT ) :: Q
+         REAL, DIMENSION ( : ), INTENT ( INOUT ) :: Q
 
-               INTEGER :: i
+         INTEGER :: j
 
-               IF ( nQ > 0 ) THEN
+         IF ( nQ > 0 ) THEN
 
-                  IF ( dQ > 0.0 ) THEN
+            IF ( dQ > 0.0 ) THEN
 
-                     IF ( SIZE ( Q ) >= nQ ) THEN ! maximum value of loop index is less than array upper bound. 
+               IF ( SIZE ( Q ) >= nQ ) THEN ! maximum value of loop index is less than array upper bound. 
 
-                        IF ( MODULO ( nQ , 2 ) == 0 ) THEN ! nQ is even.
+                  IF ( MODULO ( nQ , 2 ) == 0 ) THEN ! nQ is even.
 
-                           DO i = 1 , nQ
+                     DO j = 1 , nQ
 
-                              Q ( i ) = qO + ( REAL ( i - nQ / 2 ) - 0.5 ) * dQ
+                        Q ( j ) = qO + ( REAL ( j - nQ / 2 ) - 0.5 ) * dQ
 
-                           END DO
+                     END DO
 
-                        ELSE ! nQ is odd. 
+                  ELSE ! nQ is odd. 
 
-                           DO i = 1 , nQ
+                     DO j = 1 , nQ
 
-                              Q ( i ) = qO + REAL ( i - ( nQ + 1 ) / 2 ) * dQ
+                        Q ( j ) = qO + REAL ( j - ( nQ + 1 ) / 2 ) * dQ
 
-                           END DO
-
-                        END IF
-
-                     ELSE ! range check failed. size of coordinate axis array must be greater than or (preferably) equal to the number of grid points, otherwise, loop index will run out-of-bounds.
-
-                     END IF
-
-                  ELSE ! range check failed. distance between grid points along coordinate axis must be greater than 0.0.
+                     END DO
 
                   END IF
 
-               ELSE ! range check failed. number of grid points along coordinate axis must be greater than 0.
+               ELSE ! range check failed. size of coordinate axis array must be greater than or (preferably) equal to the number of grid points, otherwise, loop index will run out-of-bounds.
 
                END IF
 
-               RETURN
+            ELSE ! range check failed. distance between grid points along coordinate axis must be greater than 0.0.
 
-            END SUBROUTINE
+            END IF
+
+         ELSE ! range check failed. number of grid points along coordinate axis must be greater than 0.
+
+         END IF
+
+         RETURN
+
+         END SUBROUTINE
 
       END MODULE
 ! =========================================================================

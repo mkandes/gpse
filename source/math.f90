@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Thursday, January 16th, 2014
+!     Tuesday, March 11th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -42,12 +42,9 @@
       IMPLICIT NONE
       PRIVATE
 
-      CHARACTER ( LEN = * ), PARAMETER :: VERSION_NUMBER = '0.0.6'
-
       REAL, PARAMETER, PUBLIC :: PI = 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534
 
       PUBLIC :: factorial
-
       PUBLIC :: alaguerre
       PUBLIC :: hermite
       PUBLIC :: laguerre
@@ -75,7 +72,7 @@
                ELSE
 
                   nFactorial = -1
-                  !WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - n must be an integer greater than or equal to 0, but less than or equal to 12 because KIND ( n ) = INT32'
+                  WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - n must be an integer greater than or equal to 0, but less than or equal to 12 because KIND ( n ) = INT32'
                   STOP
 
                END IF
@@ -93,7 +90,7 @@
                ELSE
 
                   nFactorial = -1
-                  !WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - n must be an integer greater than or equal to 0, but less than or equal to 20 because KIND ( n ) = INT64'
+                  WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - n must be an integer greater than or equal to 0, but less than or equal to 20 because KIND ( n ) = INT64'
                   STOP
 
                END IF
@@ -101,7 +98,7 @@
             ELSE
 
                nFactorial = -1
-               !WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - KIND ( n ) != INT32 .OR. INT64'
+               WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - KIND ( n ) != INT32 .OR. INT64'
                STOP
 
             END IF
