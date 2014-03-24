@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, March 11th, 2014
+!     Friday, March 21st, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -42,30 +42,17 @@
       IMPLICIT NONE
       PRIVATE
 
-      INTEGER, PUBLIC :: nX = 0
-      INTEGER, PUBLIC :: nY = 0
-      INTEGER, PUBLIC :: nZ = 0
-        
-      REAL, PUBLIC :: xO = 0.0
-      REAL, PUBLIC :: yO = 0.0
-      REAL, PUBLIC :: zO = 0.0
-      REAL, PUBLIC :: dX = 0.0
-      REAL, PUBLIC :: dY = 0.0
-      REAL, PUBLIC :: dZ = 0.0
-
-      REAL, ALLOCATABLE, DIMENSION ( : ), PUBLIC :: X
-      REAL, ALLOCATABLE, DIMENSION ( : ), PUBLIC :: Y
-      REAL, ALLOCATABLE, DIMENSION ( : ), PUBLIC :: Z
-
       PUBLIC :: regular_grid_axis
 
       CONTAINS
 
-         SUBROUTINE regular_grid_axis ( nQ , qO , dQ , Q )
+         SUBROUTINE regular_grid_axis ( nQ , nQa , nQb , qO , dQ , Q )
 
          IMPLICIT NONE
 
          INTEGER, INTENT ( IN ) :: nQ
+         INTEGER, INTENT ( IN ) :: nQa
+         INTEGER, INTENT ( IN ) :: nQb
 
          REAL, INTENT ( IN ) :: qO
          REAL, INTENT ( IN ) :: dQ
@@ -82,7 +69,7 @@
 
                   IF ( MODULO ( nQ , 2 ) == 0 ) THEN ! nQ is even.
 
-                     DO j = 1 , nQ
+                     DO j = nQa , nQb
 
                         Q ( j ) = qO + ( REAL ( j - nQ / 2 ) - 0.5 ) * dQ
 
@@ -90,7 +77,7 @@
 
                   ELSE ! nQ is odd. 
 
-                     DO j = 1 , nQ
+                     DO j = nQa , nQb
 
                         Q ( j ) = qO + REAL ( j - ( nQ + 1 ) / 2 ) * dQ
 

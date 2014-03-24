@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Thursday, March 13th, 2014
+!     Wednesday, March 19th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -48,9 +48,7 @@
 
       CONTAINS
 
-! --- 
-
-         COMPLEX FUNCTION psi_3d_se_sho_ani ( nX , nY , nZ , x , y , z , xO , yO , zO , wX , wY , wZ )
+         COMPLEX FUNCTION psi_3d_se_sho_ani ( nX , nY , nZ , xO , yO , zO , wX , wY , wZ , x , y , z)
 
          IMPLICIT NONE
 
@@ -58,15 +56,15 @@
          INTEGER, INTENT ( IN ) :: nY
          INTEGER, INTENT ( IN ) :: nZ
           
-         REAL, INTENT ( IN ) :: x
-         REAL, INTENT ( IN ) :: y
-         REAL, INTENT ( IN ) :: z
          REAL, INTENT ( IN ) :: xO
          REAL, INTENT ( IN ) :: yO
          REAL, INTENT ( IN ) :: zO
          REAL, INTENT ( IN ) :: wX
          REAL, INTENT ( IN ) :: wY
          REAL, INTENT ( IN ) :: wZ
+         REAL, INTENT ( IN ) :: x
+         REAL, INTENT ( IN ) :: y
+         REAL, INTENT ( IN ) :: z
 
          psi_3d_se_sho_ani = CMPLX ( &
             & ( 1.0 / SQRT ( REAL ( 2**nX * factorial ( nX ) ) ) ) * SQRT ( SQRT ( wX / PI ) ) * &
@@ -80,9 +78,7 @@
 
          END FUNCTION
 
-! --- 
-
-         COMPLEX FUNCTION psi_3d_se_sho_axi ( nR , mL , nZ , x , y , z , xO , yO , zO , wR , wZ )
+         COMPLEX FUNCTION psi_3d_se_sho_axi ( nR , mL , nZ , xO , yO , zO , wR , wZ , x , y , z)
 
          IMPLICIT NONE
 
@@ -90,14 +86,14 @@
          INTEGER, INTENT ( IN ) :: mL
          INTEGER, INTENT ( IN ) :: nZ
 
-         REAL, INTENT ( IN ) :: x
-         REAL, INTENT ( IN ) :: y
-         REAL, INTENT ( IN ) :: z
          REAL, INTENT ( IN ) :: xO
          REAL, INTENT ( IN ) :: yO
          REAL, INTENT ( IN ) :: zO
          REAL, INTENT ( IN ) :: wR
          REAL, INTENT ( IN ) :: wZ
+         REAL, INTENT ( IN ) :: x
+         REAL, INTENT ( IN ) :: y
+         REAL, INTENT ( IN ) :: z
 
          psi_3d_se_sho_axi = CMPLX ( &
             & SQRT ( ( wR**( ABS ( mL ) + 1 ) * REAL ( factorial ( nR ) ) ) / &
@@ -112,8 +108,6 @@
          RETURN
 
          END FUNCTION
-
-! --- 
 
       END MODULE
 

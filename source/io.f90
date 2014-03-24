@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Thursday, March 13th, 2014
+!     Friday, March 21st, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -68,39 +68,41 @@
 
       INTEGER, PUBLIC :: vtkError = 0
 
-      PUBLIC :: write_vtk
+!      PUBLIC :: write_vtk
 
       CONTAINS
 
-         SUBROUTINE write_vtk ( t , Vex , RePsi , ImPsi )
+!         SUBROUTINE write_vtk ( t , Vex , RePsi , ImPsi )
 
-         IMPLICIT NONE
-
-         REAL, INTENT ( IN ) :: t
-         
-         REAL, DIMENSION ( : ), INTENT ( IN ) :: Vex
-         REAL, DIMENSION ( : ), INTENT ( IN ) :: RePsi
-         REAL, DIMENSION ( : ), INTENT ( IN ) :: ImPsi
-
-         IF ( vtkMode == 'LEGACY' ) THEN
-
-            vtkError = vtk_ini ( 'ASCII' , 'TEST.vtk' , 'TEST' , 'RECTILINEAR_GRID' )
-            vtkError = vtk_geo ( nX , nY , nZ , X , Y , Z )
-            vtkError = vtk_dat ( nX * nY * nZ , 'NODE' )
-            vtkError = vtk_var ( nX * nY * nZ , 'Vex' , Vex )
-            vtkError = vtk_var ( nX * nY * nZ , 'RePsi' , RePsi )
-            vtkError = vtk_var ( nX * nY * nZ , 'ImPsi' , ImPsi )
-            vtkError = vtk_end ( )
-
-         ELSE IF ( vtkMode == 'XML' ) THEN
-
-         ELSE
-
-         END IF
-
-         RETURN
-
-         END SUBROUTINE
+!         IMPLICIT NONE
+!
+!         INTEGER :: 
+!
+!         REAL, INTENT ( IN ) :: t
+!         
+!         REAL, DIMENSION ( : ), INTENT ( IN ) :: Vex
+!         REAL, DIMENSION ( : ), INTENT ( IN ) :: RePsi
+!         REAL, DIMENSION ( : ), INTENT ( IN ) :: ImPsi
+!
+!         IF ( vtkMode == 'LEGACY' ) THEN
+!
+!            vtkError = vtk_ini ( 'ASCII' , 'TEST.vtk' , 'TEST' , 'RECTILINEAR_GRID' )
+!            vtkError = vtk_geo ( nX , nY , nZ , X , Y , Z )
+!            vtkError = vtk_dat ( nX * nY * nZ , 'NODE' )
+!            vtkError = vtk_var ( nX * nY * nZ , 'Vex' , Vex )
+!            vtkError = vtk_var ( nX * nY * nZ , 'RePsi' , RePsi )
+!            vtkError = vtk_var ( nX * nY * nZ , 'ImPsi' , ImPsi )
+!            vtkError = vtk_end ( )
+!
+!         ELSE IF ( vtkMode == 'XML' ) THEN
+!
+!         ELSE
+!
+!         END IF
+!
+!         RETURN
+!
+!         END SUBROUTINE
 
       END MODULE
 
