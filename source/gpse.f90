@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Monday, March 24th, 2014
+!     Tuesday, April 8th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -42,6 +42,7 @@
       USE, INTRINSIC :: ISO_FORTRAN_ENV
       USE            :: GRID
       USE            :: IO
+      USE            :: MATH
       USE            :: PSI
       USE            :: VEX
 
@@ -54,121 +55,138 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: VERSION_NUMBER = '0.1.0'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.1.1'
 
       INTEGER, PARAMETER :: INT_DEFAULT_KIND   = KIND ( 0 ) 
-      INTEGER, PARAMETER :: INT_SINGLE_KIND    = SELECTED_INT_KIND ( 7 ) 
-      INTEGER, PARAMETER :: INT_DBLE_KIND      = SELECTED_INT_KIND ( 15 )
-      INTEGER, PARAMETER :: INT_QUAD_KIND      = SELECTED_INT_KIND ( 31 )
       INTEGER, PARAMETER :: REAL_DEFAULT_KIND  = KIND ( 0.0 )
-      INTEGER, PARAMETER :: REAL_SINGLE_KIND   = SELECTED_REAL_KIND ( 6  , 37   )   
-      INTEGER, PARAMETER :: REAL_DBLE_KIND     = SELECTED_REAL_KIND ( 15 , 307  )
-      INTEGER, PARAMETER :: REAL_QUAD_KIND     = SELECTED_REAL_KIND ( 33 , 4931 )
       INTEGER, PARAMETER :: CMPLX_DEFAULT_KIND = KIND ( CMPLX ( 0.0 , 0.0 ) )
-      INTEGER, PARAMETER :: MAX_LEN            = 80
+      INTEGER, PARAMETER :: MAX_LEN_FILENAME   = 255
       INTEGER, PARAMETER :: MPI_MASTER         = 0
 
 ! --- PARAMETER DEFINITIONS -----------------------------------------------
 ! --- VARIABLE DECLARATIONS -----------------------------------------------
 
-      CHARACTER ( LEN = MAX_LEN ) :: dimEq
-      CHARACTER ( LEN = MAX_LEN ) :: dimPsi
-      CHARACTER ( LEN = MAX_LEN ) :: dimVex
-      CHARACTER ( LEN = MAX_LEN ) :: nameBC
-      CHARACTER ( LEN = MAX_LEN ) :: nameEq
-      CHARACTER ( LEN = MAX_LEN ) :: namePsi
-      CHARACTER ( LEN = MAX_LEN ) :: nameVex
-      CHARACTER ( LEN = MAX_LEN ) :: refFrame
-      CHARACTER ( LEN = MAX_LEN ) :: quadRule
-      CHARACTER ( LEN = MAX_LEN ) :: fdScheme
-      CHARACTER ( LEN = MAX_LEN ) :: fdOrder
-      CHARACTER ( LEN = MAX_LEN ) :: fmtInput
-      CHARACTER ( LEN = MAX_LEN ) :: fmtOutput
-      CHARACTER ( LEN = MAX_LEN ) :: cmdArg
-      CHARACTER ( LEN = MAX_LEN ) :: runMode
-      CHARACTER ( LEN = MAX_LEN ) :: fIntType = 'NONE'
-      CHARACTER ( LEN = MAX_LEN ) :: fRealType = 'NONE'
-      CHARACTER ( LEN = MAX_LEN ) :: fCmplxType = 'NONE'
-      CHARACTER ( LEN = MAX_LEN ) :: mpiIntType = 'NONE'
-      CHARACTER ( LEN = MAX_LEN ) :: mpiRealType = 'NONE'
-      CHARACTER ( LEN = MAX_LEN ) :: mpiCmplxType = 'NONE'
-      CHARACTER ( LEN = 8 ) :: startDate = 'NONE'
-      CHARACTER ( LEN = 10 ) :: startTime = 'NONE'
-      CHARACTER ( LEN = 5 ) :: startZone = 'NONE'
-      CHARACTER ( LEN = 8 ) :: stopDate = 'NONE'
-      CHARACTER ( LEN = 10 ) :: stopTime = 'NONE'
-      CHARACTER ( LEN = 5 ) :: stopZone = 'NONE'
-      CHARACTER ( LEN = MAX_LEN ) :: envPwd = 'NONE'
-      CHARACTER ( LEN = MAX_LEN ) :: envHostname = 'NONE'
-      CHARACTER ( LEN = MAX_LEN ) :: envHome = 'NONE'
-      CHARACTER ( LEN = MAX_LEN ) :: envNodename = 'NONE'
+      LOGICAL :: psiRead  = .FALSE.
+      LOGICAL :: psiWrite = .FALSE.
+      LOGICAL :: vexRead  = .FALSE.
+      LOGICAL :: vexWrite = .FALSE.
+      LOGICAL :: vexLin   = .FALSE.
+      LOGICAL :: vexSHO   = .FALSE.
+      LOGICAL :: vexSHOR  = .FALSE.
 
-      INTEGER :: cmdCnt
-      INTEGER :: cmdLen
-      INTEGER :: cmdNum
-      INTEGER :: cmdStat
-      INTEGER :: fileOut
-      INTEGER :: fileInp
-      INTEGER :: lambda = 2
-      INTEGER :: lpkStat
-      INTEGER :: mpiCmplx
-      INTEGER :: mpiDst
-      INTEGER :: mpiErr
-      INTEGER :: mpiErrCode
-      INTEGER :: mpiErrClass
-      INTEGER :: mpiInt
-      INTEGER :: mpiProcs
-      INTEGER :: mpiProv
-      INTEGER :: mpiRank
-      INTEGER :: mpiReal
-      INTEGER :: mpiSrc
-      INTEGER :: ompTs
-      INTEGER :: ompTID
-      INTEGER :: nDim
-      INTEGER :: nIterates
-      INTEGER :: nParts
-      INTEGER :: nTgS
-      INTEGER :: nTomega
-      INTEGER :: nTpsi
-      INTEGER :: nTsteps
-      INTEGER :: nTvex
-      INTEGER :: nTwrite
-      INTEGER :: nX 
-      INTEGER :: nXa
-      INTEGER :: nXb
-      INTEGER :: nXbc
-      INTEGER :: nY
-      INTEGER :: nYa
-      INTEGER :: nYb
-      INTEGER :: nYbc
-      INTEGER :: nZ
-      INTEGER :: nZa
-      INTEGER :: nZb
-      INTEGER :: nZbc
+      CHARACTER ( LEN = 7  ) :: mainInFile   = 'gpse.in'
+      CHARACTER ( LEN = 8  ) :: mainOutFile  = 'gpse.out'
+      CHARACTER ( LEN = 21 ) :: fIntName     = 'NONE'
+      CHARACTER ( LEN = 27 ) :: fRealName    = 'NONE'
+      CHARACTER ( LEN = 29 ) :: fCmplxName   = 'NONE'
+      CHARACTER ( LEN = 28 ) :: mpiIntName   = 'NONE'
+      CHARACTER ( LEN = 34 ) :: mpiRealName  = 'NONE'
+      CHARACTER ( LEN = 36 ) :: mpiCmplxName = 'NONE'
+      CHARACTER ( LEN = 8  ) :: startDate    = 'NONE'
+      CHARACTER ( LEN = 10 ) :: startTime    = 'NONE'
+      CHARACTER ( LEN = 5  ) :: startZone    = 'NONE'
+      CHARACTER ( LEN = 8  ) :: stopDate     = 'NONE'
+      CHARACTER ( LEN = 10 ) :: stopTime     = 'NONE'
+      CHARACTER ( LEN = 5  ) :: stopZone     = 'NONE'
+
+      INTEGER :: runMode        = 0
+      INTEGER :: dimEq          = 0
+      INTEGER :: odeSolve       = 0
+      INTEGER :: rk4Lambda      = 0
+      INTEGER :: fdOrder        = 0
+      INTEGER :: quadRule       = 0
+      INTEGER :: fCmplxKind     = 0 
+      INTEGER :: fIntKind       = 0
+      INTEGER :: fRealKind      = 0
+      INTEGER :: mpiCmplxKind   = 0 
+      INTEGER :: mpiDestination = 0 
+      INTEGER :: mpiError       = 0 
+      INTEGER :: mpiErrorCode   = 0 
+      INTEGER :: mpiErrorClass  = 0 
+      INTEGER :: mpiIntKind     = 0 
+      INTEGER :: mpiProcesses   = 0 
+      INTEGER :: mpiProvided    = 0 
+      INTEGER :: mpiRank        = 0
+      INTEGER :: mpiRealKind    = 0 
+      INTEGER :: mpiSource      = 0
+      INTEGER :: ompThreads     = 0 
+      INTEGER :: ompThreadID    = 0
+      INTEGER :: mainInUnit     = 500
+      INTEGER :: mainOutUnit    = 600
+      INTEGER :: nTsteps        = 0
+      INTEGER :: nTwrite        = 0
+      INTEGER :: nTgS           = 0 
+      INTEGER :: nTomega        = 0 
+      INTEGER :: nTpsi          = 0 
+      INTEGER :: nTvex          = 0  
+      INTEGER :: nX             = 0 
+      INTEGER :: nXa            = 0 
+      INTEGER :: nXb            = 0 
+      INTEGER :: nXbc           = 0 
+      INTEGER :: nY             = 0 
+      INTEGER :: nYa            = 0 
+      INTEGER :: nYb            = 0 
+      INTEGER :: nYbc           = 0 
+      INTEGER :: nZ             = 0
+      INTEGER :: nZa            = 0 
+      INTEGER :: nZb            = 0 
+      INTEGER :: nZbc           = 0
+      INTEGER :: psiInFmt       = 0
+      INTEGER :: psiInUnit      = 0
+      INTEGER :: psiOutFmt      = 0
+      INTEGER :: psiOutUnit     = 0
+      INTEGER :: psiInit        = 0
+      INTEGER :: psiNx          = 0
+      INTEGER :: psiNy          = 0
+      INTEGER :: psiNz          = 0
+      INTEGER :: psiNr          = 0
+      INTEGER :: psiMl          = 0
+      INTEGER :: vexInFmt       = 0
+      INTEGER :: vexInUnit      = 0
+      INTEGER :: vexOutFmt      = 0
+      INTEGER :: vexOutUnit     = 0
       INTEGER :: j , k , l , n , m ! Reserved loop counters. 
 
-      REAL :: xO = 0.0
-      REAL :: yO = 0.0
-      REAL :: zO = 0.0
-      REAL :: dT = 0.0
-      REAL :: dX = 0.0
-      REAL :: dY = 0.0
-      REAL :: dZ = 0.0
-      REAL :: gRe = 0.0
-      REAL :: gIm = 0.0
-      REAL :: xMin = 0.0
-      REAL :: xMax = 0.0
-      REAL :: yMin = 0.0
-      REAL :: yMax = 0.0
-      REAL :: zMin = 0.0
-      REAL :: zMax = 0.0
+      REAL :: tN    = 0.0 ! Time of simulation (at nth time step)
+      REAL :: t0    = 0.0 ! Time at start of simulation
+      REAL :: xO    = 0.0 ! X-coordinate of origin used to define computational grid
+      REAL :: yO    = 0.0 ! Y-coordinate of origin used to define computational grid
+      REAL :: zO    = 0.0 ! Z-coordinate of origin used to define computational grid
+      REAL :: dTRe  = 0.0 ! Interval of a real time step
+      REAL :: dTIm  = 0.0 ! Interval of an imaginary time step
+      REAL :: dX    = 0.0 !
+      REAL :: dY    = 0.0
+      REAL :: dZ    = 0.0
+      REAL :: gSRe  = 0.0 
+      REAL :: gSIm  = 0.0
+      REAL :: psiXo = 0.0
+      REAL :: psiYo = 0.0
+      REAL :: psiZo = 0.0
+      REAL :: psiWx = 0.0
+      REAL :: psiWy = 0.0
+      REAL :: psiWz = 0.0
+      REAL :: psiWr = 0.0
+      REAL :: vexXo = 0.0
+      REAL :: vexYo = 0.0
+      REAL :: vexZo = 0.0
+      REAL :: vexRo = 0.0
+      REAL :: vexFx = 0.0
+      REAL :: vexFy = 0.0
+      REAL :: vexFz = 0.0
+      REAL :: vexWx = 0.0
+      REAL :: vexWy = 0.0
+      REAL :: vexWz = 0.0
+      REAL :: vexWr = 0.0
+
+      COMPLEX :: dT = CMPLX ( 0.0 , 0.0 )
+      COMPLEX :: gS = CMPLX ( 0.0 , 0.0 )
 
 ! --- VARIABLE DEFINITIONS ------------------------------------------------
 ! --- ARRAY DECLARATIONS --------------------------------------------------
 
       INTEGER, ALLOCATABLE, DIMENSION ( : ) :: StartValues
       INTEGER, ALLOCATABLE, DIMENSION ( : ) :: StopValues
-      INTEGER, ALLOCATABLE, DIMENSION ( : ) :: MPIStat
+      INTEGER, ALLOCATABLE, DIMENSION ( : ) :: MPIStatus
       INTEGER, ALLOCATABLE, DIMENSION ( : ) :: Pvt
 
       REAL, ALLOCATABLE, DIMENSION ( :             ) :: ImPsi1
@@ -205,31 +223,41 @@
       INTEGER :: OMP_GET_NUM_THREADS
       INTEGER :: OMP_GET_THREAD_NUM
 
+! --- NAMELIST DECLARATIONS -----------------------------------------------
+
+      NAMELIST /gpseIn/ runMode , dimEq , odeSolve , rk4Lambda , fdOrder , quadRule , nTsteps , nTwrite , nX , nXbc , nY , nYbc , &
+         & nZ , nZbc , t0 , xO , yO , zO , dTRe , dTIm , dX , dY , dZ , gSRe , gSIm , psiRead , psiInFmt , psiInUnit , psiWrite , &
+         & psiOutFmt , psiOutUnit , psiInit , psiNx , psiNy , psiNz , psiNr , psiMl , psiXo , psiYo , psiZo , psiWx , psiWy , &
+         & psiWz , psiWr , vexRead , vexWrite , vexInFmt , vexOutFmt , vexInUnit , vexOutUnit , vexLin , vexSHO , vexSHOR , vexXo ,&
+         & vexYo , vexZo , vexRo , vexFx , vexFy , vexFz , vexWx , vexWy , vexWz , vexWr
+
+! --- NAMELIST DEFINITIONS ------------------------------------------------
+
 ! --- FUNCTION AND SUBROUTINE DEFINITIONS ---------------------------------
 ! --- MAIN PROGRAM --------------------------------------------------------
 
-      ALLOCATE ( MPIStat ( MPI_STATUS_SIZE ) ) 
+      ALLOCATE ( MPIStatus ( MPI_STATUS_SIZE ) ) 
 
-      CALL MPI_INIT_THREAD ( MPI_THREAD_SINGLE , mpiProv , mpiErr )
-!     CALL MPI_INIT_THREAD_ERRCHK
-      IF ( mpiErr /= MPI_SUCCESS ) THEN
+      CALL MPI_INIT_THREAD ( MPI_THREAD_SINGLE , mpiProvided , mpiError )
+!     CALL mpi_init_thread_errchk
+      IF ( mpiError /= MPI_SUCCESS ) THEN
 
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) 'gpse: ERROR - MPI_INIT_THREAD failed. Calling MPI_ABORT.'
-         CALL MPI_ABORT ( MPI_COMM_WORLD , mpiErrCode , mpiErr )
+         CALL MPI_ABORT ( MPI_COMM_WORLD , mpiErrorCode , mpiError )
 
       END IF
-      CALL MPI_COMM_SIZE ( MPI_COMM_WORLD , mpiProcs , mpiErr )
-!     CALL MPI_COMM_SIZE_ERRCHK
-      CALL MPI_COMM_RANK ( MPI_COMM_WORLD , mpiRank , mpiErr )
-!     CALL MPI_COMM_RANK_ERRCHK
-      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiErr )
-!     CALL MPI_BARRIER_ERRCHK
+      CALL MPI_COMM_SIZE ( MPI_COMM_WORLD , mpiProcesses , mpiError )
+!     CALL mpi_comm_size_errchk
+      CALL MPI_COMM_RANK ( MPI_COMM_WORLD , mpiRank , mpiError )
+!     CALL mpi_comm_rank_errchk
+      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+!     CALL mpi_barrier_errchk
 
       IF ( mpiRank == MPI_MASTER ) THEN
 
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '! =========================================================================='
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     GPSE VERSION ',VERSION_NUMBER
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     GPSE VERSION ', GPSE_VERSION_NUMBER
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        Compiled by ', COMPILER_VERSION ( ) , ' using the options ', COMPILER_OPTIONS ( )
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
@@ -247,7 +275,7 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     LAST UPDATED'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!         Monday, March 24th, 2014'
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!         Tuesday, April 8th, 2014'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '! -------------------------------------------------------------------------'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
@@ -256,44 +284,45 @@
          ALLOCATE ( StartValues ( 8 ) )
          CALL DATE_AND_TIME ( startDate , startTime , startZone , StartValues )
 
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     RUN STARTED @ ', startTime , ' ON ' , startDate , ' ... '
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     RUN STARTED @ ', startTime, ' ON ', startDate, ' ... '
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     RUNNING ON ', mpiProcesses, ' MPI PROCESSES WITH ', ompThreads , ' OPENMP THREADS PER PROCESS ... '
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     CHECKING MACHINE/COMPILER-SPECIFIC DATA TYPE SUPPORT AND CONFIGURATION ... '
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        INTEGER_KINDS SUPPORTED ... ', INTEGER_KINDS
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        REAL_KINDS SUPPORTED ...    ', REAL_KINDS
 
       END IF
 
-      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiErr )
+      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
       SELECT CASE ( INT_DEFAULT_KIND )
 
          CASE ( INT8 )
 
-            fIntType = 'INTEGER*1'
-            mpiIntType = 'MPI_INTEGER1'
-            mpiInt = MPI_INTEGER1
+            fIntName = 'INTEGER*1'
+            mpiIntName = 'MPI_INTEGER1'
+            mpiIntKind = MPI_INTEGER1
 
          CASE ( INT16 )
 
-            fIntType = 'INTEGER*2'
-            mpiIntType = 'MPI_INTEGER2'
-            mpiInt = MPI_INTEGER2
+            fIntName = 'INTEGER*2'
+            mpiIntName = 'MPI_INTEGER2'
+            mpiIntKind = MPI_INTEGER2
 
          CASE ( INT32 )
 
-            fIntType = 'INTEGER ( INTEGER*4 )'
-            mpiIntType = 'MPI_INTEGER ( MPI_INTEGER4 )'
-            mpiInt = MPI_INTEGER
+            fIntName = 'INTEGER ( INTEGER*4 )'
+            mpiIntName = 'MPI_INTEGER ( MPI_INTEGER4 )'
+            mpiIntKind = MPI_INTEGER
 
          CASE ( INT64 )
 
-            fIntType = 'INTEGER*8'
-            mpiIntType = 'MPI_INTEGER8'
-            mpiInt = MPI_INTEGER8
+            fIntName = 'INTEGER*8'
+            mpiIntName = 'MPI_INTEGER8'
+            mpiIntKind = MPI_INTEGER8
 
          CASE DEFAULT
 
-            mpiInt = -1
+            mpiIntKind = -1
 
       END SELECT
 
@@ -301,25 +330,25 @@
 
          CASE ( REAL32 )
 
-            fRealType = 'REAL ( REAL*4 )'
-            mpiRealType = 'MPI_REAL ( MPI_REAL4 )'
-            mpiReal = MPI_REAL
+            fRealName = 'REAL ( REAL*4 )'
+            mpiRealName = 'MPI_REAL ( MPI_REAL4 )'
+            mpiRealKind = MPI_REAL
 
          CASE ( REAL64 )
 
-            fRealType = 'DOUBLE_PRECISION ( REAL*8 )'
-            mpiRealType = 'MPI_DOUBLE_PRECISION ( MPI_REAL8 )'
-            mpiReal = MPI_DOUBLE_PRECISION
+            fRealName = 'DOUBLE PRECISION ( REAL*8 )'
+            mpiRealName = 'MPI_DOUBLE_PRECISION ( MPI_REAL8 )'
+            mpiRealKind= MPI_DOUBLE_PRECISION
 
          CASE ( REAL128 )
 
-            fRealType = 'REAL*16'
-            mpiRealType = 'MPI_REAL16'
-            mpiReal = MPI_REAL16
+            fRealName = 'REAL*16'
+            mpiRealName = 'MPI_REAL16'
+            mpiRealKind = MPI_REAL16
 
          CASE DEFAULT
 
-            mpiReal = -1
+            mpiRealKind = -1
 
       END SELECT
 
@@ -327,81 +356,206 @@
 
          CASE ( REAL32 )
 
-            fCmplxType = 'COMPLEX ( COMPLEX*8 )'
-            mpiCmplxType = 'MPI_COMPLEX ( MPI_COMPLEX8 )'
-            mpiCmplx = MPI_COMPLEX
+            fCmplxName = 'COMPLEX ( COMPLEX*8 )'
+            mpiCmplxName = 'MPI_COMPLEX ( MPI_COMPLEX8 )'
+            mpiCmplxKind = MPI_COMPLEX
 
          CASE ( REAL64 )
 
-            fCmplxType = 'DOUBLE COMPLEX ( COMPLEX*16 )'
-            mpiCmplxType = 'MPI_DOUBLE_COMPLEX ( MPI_COMPLEX16 )'
-            mpiCmplx = MPI_DOUBLE_COMPLEX
+            fCmplxName = 'DOUBLE COMPLEX ( COMPLEX*16 )'
+            mpiCmplxName = 'MPI_DOUBLE_COMPLEX ( MPI_COMPLEX16 )'
+            mpiCmplxKind = MPI_DOUBLE_COMPLEX
 
          CASE ( REAL128 )
 
-            fCmplxType = 'COMPLEX*32'
-            mpiCmplxType = 'MPI_COMPLEX32'
-            mpiCmplx = MPI_COMPLEX32
+            fCmplxName = 'COMPLEX*32'
+            mpiCmplxName = 'MPI_COMPLEX32'
+            mpiCmplxKind = MPI_COMPLEX32
 
          CASE DEFAULT
 
-            mpiCmplx = -1            
+            mpiCmplxKind = -1            
 
       END SELECT
 
-      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiErr )
+      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
       IF ( mpiRank == MPI_MASTER ) THEN
 
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        DEFAULT INTEGER KIND ...    ' , fIntType
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        DEFAULT REAL KIND ...       ' , fRealType
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        DEFAULT COMPLEX KIND ...    ' , fCmplxType
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        MPI_INTEGER TYPE ...        ' , mpiIntType
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        MPI_REAL TYPE ...           ' , mpiRealType
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        MPI_COMPLEX TYPE ...        ' , mpiCmplxType
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     READING AND PARSING COMMAND-LINE ARGUMENTS ... '
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     RANGE CHECKING INPUT PARAMETER VALUES ... '
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        DEFAULT INTEGER KIND ...    ', fIntName
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        DEFAULT REAL KIND ...       ', fRealName
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        DEFAULT COMPLEX KIND ...    ', fCmplxName
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        MPI_INTEGER TYPE ...        ', mpiIntName
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        MPI_REAL TYPE ...           ', mpiRealName
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        MPI_COMPLEX TYPE ...        ', mpiCmplxName
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     READING MAIN INPUT FILE ... ', mainInFile
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     MAIN INPUT FILE UNIT NUMBER ... ', mainInUnit
 
-         nDim = 3
-         nX = 256
-         nXbc = 2
-         nY = 256
-         nYbc = 2
-         nZ = 256
-         nZbc = 2
-         dX = 0.015625
-         dY = 0.015625
-         dZ = 0.015625
+         OPEN ( UNIT = mainInUnit , FILE = mainInFile , ACTION = 'READ' , FORM = 'FORMATTED' , STATUS = 'OLD' )
+         READ ( UNIT = mainInUnit , NML = gpseIn )
+         CLOSE ( UNIT = mainInUnit , STATUS = 'KEEP' )
+
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     INPUT PARAMETERS ... '
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        runMode    = ', runMode
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dimEq      = ', dimEq
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        odeSolve   = ', odeSolve
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        rk4Lambda  = ', rk4Lambda
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        fdOrder    = ', fdOrder
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        quadRule   = ', quadRule
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        nTsteps    = ', nTsteps
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        nTwrite    = ', nTwrite
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        nX         = ', nX
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        nY         = ', nY
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        nZ         = ', nZ
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        t0         = ', t0
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        xO         = ', xO
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        yO         = ', yO
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        zO         = ', zO
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dTRe       = ', dTRe
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dTIm       = ', dTIm
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dX         = ', dX
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dY         = ', dY
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dZ         = ', dZ
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        gSRe       = ', gSRe
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        gSIm       = ', gSIm
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiRead    = ', psiRead
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiInFmt   = ', psiInFmt
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiInUnit  = ', psiInUnit
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiWrite   = ', psiWrite
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiOutFmt  = ', psiOutFmt
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiOutUnit = ', psiOutUnit
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiInit    = ', psiInit
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiNx      = ', psiNx
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiNy      = ', psiNy
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiNz      = ', psiNz
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiNr      = ', psiNr
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiMl      = ', psiMl
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiXo      = ', psiXo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiYo      = ', psiYo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiZo      = ', psiZo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiWx      = ', psiWx
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiWy      = ', psiWy
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiWz      = ', psiWz
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiWr      = ', psiWr
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexRead    = ', vexRead
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexInFmt   = ', vexInFmt
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexInUnit  = ', vexInUnit
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexWrite   = ', vexWrite
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexOutFmt  = ', vexOutFmt
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexOutUnit = ', vexOutUnit
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexLin     = ', vexLin
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexSHO     = ', vexSHO
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexSHOR    = ', vexSHOR
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexXo      = ', vexXo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexYo      = ', vexYo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexZo      = ', vexZo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexRo      = ', vexRo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexFx      = ', vexFx
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexFy      = ', vexFy
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexFz      = ', vexFz
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexWx      = ', vexWx
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexWy      = ', vexWy
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexWz      = ', vexWz
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexWr      = ', vexWr
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     RANGE CHECKING INPUT PARAMETERS ... '
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     BROADCASTING INPUT PARAMETERS TO ALL MPI PROCESSES ... '
 
       END IF
 
-      CALL MPI_BCAST ( nDim , 1 , MPI_INTEGER , MPI_MASTER , MPI_COMM_WORLD , mpiErr )
+      CALL MPI_BCAST ( runMode    , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( dimEq      , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( odeSolve   , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( rk4Lambda  , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( fdOrder    , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( quadRule   , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( nTsteps    , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( nTwrite    , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( nX         , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( nXbc       , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( nY         , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( nYbc       , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )    
+      CALL MPI_BCAST ( nZ         , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( nZbc       , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( t0         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( xO         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( yO         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( zO         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( dTRe       , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( dTIm       , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( dX         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( dY         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( dZ         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( gSRe       , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( gSIm       , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiRead    , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiInFmt   , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiInUnit  , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiWrite   , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiOutFmt  , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiOutUnit , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiInit    , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiNx      , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiNy      , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiNz      , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiNr      , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiMl      , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiXo      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiYo      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiZo      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiWx      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiWy      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiWz      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiWr      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexRead    , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexInFmt   , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexInUnit  , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexWrite   , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexOutFmt  , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexOutUnit , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexLin     , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexSHO     , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexSHOR    , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexXo      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexYo      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexZo      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexRo      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexFx      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexFy      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexFz      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexWx      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexWy      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexWz      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexWr      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
 
-      IF ( nDim == 3 ) THEN
+      IF ( runMode == 0 ) THEN ! perform imaginary time propagation calculation ...
 
-         CALL MPI_BCAST ( nX , 1 , mpiInt , MPI_MASTER , MPI_COMM_WORLD , mpiErr )
-         CALL MPI_BCAST ( nXbc , 1 , mpiInt , MPI_MASTER , MPI_COMM_WORLD , mpiErr )
-         CALL MPI_BCAST ( nY , 1 , mpiInt , MPI_MASTER , MPI_COMM_WORLD , mpiErr )
-         CALL MPI_BCAST ( nYbc , 1 , mpiInt , MPI_MASTER , MPI_COMM_WORLD , mpiErr )    
-         CALL MPI_BCAST ( nZ , 1 , mpiInt , MPI_MASTER , MPI_COMM_WORLD , mpiErr )
-         CALL MPI_BCAST ( nZbc , 1 , mpiInt , MPI_MASTER , MPI_COMM_WORLD , mpiErr )
-         CALL MPI_BCAST ( dX , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiErr )
-         CALL MPI_BCAST ( dY , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiErr )
-         CALL MPI_BCAST ( dZ , 1 , mpiReal, MPI_MASTER , MPI_COMM_WORLD , mpiErr )
+         dT = CMPLX ( 0.0 , -dTIm )
+ 
+      ELSE IF ( runMode == 1 ) THEN ! perform normal calculation ... 
+
+         dT = CMPLX ( dTRe , 0.0 )
+
+      ELSE
+
+         ! ERROR: Run mode not supported. 
+
+      END IF
+
+      IF ( dimEq == 3 ) THEN
 
          nXa = 1
          nXb = nX
          nYa = 1
          nYb = nY
-         nZa = 1 + mpiRank * FLOOR ( REAL ( nZ / mpiProcs ) )
+         nZa = 1 + mpiRank * FLOOR ( REAL ( nZ / mpiProcesses ) )
 
-         IF ( ( mpiRank + 1 ) == mpiProcs ) THEN ! include any remainder grid points in z-range on  
+         IF ( ( mpiRank + 1 ) == mpiProcesses ) THEN ! include remaining z-points on last MPI process ...
 
-            nZb = ( mpiRank + 1 ) * FLOOR ( REAL ( nZ / mpiProcs ) ) + MODULO ( nZ , mpiProcs )
+            nZb = ( mpiRank + 1 ) * FLOOR ( REAL ( nZ / mpiProcesses ) ) + MODULO ( nZ , mpiProcesses )
 
-         ELSE
+         ELSE ! all MPI processes have same number of z-points ... 
 
-            nZb = ( mpiRank + 1 ) * FLOOR ( REAL ( nZ / mpiProcs ) )
+            nZb = ( mpiRank + 1 ) * FLOOR ( REAL ( nZ / mpiProcesses ) )
 
          END IF
 
@@ -414,27 +568,15 @@
          CALL regular_grid_axis ( nY , nYa - nYbc , nYb + nYbc , yO , dY , Y )
          CALL regular_grid_axis ( nZ , nZa - nZbc , nZb + nZbc , zO , dZ , Z )
 
-         DO l = nZa , nZb
-
-            DO k = nYa , nYb
-
-               DO j = nXa , nXb
-
-                  Psi3 ( j , k , l ) = psi_3d_se_sho_ani ( 0 , 0 , 0 , xO , yO , zO , 1.0 , 1.0 , 2.0 , X ( j ) , Y ( k ) , Z ( l ) )
-
-               END DO
-
-            END DO 
-
-         END DO
-
       ELSE
+
+         ! ERROR: Dimensionality of equation not supported yet.
 
       END IF
 
-      CALL MPI_FINALIZE ( mpiErr )
+      CALL MPI_FINALIZE ( mpiError )
 
-      DEALLOCATE ( MPIStat )
+      DEALLOCATE ( MPIStatus )
 
 ! --- FORMAT STATEMENTS ---------------------------------------------------
 

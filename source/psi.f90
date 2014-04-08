@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Wednesday, March 19th, 2014
+!     Saturday, April 5th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -45,6 +45,7 @@
 
       PUBLIC :: psi_3d_se_sho_ani
       PUBLIC :: psi_3d_se_sho_axi
+      !PUBLIC :: psi_3d_se_sho_iso
 
       CONTAINS
 

@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, March 11th, 2014
+!     Wednesday, April 2nd, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -43,6 +43,8 @@
       PRIVATE
 
       REAL, PARAMETER, PUBLIC :: PI = 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534
+
+      COMPLEX, PARAMETER, PUBLIC :: I = CMPLX ( 0.0 , 1.0 )
 
       PUBLIC :: factorial
       PUBLIC :: alaguerre
