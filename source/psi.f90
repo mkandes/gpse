@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, April 5th, 2014
+!     Wednesday, April 9th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -49,7 +49,7 @@
 
       CONTAINS
 
-         COMPLEX FUNCTION psi_3d_se_sho_ani ( nX , nY , nZ , xO , yO , zO , wX , wY , wZ , x , y , z)
+         COMPLEX FUNCTION psi_3d_se_sho_ani ( nX , nY , nZ , xO , yO , zO , wX , wY , wZ , x , y , z )
 
          IMPLICIT NONE
 
@@ -79,7 +79,7 @@
 
          END FUNCTION
 
-         COMPLEX FUNCTION psi_3d_se_sho_axi ( nR , mL , nZ , xO , yO , zO , wR , wZ , x , y , z)
+         COMPLEX FUNCTION psi_3d_se_sho_axi ( nR , mL , nZ , xO , yO , zO , wR , wZ , x , y , z )
 
          IMPLICIT NONE
 

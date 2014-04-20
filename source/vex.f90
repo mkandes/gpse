@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, April 5th, 2014
+!     Wednesday, April 16th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -48,7 +48,7 @@
 
       CONTAINS
 
-         REAL FUNCTION vex_3d_lin ( xO , yO , zO , fX , fY , fZ , x , y  , z)
+         REAL FUNCTION vex_3d_lin ( xO , yO , zO , fX , fY , fZ , x , y , z )
 
          IMPLICIT NONE
 

@@ -1,7 +1,5 @@
 &gpseIn
-   runMode    = 1           ! 0 = Imaginary Time Propagation ; 1 = Real Time Propagation
-   dimEq      = 3           ! 1 = One-Dimensional ; 2 = Two-Dimensional ; 3 = Three-Dimensional
-   odeSolve   = 4           ! 4 = 4th-Order Runge-Kutta
+   itpOn      = .FALSE.     ! Perform imaginary time propagation? .TRUE. = Yes ; .FALSE. = No
    rk4Lambda  = 2           ! 1 = Tan-Chen Lambda-1 ; 2 = Classical 4th-Order Runge-Kutta ; 3 = Tan-Chen Lambda-3 ; 4 = England ; 5 = Tan-Chen Lambda-5
    fdOrder    = 2           ! 2 = 2nd-Order Central Differences ; 4 = 4th-Order Central Differences 
    quadRule   = 1           ! 1 = Rectangle Rule ; 2 = Trapezoidal Rule
@@ -24,13 +22,14 @@
    dZ         = 0.0625      ! Distance between grid points along z-axis
    gSRe       = 0.0         ! Nonlinear coupling constant ( real part ) 
    gSIm       = 0.0         ! Nonlinear coupling constant ( imaginary part )
-   psiRead    = .FALSE.     ! Read wave function from file? .TRUE. = Yes ; .FALSE. = No
+   psiRead    = .FALSE.     ! Read initial wave function from file? .TRUE. = Yes ; .FALSE. = No
+   psiInFile  = 'psi.in'    ! Initial wave function filename ( if applicable ).
    psiInFmt   = 1           ! Format of input wave function file? 1 = Unformatted ( Binary ) ; 2 = Formatted ( GPI )
    psiInUnit  = 1000        !
    psiWrite   = .TRUE.      ! Write wave function to file? .TRUE. = Yes ; .FALSE. = No
    psiOutFmt  = 1           ! Format of output wave function file(s)? 1 = Unformatted ( Binary ) ; 2 = Formatted ( GPI ) ; 3 = VTK ; 4 = VTK_XML
    psiOutUnit = 1001        !   
-   psiInit    = 1           ! 1 = Isotropic SHO ; 2 = Anisotropic SHO ; 3 = Axially-Symmetric SHO
+   psiInit    = 2           ! 1 = Isotropic 3D SHO ; 2 = Anisotropic 3D SHO ; 3 = Axially-Symmetric 3D SHO
    psiNx      = 0           ! Degree of Hermite polynomial used to define anisotropic SHO wave function along x-axis
    psiNy      = 0           ! Degree of Hermite polynomial used to define anisotropic SHO wave function along y-axis
    psiNz      = 0           ! Degree of Hermite polynomial used to define both anisotropic and axially-symmetric SHO wave functions along z-axis
@@ -50,17 +49,24 @@
    vexOutFmt  = 1           ! 1 = Unformatted ( Binary ) ; 2 = Formatted ( GPI ) ; 3 = VTK ; 4 = VTK_XML
    vexOutUnit = 10001       !
    vexLin     = .FALSE.     ! Apply linear potential? .TRUE. = Yes ; .FALSE. = No
-   vexSHO     = .TRUE.      ! Apply simple harmonic oscillator potential? .TRUE. = Yes ; .FALSE. = No
-   vexSHOR    = .FALSE.     ! Apply simple harmonic oscillator ring potential? .TRUE. = Yes ; .FALSE. = No
-   vexXo      = 0.0         !
-   vexYo      = 0.0         !
-   vexZo      = 0.0         !
-   vexRo      = 0.0         !
-   vexFx      = 0.0         !
-   vexFy      = 0.0         !
-   vexFz      = 0.0         !
-   vexWx      = 1.0         !
-   vexWy      = 1.0         !
-   vexWz      = 1.0         !
-   vexWr      = 1.0         !
+   vexLinXo   = 0.0         !
+   vexLinYo   = 0.0         !
+   vexLinZo   = 0.0         !
+   vexLinFx   = 0.0         !   
+   vexLinFy   = 0.0         !   
+   vexLinFz   = 0.0         !   
+   vexSho     = .TRUE.      ! Apply simple harmonic oscillator potential? .TRUE. = Yes ; .FALSE. = No
+   vexShoXo   = 0.0
+   vexShoYo   = 0.0
+   vexShoZo   = 0.0
+   vexShoWx   = 1.0         !
+   vexShoWy   = 1.0         !
+   vexShoWz   = 1.0         !
+   vexShor    = .FALSE.     ! Apply simple harmonic oscillator ring potential? .TRUE. = Yes ; .FALSE. = No
+   vexShorXo  = 0.0
+   vexShorYo  = 0.0
+   vexShorZo  = 0.0 
+   vexShorRo  = 0.0         !
+   vexShorWr  = 1.0         !
+   vexShorWz  = 1.0         !
 /

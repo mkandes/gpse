@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, April 8th, 2014
+!     Sunday, April 20th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -55,7 +55,7 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.1.1'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.1.2'
 
       INTEGER, PARAMETER :: INT_DEFAULT_KIND   = KIND ( 0 ) 
       INTEGER, PARAMETER :: REAL_DEFAULT_KIND  = KIND ( 0.0 )
@@ -66,16 +66,18 @@
 ! --- PARAMETER DEFINITIONS -----------------------------------------------
 ! --- VARIABLE DECLARATIONS -----------------------------------------------
 
+      LOGICAL :: itpOn = .FALSE.
       LOGICAL :: psiRead  = .FALSE.
       LOGICAL :: psiWrite = .FALSE.
       LOGICAL :: vexRead  = .FALSE.
       LOGICAL :: vexWrite = .FALSE.
       LOGICAL :: vexLin   = .FALSE.
-      LOGICAL :: vexSHO   = .FALSE.
-      LOGICAL :: vexSHOR  = .FALSE.
+      LOGICAL :: vexSho   = .FALSE.
+      LOGICAL :: vexShor  = .FALSE.
 
       CHARACTER ( LEN = 7  ) :: mainInFile   = 'gpse.in'
       CHARACTER ( LEN = 8  ) :: mainOutFile  = 'gpse.out'
+      CHARACTER ( LEN = 6  ) :: psiInFile    = 'psi.in'
       CHARACTER ( LEN = 21 ) :: fIntName     = 'NONE'
       CHARACTER ( LEN = 27 ) :: fRealName    = 'NONE'
       CHARACTER ( LEN = 29 ) :: fCmplxName   = 'NONE'
@@ -89,9 +91,6 @@
       CHARACTER ( LEN = 10 ) :: stopTime     = 'NONE'
       CHARACTER ( LEN = 5  ) :: stopZone     = 'NONE'
 
-      INTEGER :: runMode        = 0
-      INTEGER :: dimEq          = 0
-      INTEGER :: odeSolve       = 0
       INTEGER :: rk4Lambda      = 0
       INTEGER :: fdOrder        = 0
       INTEGER :: quadRule       = 0
@@ -111,6 +110,7 @@
       INTEGER :: mpiSource      = 0
       INTEGER :: ompThreads     = 0 
       INTEGER :: ompThreadID    = 0
+      INTEGER :: ompChunkSize   = 1
       INTEGER :: mainInUnit     = 500
       INTEGER :: mainOutUnit    = 600
       INTEGER :: nTsteps        = 0
@@ -166,17 +166,58 @@
       REAL :: psiWy = 0.0
       REAL :: psiWz = 0.0
       REAL :: psiWr = 0.0
-      REAL :: vexXo = 0.0
-      REAL :: vexYo = 0.0
-      REAL :: vexZo = 0.0
-      REAL :: vexRo = 0.0
-      REAL :: vexFx = 0.0
-      REAL :: vexFy = 0.0
-      REAL :: vexFz = 0.0
-      REAL :: vexWx = 0.0
-      REAL :: vexWy = 0.0
-      REAL :: vexWz = 0.0
-      REAL :: vexWr = 0.0
+      REAL :: vexLinXo = 0.0
+      REAL :: vexLinYo = 0.0
+      REAL :: vexLinZo = 0.0
+      REAL :: vexLinFx = 0.0 
+      REAL :: vexLinFy = 0.0 
+      REAL :: vexLinFz = 0.0 
+      REAL :: vexShoXo = 0.0 
+      REAL :: vexShoYo = 0.0 
+      REAL :: vexShoZo = 0.0
+      REAL :: vexShoWx = 0.0 
+      REAL :: vexShoWy = 0.0 
+      REAL :: vexShoWz = 0.0
+      REAL :: vexShorXo = 0.0 
+      REAL :: vexShorYo = 0.0 
+      REAL :: vexShorZo = 0.0
+      REAL :: vexShorRo = 0.0
+      REAL :: vexShorWr = 0.0
+      REAL :: vexShorWz = 0.0
+      REAL :: normL2 = 0.0
+      REAL :: avgX = 0.0
+      REAL :: avgY = 0.0
+      REAL :: avgZ = 0.0
+      REAL :: avgPx = 0.0
+      REAL :: avgPy = 0.0
+      REAL :: avgPz = 0.0
+      REAL :: avgLx = 0.0
+      REAL :: avgLy = 0.0
+      REAL :: avgLz = 0.0
+      REAL :: avgTx = 0.0
+      REAL :: avgTy = 0.0
+      REAL :: avgTz = 0.0
+      REAL :: avgVex = 0.0
+      REAL :: avgVmf = 0.0
+      REAL :: avgE = 0.0
+      REAL :: avgX2 = 0.0
+      REAL :: avgY2 = 0.0
+      REAL :: avgZ2 = 0.0
+      REAL :: avgPx2 = 0.0
+      REAL :: avgPy2 = 0.0
+      REAL :: avgPz2 = 0.0
+      REAL :: avgLx2 = 0.0
+      REAL :: avgLy2 = 0.0
+      REAL :: avgLz2 = 0.0
+      REAL :: sigX = 0.0
+      REAL :: sigY = 0.0
+      REAL :: sigZ = 0.0
+      REAL :: sigPx = 0.0
+      REAL :: sigPy = 0.0
+      REAL :: sigPz = 0.0
+      REAL :: sigLx = 0.0
+      REAL :: sigLy = 0.0
+      REAL :: sigLz = 0.0
 
       COMPLEX :: dT = CMPLX ( 0.0 , 0.0 )
       COMPLEX :: gS = CMPLX ( 0.0 , 0.0 )
@@ -187,7 +228,6 @@
       INTEGER, ALLOCATABLE, DIMENSION ( : ) :: StartValues
       INTEGER, ALLOCATABLE, DIMENSION ( : ) :: StopValues
       INTEGER, ALLOCATABLE, DIMENSION ( : ) :: MPIStatus
-      INTEGER, ALLOCATABLE, DIMENSION ( : ) :: Pvt
 
       REAL, ALLOCATABLE, DIMENSION ( :             ) :: ImPsi1
       REAL, ALLOCATABLE, DIMENSION ( : , :         ) :: ImPsi2
@@ -204,10 +244,6 @@
       REAL, ALLOCATABLE, DIMENSION ( :             ) :: Y
       REAL, ALLOCATABLE, DIMENSION ( :             ) :: Z
 
-      COMPLEX, ALLOCATABLE, DIMENSION ( :             ) :: Gs1   ! Note: Same as below.  
-      COMPLEX, ALLOCATABLE, DIMENSION ( : , :         ) :: Gs2
-      COMPLEX, ALLOCATABLE, DIMENSION ( : , : , :     ) :: Gs3
-      COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : , : ) :: Gs4
       COMPLEX, ALLOCATABLE, DIMENSION ( :             ) :: Psi1
       COMPLEX, ALLOCATABLE, DIMENSION ( : , :         ) :: Psi2
       COMPLEX, ALLOCATABLE, DIMENSION ( : , : , :     ) :: Psi3
@@ -225,11 +261,12 @@
 
 ! --- NAMELIST DECLARATIONS -----------------------------------------------
 
-      NAMELIST /gpseIn/ runMode , dimEq , odeSolve , rk4Lambda , fdOrder , quadRule , nTsteps , nTwrite , nX , nXbc , nY , nYbc , &
-         & nZ , nZbc , t0 , xO , yO , zO , dTRe , dTIm , dX , dY , dZ , gSRe , gSIm , psiRead , psiInFmt , psiInUnit , psiWrite , &
-         & psiOutFmt , psiOutUnit , psiInit , psiNx , psiNy , psiNz , psiNr , psiMl , psiXo , psiYo , psiZo , psiWx , psiWy , &
-         & psiWz , psiWr , vexRead , vexWrite , vexInFmt , vexOutFmt , vexInUnit , vexOutUnit , vexLin , vexSHO , vexSHOR , vexXo ,&
-         & vexYo , vexZo , vexRo , vexFx , vexFy , vexFz , vexWx , vexWy , vexWz , vexWr
+      NAMELIST /gpseIn/ itpOn , rk4Lambda , fdOrder , quadRule , nTsteps , nTwrite , nX , nXbc , nY , nYbc , nZ , nZbc , t0 , &
+         & xO , yO , zO , dTRe , dTIm , dX , dY , dZ , gSRe , gSIm , psiRead , psiInFile , psiInFmt , psiInUnit , psiWrite , &
+         & psiOutFmt , psiOutUnit , psiInit , psiNx , psiNy , psiNz , psiNr , psiMl , psiXo , psiYo , psiZo , psiWx , psiWy , & 
+         & psiWz , psiWr , vexRead , vexWrite , vexInFmt , vexOutFmt , vexInUnit , vexOutUnit , vexLin , vexLinXo , vexLinYo , & 
+         & vexLinZo , vexLinFx , vexLinFy , vexLinFz , vexSho , vexShoXo , vexShoYo , vexShoZo , vexShoWx , vexShoWy , vexShoWz , &
+         & vexShor , vexShorXo , vexShorYo , vexShorZo , vexShorRo , vexShorWr , vexShorWz
 
 ! --- NAMELIST DEFINITIONS ------------------------------------------------
 
@@ -252,6 +289,9 @@
 !     CALL mpi_comm_rank_errchk
       CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 !     CALL mpi_barrier_errchk
+!$OMP PARALLEL DEFAULT ( SHARED )
+      ompThreads = OMP_GET_NUM_THREADS ( )
+!$OMP END PARALLEL
 
       IF ( mpiRank == MPI_MASTER ) THEN
 
@@ -275,7 +315,7 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     LAST UPDATED'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!         Tuesday, April 8th, 2014'
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!         Sunday, April 20th, 2014'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '! -------------------------------------------------------------------------'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
@@ -396,9 +436,7 @@
          CLOSE ( UNIT = mainInUnit , STATUS = 'KEEP' )
 
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     INPUT PARAMETERS ... '
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        runMode    = ', runMode
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dimEq      = ', dimEq
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        odeSolve   = ', odeSolve
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        itpOn   = ', itpOn
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        rk4Lambda  = ', rk4Lambda
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        fdOrder    = ', fdOrder
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        quadRule   = ', quadRule
@@ -444,27 +482,34 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexOutFmt  = ', vexOutFmt
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexOutUnit = ', vexOutUnit
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexLin     = ', vexLin
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexSHO     = ', vexSHO
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexSHOR    = ', vexSHOR
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexXo      = ', vexXo
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexYo      = ', vexYo
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexZo      = ', vexZo
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexRo      = ', vexRo
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexFx      = ', vexFx
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexFy      = ', vexFy
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexFz      = ', vexFz
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexWx      = ', vexWx
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexWy      = ', vexWy
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexWz      = ', vexWz
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexWr      = ', vexWr
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexLinXo   = ', vexLinXo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexLinYo   = ', vexLinYo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexLinZo   = ', vexLinZo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexLinFx   = ', vexLinFx
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexLinFy   = ', vexLinFy
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexLinFz   = ', vexLinFz
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexSho     = ', vexSho
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexShoXo   = ', vexShoXo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexShoYo   = ', vexShoYo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexShoZo   = ', vexShoZo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexShoWx   = ', vexShoWx
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexShoWy   = ', vexShoWy
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexShoWz   = ', vexShoWz
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexShor    = ', vexShor
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexShorXo  = ', vexShorXo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexShorYo  = ', vexShorYo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexShorZo  = ', vexShorZo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexShorRo  = ', vexShorRo
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexShorWr  = ', vexShorWr
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        vexShorWz  = ', vexShorWz
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     RANGE CHECKING INPUT PARAMETERS ... '
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     BROADCASTING INPUT PARAMETERS TO ALL MPI PROCESSES ... '
 
       END IF
 
-      CALL MPI_BCAST ( runMode    , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( dimEq      , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( odeSolve   , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+
+      CALL MPI_BCAST ( itpOn   , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( rk4Lambda  , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( fdOrder    , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( quadRule   , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
@@ -513,67 +558,262 @@
       CALL MPI_BCAST ( vexOutFmt  , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( vexOutUnit , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( vexLin     , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexSHO     , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexSHOR    , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexXo      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexYo      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexZo      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexRo      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexFx      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexFy      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexFz      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexWx      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexWy      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexWz      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexWr      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexLinXo   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexLinYo   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexLinZo   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexLinFx   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexLinFy   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexLinFz   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexSho     , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShoXo   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShoYo   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShoZo   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShoWx   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShoWy   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShoWz   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShor    , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShorXo  , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShorYo  , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShorZo  , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShorWr  , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShorWz  , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
 
-      IF ( runMode == 0 ) THEN ! perform imaginary time propagation calculation ...
+      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+
+! --- INITIALIZING ... 
+
+      IF ( itpOn .EQV. .TRUE. ) THEN ! perform imaginary time propagation calculation ...
 
          dT = CMPLX ( 0.0 , -dTIm )
- 
-      ELSE IF ( runMode == 1 ) THEN ! perform normal calculation ... 
+
+      ELSE ! perform normal calculation ...
 
          dT = CMPLX ( dTRe , 0.0 )
 
-      ELSE
+      END IF
 
-         ! ERROR: Run mode not supported. 
+      nXa = 1
+      nXb = nX
+      nYa = 1
+      nYb = nY
+      nZa = 1 + mpiRank * FLOOR ( REAL ( nZ / mpiProcesses ) )
+
+      IF ( ( mpiRank + 1 ) == mpiProcesses ) THEN ! include any remainder z-points on last MPI process ...
+
+         nZb = ( mpiRank + 1 ) * FLOOR ( REAL ( nZ / mpiProcesses ) ) + MODULO ( nZ , mpiProcesses )
+
+      ELSE ! all other MPI processes have same number of z-points ... 
+
+         nZb = ( mpiRank + 1 ) * FLOOR ( REAL ( nZ / mpiProcesses ) )
 
       END IF
 
-      IF ( dimEq == 3 ) THEN
+      ALLOCATE ( X ( nXa - nXbc : nXb + nXbc ) )
+      ALLOCATE ( Y ( nYa - nYbc : nYb + nYbc ) )
+      ALLOCATE ( Z ( nZa - nZbc : nZb + nZbc ) )
+      ALLOCATE ( Psi3 ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
+      ALLOCATE ( Vex3 ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) ) 
 
-         nXa = 1
-         nXb = nX
-         nYa = 1
-         nYb = nY
-         nZa = 1 + mpiRank * FLOOR ( REAL ( nZ / mpiProcesses ) )
+      X = 0.0
+      Y = 0.0
+      Z = 0.0
+      Psi3 = CMPLX ( 0.0 , 0.0 )
+      Vex3 = CMPLX ( 0.0 , 0.0 )
 
-         IF ( ( mpiRank + 1 ) == mpiProcesses ) THEN ! include remaining z-points on last MPI process ...
+      CALL regular_grid_axis ( nX , nXa - nXbc , nXb + nXbc , xO , dX , X )
+      CALL regular_grid_axis ( nY , nYa - nYbc , nYb + nYbc , yO , dY , Y )
+      CALL regular_grid_axis ( nZ , nZa - nZbc , nZb + nZbc , zO , dZ , Z )
 
-            nZb = ( mpiRank + 1 ) * FLOOR ( REAL ( nZ / mpiProcesses ) ) + MODULO ( nZ , mpiProcesses )
+      IF ( psiRead .EQV. .TRUE. ) THEN
 
-         ELSE ! all MPI processes have same number of z-points ... 
+         ! Read initial wave function from input file.
 
-            nZb = ( mpiRank + 1 ) * FLOOR ( REAL ( nZ / mpiProcesses ) )
+      ELSE
+
+         IF ( psiInit == 1 ) THEN
+
+            ! Isotropic SHO not supported yet.
+
+         ELSE IF ( psiInit == 2 ) THEN
+
+!$OMP       PARALLEL DEFAULT ( SHARED )
+            ompChunkSize = 1 + FLOOR ( REAL ( ( nZb - nZa ) / OMP_GET_NUM_THREADS ( ) ) )
+!$OMP       DO SCHEDULE ( STATIC , ompChunkSize )
+            DO l = nZa , nZb
+
+               DO k = nYa , nYb
+
+                  DO j = nXa , nXb
+
+                     Psi3 ( j , k , l ) = psi_3d_se_sho_ani ( psiNx , psiNy , psiNz , psiXo , psiYo , psiZo , psiWx , psiWy , &
+                        & psiWz , X ( j ) , Y ( k ) , Z ( l ) )
+
+                  END DO
+
+               END DO
+
+            END DO
+!$OMP       END DO
+!$OMP       END PARALLEL
+
+         ELSE IF ( psiInit == 3 ) THEN
+
+!$OMP       PARALLEL DEFAULT ( SHARED )
+            ompChunkSize = 1 + FLOOR ( REAL ( ( nZb - nZa ) / OMP_GET_NUM_THREADS ( ) ) )
+!$OMP       DO SCHEDULE ( STATIC , ompChunkSize )
+            DO l = nZa , nZb
+
+               DO k = nYa , nYb
+
+                  DO j = nXa , nXb
+
+                     Psi3 ( j , k , l ) = psi_3d_se_sho_axi ( psiNr , psiMl , psiNz , psiXo , psiYo , psiZo , psiWr , psiWz , &
+                        & X ( j ) , Y ( k ) , Z ( l ) )
+
+                  END DO
+
+               END DO
+
+            END DO
+!$OMP       END DO
+!$OMP       END PARALLEL
+
+         ELSE
+
+            ! ERROR: psiInit not defined.
 
          END IF
 
-         ALLOCATE ( X ( nXa - nXbc : nXb + nXbc ) )
-         ALLOCATE ( Y ( nYa - nYbc : nYb + nYbc ) )
-         ALLOCATE ( Z ( nZa - nZbc : nZb + nZbc ) )
-         ALLOCATE ( Psi3 ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
+      END IF
 
-         CALL regular_grid_axis ( nX , nXa - nXbc , nXb + nXbc , xO , dX , X )
-         CALL regular_grid_axis ( nY , nYa - nYbc , nYb + nYbc , yO , dY , Y )
-         CALL regular_grid_axis ( nZ , nZa - nZbc , nZb + nZbc , zO , dZ , Z )
-
-      ELSE
-
-         ! ERROR: Dimensionality of equation not supported yet.
+      IF ( vexRead .EQV. .TRUE. ) THEN ! initialize external potential from file ...
 
       END IF
 
+      IF ( vexLin .EQV. .TRUE. ) THEN ! add linear potential to external potential ...
+
+!$OMP    PARALLEL DEFAULT ( SHARED )
+         ompChunkSize = 1 + FLOOR ( REAL ( ( nZb - nZa ) / OMP_GET_NUM_THREADS ( ) ) )
+!$OMP    DO SCHEDULE ( STATIC , ompChunkSize )
+         DO l = nZa , nZb
+
+            DO k = nYa , nYb
+
+               DO j = nXa , nXb
+
+                  Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + CMPLX ( vex_3d_lin ( vexLinXo , vexLinYo , vexLinZo , vexLinFx , &
+                     & vexLinFy , vexLinFz , X ( j ) , Y ( k ) , Z ( l ) ) , 0.0 )
+
+               END DO
+
+            END DO
+
+         END DO
+!$OMP    END DO      
+!$OMP    END PARALLEL
+
+      END IF
+
+      IF ( vexSho .EQV. .TRUE. ) THEN ! add simple harmonic oscillator potential to external potential ...
+
+!$OMP    PARALLEL DEFAULT ( SHARED )
+         ompChunkSize = 1 + FLOOR ( REAL ( ( nZb - nZa ) / OMP_GET_NUM_THREADS ( ) ) )
+!$OMP    DO SCHEDULE ( STATIC , ompChunkSize )
+         DO l = nZa , nZb
+
+            DO k = nYa , nYb
+
+               DO j = nXa , nXb
+
+                  Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + CMPLX ( vex_3d_sho ( vexShoXo , vexShoYo , vexShoZo , vexShoWx , &
+                     & vexShoWy , vexShoWz , X ( j ) , Y ( k ) , Z ( l ) ) , 0.0 )
+
+               END DO
+
+            END DO
+
+         END DO
+!$OMP    END DO      
+!$OMP    END PARALLEL
+
+      END IF
+
+      IF ( vexShor .EQV. .TRUE. ) THEN ! add simple harmonic oscillator ring potential to external potential ...
+
+!$OMP    PARALLEL DEFAULT ( SHARED )
+         ompChunkSize = 1 + FLOOR ( REAL ( ( nZb - nZa ) / OMP_GET_NUM_THREADS ( ) ) ) 
+!$OMP    DO SCHEDULE ( STATIC , ompChunkSize )
+         DO l = nZa , nZb
+
+            DO k = nYa , nYb
+
+               DO j = nXa , nXb
+
+                  Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + CMPLX ( vex_3d_shor ( vexShorXo , vexShorYo , vexShorZo , &
+                     & vexShorRo , vexShorWr , vexShorWz , X ( j ) , Y ( k ) , Z ( l ) ) , 0.0 )
+
+               END DO
+
+            END DO
+
+         END DO
+!$OMP    END DO      
+!$OMP    END PARALLEL
+
+      END IF
+
+! --- BEGIN MAIN TIME PROPAGATION LOOP ------------------------------------
+
+      DO n = 0 , nTsteps
+
+         IF ( itpOn .EQV. .TRUE. ) THEN ! increment simulation time with dTIm ...
+
+            tN = t0 + REAL ( n ) * dTIm
+
+         ELSE ! increment simulation time with dTRe ...
+
+            tN = t0 + REAL ( n ) * dTRe
+
+         END IF
+
+         IF ( MODULO ( n , nTwrite ) == 0 ) THEN
+
+            ! Compute parts of expectation values locally on each MPI process ...
+            ! ... then gather parts of expectation values on MPI_MASTER processs and ...
+            ! ... write expectation values to file from MPI_MASTER.
+            ! Gather parts of psi from all MPI processes to MPI_MASTER ... 
+            ! ... then write psi to file.
+
+         END IF
+
+         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+
+         ! Add solve steps here ...
+         ! Update wave function each time step on sub-grids ...
+         ! Then exchange sub-grid boundry values with nearest neighbor MPI processes ...
+
+         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )        
+
+      END DO
+
+! --- END MAIN TIME PROPAGATION LOOP / BEGIN CLEAN UP TO STOP -------------
+
+      DEALLOCATE ( Vex3 )
+      DEALLOCATE ( Psi3 )
+      DEALLOCATE ( Z )
+      DEALLOCATE ( Y )
+      DEALLOCATE ( X ) 
+
+      IF ( mpiRank == MPI_MASTER ) THEN
+
+         ALLOCATE ( StopValues ( 8 ) ) 
+         CALL DATE_AND_TIME ( stopDate , stopTime , stopZone , StopValues )
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     RUN STOPPED @ ', stopTime, ' ON ', stopDate, ' ... '
+         DEALLOCATE ( StopValues )
+         DEALLOCATE ( StartValues )
+
+      END IF
+      
       CALL MPI_FINALIZE ( mpiError )
 
       DEALLOCATE ( MPIStatus )

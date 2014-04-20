@@ -59,7 +59,7 @@ INTEGER  = DOUBLE
 REAL     = DOUBLE
 DEBUG    = NO
 OPTIMIZE = NO
-OPENMP   = OFF
+OPENMP   = ON
 MPI      = OFF
 
 #     Specify compiler-specific compilation options here.
@@ -104,7 +104,7 @@ ifeq ($(COMPILER),gfortran)
 endif
 
 FC = mpif90
-FFLAGS = $(STD)
+FFLAGS = $(STD) $(OPT) $(OMP)
 
 all : gpse.x
 
