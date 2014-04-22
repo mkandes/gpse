@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Sunday, April 20th, 2014
+!     Tuesday, April 22nd, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -40,6 +40,7 @@
 ! --- MODULE DECLARATIONS -------------------------------------------------
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
+      USE            :: EVUA
       USE            :: GRID
       USE            :: IO
       USE            :: MATH
@@ -55,7 +56,7 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.1.2'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.1.3'
 
       INTEGER, PARAMETER :: INT_DEFAULT_KIND   = KIND ( 0 ) 
       INTEGER, PARAMETER :: REAL_DEFAULT_KIND  = KIND ( 0.0 )
@@ -110,7 +111,6 @@
       INTEGER :: mpiSource      = 0
       INTEGER :: ompThreads     = 0 
       INTEGER :: ompThreadID    = 0
-      INTEGER :: ompChunkSize   = 1
       INTEGER :: mainInUnit     = 500
       INTEGER :: mainOutUnit    = 600
       INTEGER :: nTsteps        = 0
@@ -185,9 +185,13 @@
       REAL :: vexShorWr = 0.0
       REAL :: vexShorWz = 0.0
       REAL :: normL2 = 0.0
+      REAL :: normL2sum = 0.0
       REAL :: avgX = 0.0
+      REAL :: avgXsum = 0.0
       REAL :: avgY = 0.0
+      REAL :: avgYsum = 0.0
       REAL :: avgZ = 0.0
+      REAL :: avgZsum = 0.0
       REAL :: avgPx = 0.0
       REAL :: avgPy = 0.0
       REAL :: avgPz = 0.0
@@ -290,7 +294,7 @@
       CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 !     CALL mpi_barrier_errchk
 !$OMP PARALLEL DEFAULT ( SHARED )
-      ompThreads = OMP_GET_NUM_THREADS ( )
+!      ompThreads = OMP_GET_NUM_THREADS ( )
 !$OMP END PARALLEL
 
       IF ( mpiRank == MPI_MASTER ) THEN
@@ -315,7 +319,7 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     LAST UPDATED'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!         Sunday, April 20th, 2014'
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!         Tuesday, April 22nd, 2014'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '! -------------------------------------------------------------------------'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
@@ -582,11 +586,11 @@
 
 ! --- INITIALIZING ... 
 
-      IF ( itpOn .EQV. .TRUE. ) THEN ! perform imaginary time propagation calculation ...
+      IF ( itpOn .EQV. .TRUE. ) THEN 
 
          dT = CMPLX ( 0.0 , -dTIm )
 
-      ELSE ! perform normal calculation ...
+      ELSE
 
          dT = CMPLX ( dTRe , 0.0 )
 
@@ -620,9 +624,9 @@
       Psi3 = CMPLX ( 0.0 , 0.0 )
       Vex3 = CMPLX ( 0.0 , 0.0 )
 
-      CALL regular_grid_axis ( nX , nXa - nXbc , nXb + nXbc , xO , dX , X )
-      CALL regular_grid_axis ( nY , nYa - nYbc , nYb + nYbc , yO , dY , Y )
-      CALL regular_grid_axis ( nZ , nZa - nZbc , nZb + nZbc , zO , dZ , Z )
+      CALL regular_grid_axis ( nX , nXa , nXb , nXbc , xO , dX , X )
+      CALL regular_grid_axis ( nY , nYa , nYb , nYbc , yO , dY , Y )
+      CALL regular_grid_axis ( nZ , nZa , nZb , nZbc , zO , dZ , Z )
 
       IF ( psiRead .EQV. .TRUE. ) THEN
 
@@ -636,47 +640,13 @@
 
          ELSE IF ( psiInit == 2 ) THEN
 
-!$OMP       PARALLEL DEFAULT ( SHARED )
-            ompChunkSize = 1 + FLOOR ( REAL ( ( nZb - nZa ) / OMP_GET_NUM_THREADS ( ) ) )
-!$OMP       DO SCHEDULE ( STATIC , ompChunkSize )
-            DO l = nZa , nZb
-
-               DO k = nYa , nYb
-
-                  DO j = nXa , nXb
-
-                     Psi3 ( j , k , l ) = psi_3d_se_sho_ani ( psiNx , psiNy , psiNz , psiXo , psiYo , psiZo , psiWx , psiWy , &
-                        & psiWz , X ( j ) , Y ( k ) , Z ( l ) )
-
-                  END DO
-
-               END DO
-
-            END DO
-!$OMP       END DO
-!$OMP       END PARALLEL
+            CALL psi_3d_se_sho_ani ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , psiNx , psiNy , psiNz , psiXo , &
+               & psiYo , psiZo , psiWx , psiWy , psiWz , X , Y , Z , Psi3 )
 
          ELSE IF ( psiInit == 3 ) THEN
 
-!$OMP       PARALLEL DEFAULT ( SHARED )
-            ompChunkSize = 1 + FLOOR ( REAL ( ( nZb - nZa ) / OMP_GET_NUM_THREADS ( ) ) )
-!$OMP       DO SCHEDULE ( STATIC , ompChunkSize )
-            DO l = nZa , nZb
-
-               DO k = nYa , nYb
-
-                  DO j = nXa , nXb
-
-                     Psi3 ( j , k , l ) = psi_3d_se_sho_axi ( psiNr , psiMl , psiNz , psiXo , psiYo , psiZo , psiWr , psiWz , &
-                        & X ( j ) , Y ( k ) , Z ( l ) )
-
-                  END DO
-
-               END DO
-
-            END DO
-!$OMP       END DO
-!$OMP       END PARALLEL
+            CALL psi_3d_se_sho_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , psiNr , psiMl , psiNz , psiXo , &
+               & psiYo , psiZo , psiWr , psiWz , X , Y , Z , Psi3 )
 
          ELSE
 
@@ -692,92 +662,58 @@
 
       IF ( vexLin .EQV. .TRUE. ) THEN ! add linear potential to external potential ...
 
-!$OMP    PARALLEL DEFAULT ( SHARED )
-         ompChunkSize = 1 + FLOOR ( REAL ( ( nZb - nZa ) / OMP_GET_NUM_THREADS ( ) ) )
-!$OMP    DO SCHEDULE ( STATIC , ompChunkSize )
-         DO l = nZa , nZb
-
-            DO k = nYa , nYb
-
-               DO j = nXa , nXb
-
-                  Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + CMPLX ( vex_3d_lin ( vexLinXo , vexLinYo , vexLinZo , vexLinFx , &
-                     & vexLinFy , vexLinFz , X ( j ) , Y ( k ) , Z ( l ) ) , 0.0 )
-
-               END DO
-
-            END DO
-
-         END DO
-!$OMP    END DO      
-!$OMP    END PARALLEL
+         CALL vex_3d_lin ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , vexLinXo , vexLinYo , vexLinZo , vexLinFx , vexLinFy , vexLinFz , X , Y , Z , Vex3 )
 
       END IF
 
       IF ( vexSho .EQV. .TRUE. ) THEN ! add simple harmonic oscillator potential to external potential ...
 
-!$OMP    PARALLEL DEFAULT ( SHARED )
-         ompChunkSize = 1 + FLOOR ( REAL ( ( nZb - nZa ) / OMP_GET_NUM_THREADS ( ) ) )
-!$OMP    DO SCHEDULE ( STATIC , ompChunkSize )
-         DO l = nZa , nZb
-
-            DO k = nYa , nYb
-
-               DO j = nXa , nXb
-
-                  Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + CMPLX ( vex_3d_sho ( vexShoXo , vexShoYo , vexShoZo , vexShoWx , &
-                     & vexShoWy , vexShoWz , X ( j ) , Y ( k ) , Z ( l ) ) , 0.0 )
-
-               END DO
-
-            END DO
-
-         END DO
-!$OMP    END DO      
-!$OMP    END PARALLEL
+         CALL vex_3d_sho ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , vexShoXo , vexShoYo , vexShoZo , vexShoWx , vexShoWy , vexShoWz , X , Y , Z , Vex3 )
 
       END IF
 
       IF ( vexShor .EQV. .TRUE. ) THEN ! add simple harmonic oscillator ring potential to external potential ...
 
-!$OMP    PARALLEL DEFAULT ( SHARED )
-         ompChunkSize = 1 + FLOOR ( REAL ( ( nZb - nZa ) / OMP_GET_NUM_THREADS ( ) ) ) 
-!$OMP    DO SCHEDULE ( STATIC , ompChunkSize )
-         DO l = nZa , nZb
-
-            DO k = nYa , nYb
-
-               DO j = nXa , nXb
-
-                  Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + CMPLX ( vex_3d_shor ( vexShorXo , vexShorYo , vexShorZo , &
-                     & vexShorRo , vexShorWr , vexShorWz , X ( j ) , Y ( k ) , Z ( l ) ) , 0.0 )
-
-               END DO
-
-            END DO
-
-         END DO
-!$OMP    END DO      
-!$OMP    END PARALLEL
+         CALL vex_3d_shor ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , vexShorXo , vexShorYo , vexShorZo , vexShorRo , vexShorWr , vexShorWz , X , Y , Z , Vex3 )
 
       END IF
+
+      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
 ! --- BEGIN MAIN TIME PROPAGATION LOOP ------------------------------------
 
       DO n = 0 , nTsteps
 
-         IF ( itpOn .EQV. .TRUE. ) THEN ! increment simulation time with dTIm ...
+         IF ( itpOn .EQV. .TRUE. ) THEN
 
             tN = t0 + REAL ( n ) * dTIm
 
-         ELSE ! increment simulation time with dTRe ...
+         ELSE
 
             tN = t0 + REAL ( n ) * dTRe
 
          END IF
 
+         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+
          IF ( MODULO ( n , nTwrite ) == 0 ) THEN
 
+            normL2 = l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
+            avgX = x_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Psi3 )
+            avgY = y_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Y , Psi3 )
+            avgZ = z_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Z , Psi3 )
+
+            CALL MPI_REDUCE ( normL2 , normL2sum, 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+            CALL MPI_REDUCE ( avgX , avgXsum, 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgY , avgYsum, 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgZ , avgZsum, 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+
+            IF ( mpiRank == MPI_MASTER ) THEN
+
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) tN , normL2sum , avgXsum , avgYsum , avgZsum
+
+            END IF
+!
             ! Compute parts of expectation values locally on each MPI process ...
             ! ... then gather parts of expectation values on MPI_MASTER processs and ...
             ! ... write expectation values to file from MPI_MASTER.

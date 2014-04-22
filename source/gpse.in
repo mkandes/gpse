@@ -35,9 +35,9 @@
    psiNz      = 0           ! Degree of Hermite polynomial used to define both anisotropic and axially-symmetric SHO wave functions along z-axis
    psiNr      = 0           ! Degree of (associated) Laguerre polynomials used to define radial components of isotropic and axially-symmetric SHO wave functions
    psiMl      = 0           ! projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
-   psiXo      = 0.0         ! X-coordinate of origin used to define initial wave function
-   psiYo      = 0.0         ! Y-coordinate of origin used to define initial wave function 
-   psiZo      = 0.0         ! Z-coordinate of origin used to define initial wave function
+   psiXo      = 1.0         ! X-coordinate of origin used to define initial wave function
+   psiYo      = 1.0         ! Y-coordinate of origin used to define initial wave function 
+   psiZo      = 1.0         ! Z-coordinate of origin used to define initial wave function
    psiWx      = 1.0         ! Angular frequency of SHO potential along x-axis used to define anisotropic SHO wave function
    psiWy      = 1.0         ! Angular frequency of SHO potential along y-axis used to define anisotropic SHO wave function
    psiWz      = 1.0         ! Angular frequency of SHO potential along z-axis used to define both anisotropic and axially-symmetric SHO wave functions

@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Friday, March 21st, 2014
+!     Monday, April 21st, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -46,58 +46,41 @@
 
       CONTAINS
 
-         SUBROUTINE regular_grid_axis ( nQ , nQa , nQb , qO , dQ , Q )
+         SUBROUTINE regular_grid_axis ( nQ , nQa , nQb , nQbc , qO , dQ , Q )
 
-         IMPLICIT NONE
+            IMPLICIT NONE
 
-         INTEGER, INTENT ( IN ) :: nQ
-         INTEGER, INTENT ( IN ) :: nQa
-         INTEGER, INTENT ( IN ) :: nQb
+            INTEGER, INTENT ( IN ) :: nQ
+            INTEGER, INTENT ( IN ) :: nQa
+            INTEGER, INTENT ( IN ) :: nQb
+            INTEGER, INTENT ( IN ) :: nQbc
 
-         REAL, INTENT ( IN ) :: qO
-         REAL, INTENT ( IN ) :: dQ
+            REAL, INTENT ( IN ) :: qO
+            REAL, INTENT ( IN ) :: dQ
  
-         REAL, DIMENSION ( : ), INTENT ( INOUT ) :: Q
+            REAL, DIMENSION ( nQa - nQbc : nQb + nQbc ), INTENT ( INOUT ) :: Q
 
-         INTEGER :: j
+            INTEGER :: j
 
-         IF ( nQ > 0 ) THEN
+            IF ( MODULO ( nQ , 2 ) == 0 ) THEN ! nQ is even.
 
-            IF ( dQ > 0.0 ) THEN
+               DO j = nQa - nQbc , nQb + nQbc
 
-               IF ( SIZE ( Q ) >= nQ ) THEN ! maximum value of loop index is less than array upper bound. 
+                  Q ( j ) = qO + ( REAL ( j - nQ / 2 ) - 0.5 ) * dQ
 
-                  IF ( MODULO ( nQ , 2 ) == 0 ) THEN ! nQ is even.
+               END DO
 
-                     DO j = nQa , nQb
+            ELSE ! nQ is odd. 
 
-                        Q ( j ) = qO + ( REAL ( j - nQ / 2 ) - 0.5 ) * dQ
+               DO j = nQa - nQbc , nQb + nQbc
 
-                     END DO
+                  Q ( j ) = qO + REAL ( j - ( nQ + 1 ) / 2 ) * dQ
 
-                  ELSE ! nQ is odd. 
-
-                     DO j = nQa , nQb
-
-                        Q ( j ) = qO + REAL ( j - ( nQ + 1 ) / 2 ) * dQ
-
-                     END DO
-
-                  END IF
-
-               ELSE ! range check failed. size of coordinate axis array must be greater than or (preferably) equal to the number of grid points, otherwise, loop index will run out-of-bounds.
-
-               END IF
-
-            ELSE ! range check failed. distance between grid points along coordinate axis must be greater than 0.0.
+               END DO
 
             END IF
 
-         ELSE ! range check failed. number of grid points along coordinate axis must be greater than 0.
-
-         END IF
-
-         RETURN
+            RETURN
 
          END SUBROUTINE
 
