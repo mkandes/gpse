@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, April 22nd, 2014
+!     Wednesday, April 23rd, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -56,7 +56,7 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.1.3'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.1.4'
 
       INTEGER, PARAMETER :: INT_DEFAULT_KIND   = KIND ( 0 ) 
       INTEGER, PARAMETER :: REAL_DEFAULT_KIND  = KIND ( 0.0 )
@@ -241,6 +241,10 @@
       REAL, ALLOCATABLE, DIMENSION ( : , :         ) :: RePsi2
       REAL, ALLOCATABLE, DIMENSION ( : , : , :     ) :: RePsi3
       REAL, ALLOCATABLE, DIMENSION ( : , : , : , : ) :: RePsi4
+      REAL, ALLOCATABLE, DIMENSION ( :             ) :: Vex1
+      REAL, ALLOCATABLE, DIMENSION ( : , :         ) :: Vex2
+      REAL, ALLOCATABLE, DIMENSION ( : , : , :     ) :: Vex3 
+      REAL, ALLOCATABLE, DIMENSION ( : , : , : , : ) :: Vex4
       REAL, ALLOCATABLE, DIMENSION ( :             ) :: Wx
       REAL, ALLOCATABLE, DIMENSION ( :             ) :: Wy
       REAL, ALLOCATABLE, DIMENSION ( :             ) :: Wz
@@ -252,10 +256,6 @@
       COMPLEX, ALLOCATABLE, DIMENSION ( : , :         ) :: Psi2
       COMPLEX, ALLOCATABLE, DIMENSION ( : , : , :     ) :: Psi3
       COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : , : ) :: Psi4
-      COMPLEX, ALLOCATABLE, DIMENSION ( :             ) :: Vex1   ! Note: Arrays reserved for storing external potential functions 
-      COMPLEX, ALLOCATABLE, DIMENSION ( : , :         ) :: Vex2   ! are declared as COMPLEX to provide the built-in flexability to  
-      COMPLEX, ALLOCATABLE, DIMENSION ( : , : , :     ) :: Vex3   ! accomodate complex potentials. 
-      COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : , : ) :: Vex4
 
 ! --- ARRAY DEFINITIONS ---------------------------------------------------
 ! --- FUNCTION AND SUBROUTINE DECLARATIONS --------------------------------
@@ -319,7 +319,7 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     LAST UPDATED'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!         Tuesday, April 22nd, 2014'
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!         Wednesday, April 23rd, 2014'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '! -------------------------------------------------------------------------'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
@@ -621,8 +621,8 @@
       X = 0.0
       Y = 0.0
       Z = 0.0
+      Vex3 = 0.0
       Psi3 = CMPLX ( 0.0 , 0.0 )
-      Vex3 = CMPLX ( 0.0 , 0.0 )
 
       CALL regular_grid_axis ( nX , nXa , nXb , nXbc , xO , dX , X )
       CALL regular_grid_axis ( nY , nYa , nYb , nYbc , yO , dY , Y )

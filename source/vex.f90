@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, April 22nd, 2014
+!     Wednesday, April 23rd, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -72,8 +72,7 @@
             REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
             REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
             REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
-
-            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Vex3
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Vex3
 
             INTEGER :: j , k , l
 
@@ -85,7 +84,7 @@
 
                   DO j = nXa , nXb
 
-                     Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + CMPLX ( fX * ( X ( j ) - xO ) + fY * ( Y ( k ) - yO ) + fZ * ( Z ( l ) - zO ) , 0.0 )
+                     Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + fX * ( X ( j ) - xO ) + fY * ( Y ( k ) - yO ) + fZ * ( Z ( l ) - zO )
 
                   END DO
 
@@ -143,8 +142,7 @@
             REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
             REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
             REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
-
-            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Vex3
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Vex3
 
             INTEGER :: j , k , l
 
@@ -156,7 +154,7 @@
 
                   DO j = nXa , nXb
 
-                     Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + CMPLX ( 0.5 * ( ( wX * ( X ( j ) - xO ) )**2 + ( wY * ( Y ( k ) - yO ) )**2 + ( wZ * ( Z ( l ) - zO ) )**2 ) , 0.0 )
+                     Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + 0.5 * ( ( wX * ( X ( j ) - xO ) )**2 + ( wY * ( Y ( k ) - yO ) )**2 + ( wZ * ( Z ( l ) - zO ) )**2 )
 
                   END DO
 
@@ -214,8 +212,7 @@
             REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
             REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
             REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
-
-            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Vex3
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Vex3
 
             INTEGER :: j , k , l 
 
@@ -227,7 +224,7 @@
 
                   DO j = nXa , nXb
 
-                     Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + CMPLX ( 0.5 * ( wR * ( SQRT ( ( X ( j ) - xO )**2 + ( Y ( k ) - yO )**2 ) - rO )**2 + ( wZ * ( Z ( l ) - zO ) )**2 ) , 0.0 )
+                     Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + 0.5 * ( wR * ( SQRT ( ( X ( j ) - xO )**2 + ( Y ( k ) - yO )**2 ) - rO )**2 + ( wZ * ( Z ( l ) - zO ) )**2 )
 
                   END DO
                  
