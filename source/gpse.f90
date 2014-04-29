@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Wednesday, April 23rd, 2014
+!     Tuesday, April 29th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -56,7 +56,7 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.1.4'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.1.5'
 
       INTEGER, PARAMETER :: INT_DEFAULT_KIND   = KIND ( 0 ) 
       INTEGER, PARAMETER :: REAL_DEFAULT_KIND  = KIND ( 0.0 )
@@ -157,8 +157,7 @@
       REAL :: dX    = 0.0 !
       REAL :: dY    = 0.0
       REAL :: dZ    = 0.0
-      REAL :: gSRe  = 0.0 
-      REAL :: gSIm  = 0.0
+      REAL :: gS    = 0.0 
       REAL :: psiXo = 0.0
       REAL :: psiYo = 0.0
       REAL :: psiZo = 0.0
@@ -193,26 +192,44 @@
       REAL :: avgZ = 0.0
       REAL :: avgZsum = 0.0
       REAL :: avgPx = 0.0
+      REAL :: avgPxSum = 0.0
       REAL :: avgPy = 0.0
+      REAL :: avgPySum = 0.0
       REAL :: avgPz = 0.0
+      REAL :: avgPzSum = 0.0
       REAL :: avgLx = 0.0
+      REAL :: avgLxSum = 0.0
       REAL :: avgLy = 0.0
+      REAL :: avgLySum = 0.0
       REAL :: avgLz = 0.0
+      REAL :: avgLzSum = 0.0
       REAL :: avgTx = 0.0
       REAL :: avgTy = 0.0
       REAL :: avgTz = 0.0
       REAL :: avgVex = 0.0
+      REAL :: avgVexSum = 0.0
       REAL :: avgVmf = 0.0
+      REAL :: avgVmfSum = 0.0
       REAL :: avgE = 0.0
       REAL :: avgX2 = 0.0
+      REAL :: avgX2sum = 0.0
       REAL :: avgY2 = 0.0
+      REAL :: avgY2sum = 0.0
       REAL :: avgZ2 = 0.0
+      REAL :: avgZ2sum = 0.0
       REAL :: avgPx2 = 0.0
+      REAL :: avgPx2sum = 0.0
       REAL :: avgPy2 = 0.0
+      REAL :: avgPy2sum = 0.0
       REAL :: avgPz2 = 0.0
+      REAL :: avgPz2sum = 0.0
       REAL :: avgLx2 = 0.0
+      REAL :: avgLx2sum = 0.0
       REAL :: avgLy2 = 0.0
+      REAL :: avgLy2sum = 0.0
       REAL :: avgLz2 = 0.0
+      REAL :: avgLz2sum = 0.0
+      REAL :: avgL2 = 0.0
       REAL :: sigX = 0.0
       REAL :: sigY = 0.0
       REAL :: sigZ = 0.0
@@ -224,7 +241,6 @@
       REAL :: sigLz = 0.0
 
       COMPLEX :: dT = CMPLX ( 0.0 , 0.0 )
-      COMPLEX :: gS = CMPLX ( 0.0 , 0.0 )
 
 ! --- VARIABLE DEFINITIONS ------------------------------------------------
 ! --- ARRAY DECLARATIONS --------------------------------------------------
@@ -266,7 +282,7 @@
 ! --- NAMELIST DECLARATIONS -----------------------------------------------
 
       NAMELIST /gpseIn/ itpOn , rk4Lambda , fdOrder , quadRule , nTsteps , nTwrite , nX , nXbc , nY , nYbc , nZ , nZbc , t0 , &
-         & xO , yO , zO , dTRe , dTIm , dX , dY , dZ , gSRe , gSIm , psiRead , psiInFile , psiInFmt , psiInUnit , psiWrite , &
+         & xO , yO , zO , dTRe , dTIm , dX , dY , dZ , gS , psiRead , psiInFile , psiInFmt , psiInUnit , psiWrite , &
          & psiOutFmt , psiOutUnit , psiInit , psiNx , psiNy , psiNz , psiNr , psiMl , psiXo , psiYo , psiZo , psiWx , psiWy , & 
          & psiWz , psiWr , vexRead , vexWrite , vexInFmt , vexOutFmt , vexInUnit , vexOutUnit , vexLin , vexLinXo , vexLinYo , & 
          & vexLinZo , vexLinFx , vexLinFy , vexLinFz , vexSho , vexShoXo , vexShoYo , vexShoZo , vexShoWx , vexShoWy , vexShoWz , &
@@ -319,7 +335,7 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     LAST UPDATED'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!         Wednesday, April 23rd, 2014'
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!         Tuesday, April 29th, 2014'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '! -------------------------------------------------------------------------'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
@@ -458,8 +474,7 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dX         = ', dX
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dY         = ', dY
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dZ         = ', dZ
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        gSRe       = ', gSRe
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        gSIm       = ', gSIm
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        gS         = ', gS
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiRead    = ', psiRead
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiInFmt   = ', psiInFmt
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        psiInUnit  = ', psiInUnit
@@ -534,8 +549,7 @@
       CALL MPI_BCAST ( dX         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( dY         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( dZ         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( gSRe       , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( gSIm       , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( gS         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( psiRead    , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( psiInFmt   , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( psiInUnit  , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
@@ -615,8 +629,8 @@
       ALLOCATE ( X ( nXa - nXbc : nXb + nXbc ) )
       ALLOCATE ( Y ( nYa - nYbc : nYb + nYbc ) )
       ALLOCATE ( Z ( nZa - nZbc : nZb + nZbc ) )
+      ALLOCATE ( Vex3 ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
       ALLOCATE ( Psi3 ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
-      ALLOCATE ( Vex3 ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) ) 
 
       X = 0.0
       Y = 0.0
@@ -698,19 +712,84 @@
 
          IF ( MODULO ( n , nTwrite ) == 0 ) THEN
 
-            normL2 = l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
-            avgX = x_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Psi3 )
-            avgY = y_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Y , Psi3 )
-            avgZ = z_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Z , Psi3 )
+            IF ( quadRule == 1 ) THEN 
+            
+               normL2 = l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
+               avgX = x_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Psi3 )
+               avgX2 = x2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Psi3 ) 
+               avgY = y_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Y , Psi3 )
+               avgY2 = y2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Y , Psi3 )
+               avgZ = z_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Z , Psi3 )
+               avgZ2 = z2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Z , Psi3 )
+               avgVex = vex_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Vex3 , Psi3 )
+               avgVmf = vmf_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , gS , Psi3 )
 
-            CALL MPI_REDUCE ( normL2 , normL2sum, 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-            CALL MPI_REDUCE ( avgX , avgXsum, 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgY , avgYsum, 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgZ , avgZsum, 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+               IF ( fdOrder == 2 ) THEN
+
+                  avgPx = px_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , Psi3 )
+                  avgPx2 = px2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
+                  avgPy = py_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , Psi3 )
+                  avgPy2 = py2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
+                  avgPz = pz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , Psi3 )
+                  avgPz2 = pz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
+                  avgLx = lx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Y , Z , Psi3 )
+                  avgLx2 = lx2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Y , Z , Psi3 )
+                  avgLy = ly_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Z , Psi3 )
+                  avgLy2 = ly2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Z , Psi3 )
+                  avgLz = lz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Y , Psi3 )
+                  avgLz2 = lz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Y , Psi3 )
+
+               ELSE IF ( fdOrder == 4 ) THEN
+
+               ELSE
+
+               END IF
+
+            END IF
+
+            CALL MPI_REDUCE ( normL2 , normL2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+            CALL MPI_REDUCE ( avgX , avgXsum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgX2 , avgX2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgY , avgYsum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgY2 , avgY2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgZ , avgZsum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgZ2 , avgZ2sum,  1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgVex , avgVexSum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgVmf , avgVmfSum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgPx , avgPxSum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgPx2 , avgPx2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgPy , avgPySum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgPy2 , avgPy2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgPz , avgPzSum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgPz2 , avgPz2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgLx , avgLxSum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgLx2 , avgLx2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgLy , avgLySum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgLy2 , avgLy2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgLz , avgLzSum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgLz2 , avgLz2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
 
             IF ( mpiRank == MPI_MASTER ) THEN
 
-               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) tN , normL2sum , avgXsum , avgYsum , avgZsum
+               sigX = SQRT ( avgX2sum - avgXsum**2 )
+               sigY = SQRT ( avgY2sum - avgYsum**2 )
+               sigZ = SQRT ( avgZ2sum - avgZsum**2 )
+               sigPx = SQRT ( avgPx2sum - avgPxSum**2 )
+               sigPy = SQRT ( avgPy2sum - avgPySum**2 )
+               sigPz = SQRT ( avgPz2sum - avgPzSum**2 )
+               sigLx = SQRT ( avgLx2sum - avgLxSum**2 )
+               sigLy = SQRT ( avgLy2sum - avgLySum**2 )
+               sigLz = SQRT ( avgLz2sum - avgLzSum**2 )
+
+               avgL2 = avgLx2sum + avgLy2sum + avgLz2sum
+ 
+               avgTx = 0.5 * avgPx2sum
+               avgTy = 0.5 * avgPy2sum
+               avgTz = 0.5 * avgPz2sum
+
+               avgE = avgTx + avgTy + avgTz + avgVexSum + avgVmfSum
+
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) tN , normL2sum , avgXsum , avgX2sum , sigX , avgYsum , avgY2sum , sigY , avgZsum , avgZ2sum , sigZ , avgPxSum , avgPx2sum , sigPx , avgPySum , avgPy2sum , sigPy , avgPzSum , avgPz2sum , sigPz , avgLxSum , avgLx2sum , sigLx , avgLySum , avgLy2sum , sigLy , avgLzSum , avgLz2sum , sigLz , avgL2 , avgTx , avgTy , avgTz , avgVexSum , avgVmfSum , avgE , sigX * sigPx , sigY * sigPy , sigZ * sigPz , sigLx * sigLy , sigLy * sigLz , sigLz * sigLx
 
             END IF
 !

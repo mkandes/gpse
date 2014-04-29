@@ -20,8 +20,7 @@
    dX         = 0.0625      ! Distance between grid points along x-axis
    dY         = 0.0625      ! Distance between grid points along y-axis
    dZ         = 0.0625      ! Distance between grid points along z-axis
-   gSRe       = 0.0         ! Nonlinear coupling constant ( real part ) 
-   gSIm       = 0.0         ! Nonlinear coupling constant ( imaginary part )
+   gS         = 0.0         ! Nonlinear coupling constant
    psiRead    = .FALSE.     ! Read initial wave function from file? .TRUE. = Yes ; .FALSE. = No
    psiInFile  = 'psi.in'    ! Initial wave function filename ( if applicable ).
    psiInFmt   = 1           ! Format of input wave function file? 1 = Unformatted ( Binary ) ; 2 = Formatted ( GPI )
@@ -29,15 +28,15 @@
    psiWrite   = .TRUE.      ! Write wave function to file? .TRUE. = Yes ; .FALSE. = No
    psiOutFmt  = 1           ! Format of output wave function file(s)? 1 = Unformatted ( Binary ) ; 2 = Formatted ( GPI ) ; 3 = VTK ; 4 = VTK_XML
    psiOutUnit = 1001        !   
-   psiInit    = 2           ! 1 = Isotropic 3D SHO ; 2 = Anisotropic 3D SHO ; 3 = Axially-Symmetric 3D SHO
+   psiInit    = 3           ! 1 = Isotropic 3D SHO ; 2 = Anisotropic 3D SHO ; 3 = Axially-Symmetric 3D SHO
    psiNx      = 0           ! Degree of Hermite polynomial used to define anisotropic SHO wave function along x-axis
    psiNy      = 0           ! Degree of Hermite polynomial used to define anisotropic SHO wave function along y-axis
    psiNz      = 0           ! Degree of Hermite polynomial used to define both anisotropic and axially-symmetric SHO wave functions along z-axis
    psiNr      = 0           ! Degree of (associated) Laguerre polynomials used to define radial components of isotropic and axially-symmetric SHO wave functions
-   psiMl      = 0           ! projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
-   psiXo      = 1.0         ! X-coordinate of origin used to define initial wave function
-   psiYo      = 1.0         ! Y-coordinate of origin used to define initial wave function 
-   psiZo      = 1.0         ! Z-coordinate of origin used to define initial wave function
+   psiMl      = 1           ! projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
+   psiXo      = 0.0         ! X-coordinate of origin used to define initial wave function
+   psiYo      = 0.0         ! Y-coordinate of origin used to define initial wave function 
+   psiZo      = 0.0         ! Z-coordinate of origin used to define initial wave function
    psiWx      = 1.0         ! Angular frequency of SHO potential along x-axis used to define anisotropic SHO wave function
    psiWy      = 1.0         ! Angular frequency of SHO potential along y-axis used to define anisotropic SHO wave function
    psiWz      = 1.0         ! Angular frequency of SHO potential along z-axis used to define both anisotropic and axially-symmetric SHO wave functions

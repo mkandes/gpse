@@ -33,7 +33,7 @@
 #
 # LAST UPDATED
 #
-#     Sunday, April 20th, 2014
+#     Wednesday, April 24th, 2014
 #
 # -------------------------------------------------------------------------
 
@@ -104,7 +104,7 @@ ifeq ($(COMPILER),gfortran)
 endif
 
 FC = mpif90
-FFLAGS = $(STD) $(OPT)
+FFLAGS = $(STD) $(OPT) $(OMP)
 
 all : gpse.x
 
@@ -114,7 +114,7 @@ gpse.x : gpse.o evua.o grid.o io.o math.o psi.o vex.o lib_vtk_io.o lib_base64.o 
 gpse.o : gpse.f90 evua.mod grid.mod io.mod math.mod psi.mod vex.mod lib_vtk_io.mod lib_base64.mod ir_precision.mod
 	$(FC) $(FFLAGS) -c -cpp $<
 
-evua.o evua.mod : evua.f90
+evua.o evua.mod : evua.f90 math.mod
 	$(FC) $(FFLAGS) -c -cpp $<
 
 grid.o grid.mod : grid.f90
