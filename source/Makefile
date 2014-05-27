@@ -33,7 +33,7 @@
 #
 # LAST UPDATED
 #
-#     Wednesday, April 24th, 2014
+#     Tuesday, May 27th, 2014
 #
 # -------------------------------------------------------------------------
 
@@ -104,20 +104,23 @@ ifeq ($(COMPILER),gfortran)
 endif
 
 FC = mpif90
-FFLAGS = $(STD) $(OPT) $(OMP)
+FFLAGS = $(STD) $(OPT) #$(OMP)
 
 all : gpse.x
 
-gpse.x : gpse.o evua.o grid.o io.o math.o psi.o vex.o lib_vtk_io.o lib_base64.o ir_precision.o
+gpse.x : gpse.o evua.o grid.o grk4.o io.o math.o psi.o vex.o lib_vtk_io.o lib_base64.o ir_precision.o
 	$(FC) $(FFLAGS) -o $@ $^
 
-gpse.o : gpse.f90 evua.mod grid.mod io.mod math.mod psi.mod vex.mod lib_vtk_io.mod lib_base64.mod ir_precision.mod
+gpse.o : gpse.f90 evua.mod grid.mod grk4.mod io.mod math.mod psi.mod vex.mod lib_vtk_io.mod lib_base64.mod ir_precision.mod
 	$(FC) $(FFLAGS) -c -cpp $<
 
 evua.o evua.mod : evua.f90 math.mod
 	$(FC) $(FFLAGS) -c -cpp $<
 
 grid.o grid.mod : grid.f90
+	$(FC) $(FFLAGS) -c -cpp $<
+
+grk4.o grk4.mod : grk4.f90
 	$(FC) $(FFLAGS) -c -cpp $<
 
 io.o io.mod : io.f90 grid.mod lib_vtk_io.mod
@@ -142,6 +145,6 @@ ir_precision.o ir_precision.mod : ir_precision.f90
 	$(FC) $(FFLAGS) -c -cpp $<
 
 clean : 
-	rm -f *.x *.o *.mod
+	rm -f *.x *.o *.mod *.out
 
 # =========================================================================

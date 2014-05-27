@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, April 29th, 2014
+!     Tuesday, May 27th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -40,8 +40,10 @@
 ! --- MODULE DECLARATIONS -------------------------------------------------
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
+      USE            :: MPI
       USE            :: EVUA
       USE            :: GRID
+      USE            :: GRK4
       USE            :: IO
       USE            :: MATH
       USE            :: PSI
@@ -52,11 +54,9 @@
       
       IMPLICIT NONE
 
-      INCLUDE 'mpif.h'
-
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.1.5'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.1.6'
 
       INTEGER, PARAMETER :: INT_DEFAULT_KIND   = KIND ( 0 ) 
       INTEGER, PARAMETER :: REAL_DEFAULT_KIND  = KIND ( 0.0 )
@@ -95,19 +95,19 @@
       INTEGER :: rk4Lambda      = 0
       INTEGER :: fdOrder        = 0
       INTEGER :: quadRule       = 0
-      INTEGER :: fCmplxKind     = 0 
-      INTEGER :: fIntKind       = 0
-      INTEGER :: fRealKind      = 0
-      INTEGER :: mpiCmplxKind   = 0 
+      INTEGER :: fCmplx     = 0 
+      INTEGER :: fInt       = 0
+      INTEGER :: fReal      = 0
+      INTEGER :: mpiCmplx   = 0 
       INTEGER :: mpiDestination = 0 
       INTEGER :: mpiError       = 0 
       INTEGER :: mpiErrorCode   = 0 
       INTEGER :: mpiErrorClass  = 0 
-      INTEGER :: mpiIntKind     = 0 
+      INTEGER :: mpiInteger     = 0 
       INTEGER :: mpiProcesses   = 0 
       INTEGER :: mpiProvided    = 0 
       INTEGER :: mpiRank        = 0
-      INTEGER :: mpiRealKind    = 0 
+      INTEGER :: mpiReal    = 0 
       INTEGER :: mpiSource      = 0
       INTEGER :: ompThreads     = 0 
       INTEGER :: ompThreadID    = 0
@@ -147,16 +147,18 @@
       INTEGER :: vexOutUnit     = 0
       INTEGER :: j , k , l , n , m ! Reserved loop counters. 
 
-      REAL :: tN    = 0.0 ! Time of simulation (at nth time step)
-      REAL :: t0    = 0.0 ! Time at start of simulation
+      REAL :: tN    = 0.0 ! Simulation time at nth time step
+      REAL :: t0    = 0.0 ! Time at the beginning of the simulation
       REAL :: xO    = 0.0 ! X-coordinate of origin used to define computational grid
       REAL :: yO    = 0.0 ! Y-coordinate of origin used to define computational grid
       REAL :: zO    = 0.0 ! Z-coordinate of origin used to define computational grid
-      REAL :: dTRe  = 0.0 ! Interval of a real time step
-      REAL :: dTIm  = 0.0 ! Interval of an imaginary time step
+      REAL :: dT    = 0.0 ! Interval of a time step
       REAL :: dX    = 0.0 !
       REAL :: dY    = 0.0
       REAL :: dZ    = 0.0
+      REAL :: wX    = 0.0
+      REAL :: wY    = 0.0
+      REAL :: wZ    = 0.0
       REAL :: gS    = 0.0 
       REAL :: psiXo = 0.0
       REAL :: psiYo = 0.0
@@ -184,19 +186,19 @@
       REAL :: vexShorWr = 0.0
       REAL :: vexShorWz = 0.0
       REAL :: normL2 = 0.0
-      REAL :: normL2sum = 0.0
+      REAL :: normL20 = 0.0
       REAL :: avgX = 0.0
-      REAL :: avgXsum = 0.0
+      REAL :: avgX0 = 0.0
       REAL :: avgY = 0.0
-      REAL :: avgYsum = 0.0
+      REAL :: avgY0 = 0.0
       REAL :: avgZ = 0.0
-      REAL :: avgZsum = 0.0
+      REAL :: avgZ0 = 0.0
       REAL :: avgPx = 0.0
-      REAL :: avgPxSum = 0.0
+      REAL :: avgPx0 = 0.0
       REAL :: avgPy = 0.0
-      REAL :: avgPySum = 0.0
+      REAL :: avgPy0 = 0.0
       REAL :: avgPz = 0.0
-      REAL :: avgPzSum = 0.0
+      REAL :: avgPz0 = 0.0
       REAL :: avgLx = 0.0
       REAL :: avgLxSum = 0.0
       REAL :: avgLy = 0.0
@@ -212,23 +214,23 @@
       REAL :: avgVmfSum = 0.0
       REAL :: avgE = 0.0
       REAL :: avgX2 = 0.0
-      REAL :: avgX2sum = 0.0
+      REAL :: avgX20 = 0.0
       REAL :: avgY2 = 0.0
-      REAL :: avgY2sum = 0.0
+      REAL :: avgY20 = 0.0
       REAL :: avgZ2 = 0.0
-      REAL :: avgZ2sum = 0.0
+      REAL :: avgZ20 = 0.0
       REAL :: avgPx2 = 0.0
       REAL :: avgPx2sum = 0.0
       REAL :: avgPy2 = 0.0
       REAL :: avgPy2sum = 0.0
       REAL :: avgPz2 = 0.0
-      REAL :: avgPz2sum = 0.0
+      REAL :: avgPz20 = 0.0
       REAL :: avgLx2 = 0.0
-      REAL :: avgLx2sum = 0.0
+      REAL :: avgLx20 = 0.0
       REAL :: avgLy2 = 0.0
-      REAL :: avgLy2sum = 0.0
+      REAL :: avgLy20 = 0.0
       REAL :: avgLz2 = 0.0
-      REAL :: avgLz2sum = 0.0
+      REAL :: avgLz20 = 0.0
       REAL :: avgL2 = 0.0
       REAL :: sigX = 0.0
       REAL :: sigY = 0.0
@@ -240,38 +242,28 @@
       REAL :: sigLy = 0.0
       REAL :: sigLz = 0.0
 
-      COMPLEX :: dT = CMPLX ( 0.0 , 0.0 )
+      COMPLEX :: dTz = CMPLX ( 0.0 , 0.0 )
 
 ! --- VARIABLE DEFINITIONS ------------------------------------------------
 ! --- ARRAY DECLARATIONS --------------------------------------------------
 
-      INTEGER, ALLOCATABLE, DIMENSION ( : ) :: StartValues
-      INTEGER, ALLOCATABLE, DIMENSION ( : ) :: StopValues
       INTEGER, ALLOCATABLE, DIMENSION ( : ) :: MPIStatus
+      INTEGER, ALLOCATABLE, DIMENSION ( : ) :: StartVals
+      INTEGER, ALLOCATABLE, DIMENSION ( : ) :: StopVals
 
-      REAL, ALLOCATABLE, DIMENSION ( :             ) :: ImPsi1
-      REAL, ALLOCATABLE, DIMENSION ( : , :         ) :: ImPsi2
-      REAL, ALLOCATABLE, DIMENSION ( : , : , :     ) :: ImPsi3
-      REAL, ALLOCATABLE, DIMENSION ( : , : , : , : ) :: ImPsi4
-      REAL, ALLOCATABLE, DIMENSION ( :             ) :: RePsi1
-      REAL, ALLOCATABLE, DIMENSION ( : , :         ) :: RePsi2
-      REAL, ALLOCATABLE, DIMENSION ( : , : , :     ) :: RePsi3
-      REAL, ALLOCATABLE, DIMENSION ( : , : , : , : ) :: RePsi4
-      REAL, ALLOCATABLE, DIMENSION ( :             ) :: Vex1
-      REAL, ALLOCATABLE, DIMENSION ( : , :         ) :: Vex2
-      REAL, ALLOCATABLE, DIMENSION ( : , : , :     ) :: Vex3 
-      REAL, ALLOCATABLE, DIMENSION ( : , : , : , : ) :: Vex4
-      REAL, ALLOCATABLE, DIMENSION ( :             ) :: Wx
-      REAL, ALLOCATABLE, DIMENSION ( :             ) :: Wy
-      REAL, ALLOCATABLE, DIMENSION ( :             ) :: Wz
-      REAL, ALLOCATABLE, DIMENSION ( :             ) :: X
-      REAL, ALLOCATABLE, DIMENSION ( :             ) :: Y
-      REAL, ALLOCATABLE, DIMENSION ( :             ) :: Z
+      REAL, ALLOCATABLE, DIMENSION ( : , : , : ) :: Vex
+      REAL, ALLOCATABLE, DIMENSION ( :         ) :: X
+      REAL, ALLOCATABLE, DIMENSION ( :         ) :: Y
+      REAL, ALLOCATABLE, DIMENSION ( :         ) :: Z
 
-      COMPLEX, ALLOCATABLE, DIMENSION ( :             ) :: Psi1
-      COMPLEX, ALLOCATABLE, DIMENSION ( : , :         ) :: Psi2
-      COMPLEX, ALLOCATABLE, DIMENSION ( : , : , :     ) :: Psi3
-      COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : , : ) :: Psi4
+      COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: F
+      COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: K1
+      COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: K2
+      COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: K3
+      COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: K4
+      COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: PsiA
+      COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: PsiB
+      COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: Psi
 
 ! --- ARRAY DEFINITIONS ---------------------------------------------------
 ! --- FUNCTION AND SUBROUTINE DECLARATIONS --------------------------------
@@ -282,7 +274,7 @@
 ! --- NAMELIST DECLARATIONS -----------------------------------------------
 
       NAMELIST /gpseIn/ itpOn , rk4Lambda , fdOrder , quadRule , nTsteps , nTwrite , nX , nXbc , nY , nYbc , nZ , nZbc , t0 , &
-         & xO , yO , zO , dTRe , dTIm , dX , dY , dZ , gS , psiRead , psiInFile , psiInFmt , psiInUnit , psiWrite , &
+         & xO , yO , zO , dT , dX , dY , dZ , gS , psiRead , psiInFile , psiInFmt , psiInUnit , psiWrite , &
          & psiOutFmt , psiOutUnit , psiInit , psiNx , psiNy , psiNz , psiNr , psiMl , psiXo , psiYo , psiZo , psiWx , psiWy , & 
          & psiWz , psiWr , vexRead , vexWrite , vexInFmt , vexOutFmt , vexInUnit , vexOutUnit , vexLin , vexLinXo , vexLinYo , & 
          & vexLinZo , vexLinFx , vexLinFy , vexLinFz , vexSho , vexShoXo , vexShoYo , vexShoZo , vexShoWx , vexShoWy , vexShoWz , &
@@ -335,14 +327,14 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     LAST UPDATED'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!         Tuesday, April 29th, 2014'
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!         Tuesday, May 27th, 2014'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '! -------------------------------------------------------------------------'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     STARTING GPSE ... '
 
-         ALLOCATE ( StartValues ( 8 ) )
-         CALL DATE_AND_TIME ( startDate , startTime , startZone , StartValues )
+         ALLOCATE ( StartVals ( 8 ) )
+         CALL DATE_AND_TIME ( startDate , startTime , startZone , StartVals )
 
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     RUN STARTED @ ', startTime, ' ON ', startDate, ' ... '
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     RUNNING ON ', mpiProcesses, ' MPI PROCESSES WITH ', ompThreads , ' OPENMP THREADS PER PROCESS ... '
@@ -360,29 +352,29 @@
 
             fIntName = 'INTEGER*1'
             mpiIntName = 'MPI_INTEGER1'
-            mpiIntKind = MPI_INTEGER1
+            mpiInteger = MPI_INTEGER1
 
          CASE ( INT16 )
 
             fIntName = 'INTEGER*2'
             mpiIntName = 'MPI_INTEGER2'
-            mpiIntKind = MPI_INTEGER2
+            mpiInteger = MPI_INTEGER2
 
          CASE ( INT32 )
 
             fIntName = 'INTEGER ( INTEGER*4 )'
             mpiIntName = 'MPI_INTEGER ( MPI_INTEGER4 )'
-            mpiIntKind = MPI_INTEGER
+            mpiInteger = MPI_INTEGER
 
          CASE ( INT64 )
 
             fIntName = 'INTEGER*8'
             mpiIntName = 'MPI_INTEGER8'
-            mpiIntKind = MPI_INTEGER8
+            mpiInteger = MPI_INTEGER8
 
          CASE DEFAULT
 
-            mpiIntKind = -1
+            mpiInteger = -1
 
       END SELECT
 
@@ -392,23 +384,23 @@
 
             fRealName = 'REAL ( REAL*4 )'
             mpiRealName = 'MPI_REAL ( MPI_REAL4 )'
-            mpiRealKind = MPI_REAL
+            mpiReal = MPI_REAL
 
          CASE ( REAL64 )
 
             fRealName = 'DOUBLE PRECISION ( REAL*8 )'
             mpiRealName = 'MPI_DOUBLE_PRECISION ( MPI_REAL8 )'
-            mpiRealKind= MPI_DOUBLE_PRECISION
+            mpiReal= MPI_DOUBLE_PRECISION
 
          CASE ( REAL128 )
 
             fRealName = 'REAL*16'
             mpiRealName = 'MPI_REAL16'
-            mpiRealKind = MPI_REAL16
+            mpiReal = MPI_REAL16
 
          CASE DEFAULT
 
-            mpiRealKind = -1
+            mpiReal = -1
 
       END SELECT
 
@@ -418,23 +410,23 @@
 
             fCmplxName = 'COMPLEX ( COMPLEX*8 )'
             mpiCmplxName = 'MPI_COMPLEX ( MPI_COMPLEX8 )'
-            mpiCmplxKind = MPI_COMPLEX
+            mpiCmplx = MPI_COMPLEX
 
          CASE ( REAL64 )
 
             fCmplxName = 'DOUBLE COMPLEX ( COMPLEX*16 )'
             mpiCmplxName = 'MPI_DOUBLE_COMPLEX ( MPI_COMPLEX16 )'
-            mpiCmplxKind = MPI_DOUBLE_COMPLEX
+            mpiCmplx = MPI_DOUBLE_COMPLEX
 
          CASE ( REAL128 )
 
             fCmplxName = 'COMPLEX*32'
             mpiCmplxName = 'MPI_COMPLEX32'
-            mpiCmplxKind = MPI_COMPLEX32
+            mpiCmplx = MPI_COMPLEX32
 
          CASE DEFAULT
 
-            mpiCmplxKind = -1            
+            mpiCmplx = -1            
 
       END SELECT
 
@@ -469,8 +461,7 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        xO         = ', xO
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        yO         = ', yO
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        zO         = ', zO
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dTRe       = ', dTRe
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dTIm       = ', dTIm
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dT         = ', dT
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dX         = ', dX
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dY         = ', dY
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!        dZ         = ', dZ
@@ -529,72 +520,71 @@
       CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
       CALL MPI_BCAST ( itpOn   , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( rk4Lambda  , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( fdOrder    , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( quadRule   , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nTsteps    , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nTwrite    , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nX         , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nXbc       , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nY         , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nYbc       , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )    
-      CALL MPI_BCAST ( nZ         , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nZbc       , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( t0         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( xO         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( yO         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( zO         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( dTRe       , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( dTIm       , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( dX         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( dY         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( dZ         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( gS         , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( rk4Lambda  , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( fdOrder    , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( quadRule   , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( nTsteps    , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( nTwrite    , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( nX         , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( nXbc       , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( nY         , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( nYbc       , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )    
+      CALL MPI_BCAST ( nZ         , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( nZbc       , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( t0         , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( xO         , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( yO         , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( zO         , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( dT         , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( dX         , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( dY         , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( dZ         , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( gS         , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( psiRead    , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiInFmt   , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiInUnit  , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiInFmt   , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiInUnit  , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( psiWrite   , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiOutFmt  , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiOutUnit , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiInit    , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiNx      , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiNy      , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiNz      , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiNr      , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiMl      , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiXo      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiYo      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiZo      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiWx      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiWy      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiWz      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiWr      , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiOutFmt  , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiOutUnit , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiInit    , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiNx      , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiNy      , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiNz      , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiNr      , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiMl      , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiXo      , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiYo      , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiZo      , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiWx      , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiWy      , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiWz      , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( psiWr      , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( vexRead    , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexInFmt   , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexInUnit  , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexInFmt   , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexInUnit  , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( vexWrite   , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexOutFmt  , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexOutUnit , 1 , mpiIntKind  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexOutFmt  , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexOutUnit , 1 , mpiInteger  , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( vexLin     , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexLinXo   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexLinYo   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexLinZo   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexLinFx   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexLinFy   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexLinFz   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexLinXo   , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexLinYo   , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexLinZo   , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexLinFx   , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexLinFy   , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexLinFz   , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( vexSho     , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexShoXo   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexShoYo   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexShoZo   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexShoWx   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexShoWy   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexShoWz   , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShoXo   , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShoYo   , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShoZo   , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShoWx   , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShoWy   , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShoWz   , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( vexShor    , 1 , MPI_LOGICAL , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexShorXo  , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexShorYo  , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexShorZo  , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexShorWr  , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexShorWz  , 1 , mpiRealKind , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShorXo  , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShorYo  , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShorZo  , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShorWr  , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( vexShorWz  , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
 
       CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
@@ -602,11 +592,11 @@
 
       IF ( itpOn .EQV. .TRUE. ) THEN 
 
-         dT = CMPLX ( 0.0 , -dTIm )
+         dTz = CMPLX ( 0.0 , -dT )
 
       ELSE
 
-         dT = CMPLX ( dTRe , 0.0 )
+         dTz = CMPLX ( dT , 0.0 )
 
       END IF
 
@@ -626,17 +616,43 @@
 
       END IF
 
-      ALLOCATE ( X ( nXa - nXbc : nXb + nXbc ) )
-      ALLOCATE ( Y ( nYa - nYbc : nYb + nYbc ) )
-      ALLOCATE ( Z ( nZa - nZbc : nZb + nZbc ) )
-      ALLOCATE ( Vex3 ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
-      ALLOCATE ( Psi3 ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
+      ALLOCATE ( Vex  ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
+      ALLOCATE ( X    ( nXa - nXbc : nXb + nXbc                                                     ) )
+      ALLOCATE ( Y    ( nYa - nYbc : nYb + nYbc                                                     ) )
+      ALLOCATE ( Z    ( nZa - nZbc : nZb + nZbc                                                     ) )
 
-      X = 0.0
-      Y = 0.0
-      Z = 0.0
-      Vex3 = 0.0
-      Psi3 = CMPLX ( 0.0 , 0.0 )
+      ALLOCATE ( F    ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
+      ALLOCATE ( K1   ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
+      ALLOCATE ( K2   ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
+      ALLOCATE ( K3   ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
+      ALLOCATE ( K4   ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
+      ALLOCATE ( PsiA ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
+      ALLOCATE ( PsiB ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
+
+!      IF ( mpiRank == MPI_MASTER ) THEN
+!
+!         ALLOCATE ( Psi ( -nXbc : nX + nXbc , -nYbc : nY + nYbc , -nZbc : nZ + nZbc ) ) 
+!
+!      END IF
+
+      Vex = 0.0
+      X   = 0.0
+      Y   = 0.0
+      Z   = 0.0
+
+      F    = CMPLX ( 0.0 , 0.0 )
+      K1   = CMPLX ( 0.0 , 0.0 )
+      K2   = CMPLX ( 0.0 , 0.0 )
+      K3   = CMPLX ( 0.0 , 0.0 )
+      K4   = CMPLX ( 0.0 , 0.0 )
+      PsiA = CMPLX ( 0.0 , 0.0 )
+      PsiB = CMPLX ( 0.0 , 0.0 )
+      
+!      IF ( mpiRank == MPI_MASTER ) THEN 
+! 
+!         Psi = CMPLX ( 0.0 , 0.0 )
+!
+!      END IF
 
       CALL regular_grid_axis ( nX , nXa , nXb , nXbc , xO , dX , X )
       CALL regular_grid_axis ( nY , nYa , nYb , nYbc , yO , dY , Y )
@@ -655,12 +671,12 @@
          ELSE IF ( psiInit == 2 ) THEN
 
             CALL psi_3d_se_sho_ani ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , psiNx , psiNy , psiNz , psiXo , &
-               & psiYo , psiZo , psiWx , psiWy , psiWz , X , Y , Z , Psi3 )
+               & psiYo , psiZo , psiWx , psiWy , psiWz , X , Y , Z , PsiA )
 
          ELSE IF ( psiInit == 3 ) THEN
 
             CALL psi_3d_se_sho_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , psiNr , psiMl , psiNz , psiXo , &
-               & psiYo , psiZo , psiWr , psiWz , X , Y , Z , Psi3 )
+               & psiYo , psiZo , psiWr , psiWz , X , Y , Z , PsiA )
 
          ELSE
 
@@ -676,19 +692,19 @@
 
       IF ( vexLin .EQV. .TRUE. ) THEN ! add linear potential to external potential ...
 
-         CALL vex_3d_lin ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , vexLinXo , vexLinYo , vexLinZo , vexLinFx , vexLinFy , vexLinFz , X , Y , Z , Vex3 )
+         CALL vex_3d_lin ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , vexLinXo , vexLinYo , vexLinZo , vexLinFx , vexLinFy , vexLinFz , X , Y , Z , Vex )
 
       END IF
 
       IF ( vexSho .EQV. .TRUE. ) THEN ! add simple harmonic oscillator potential to external potential ...
 
-         CALL vex_3d_sho ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , vexShoXo , vexShoYo , vexShoZo , vexShoWx , vexShoWy , vexShoWz , X , Y , Z , Vex3 )
+         CALL vex_3d_sho ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , vexShoXo , vexShoYo , vexShoZo , vexShoWx , vexShoWy , vexShoWz , X , Y , Z , Vex )
 
       END IF
 
       IF ( vexShor .EQV. .TRUE. ) THEN ! add simple harmonic oscillator ring potential to external potential ...
 
-         CALL vex_3d_shor ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , vexShorXo , vexShorYo , vexShorZo , vexShorRo , vexShorWr , vexShorWz , X , Y , Z , Vex3 )
+         CALL vex_3d_shor ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , vexShorXo , vexShorYo , vexShorZo , vexShorRo , vexShorWr , vexShorWz , X , Y , Z , Vex )
 
       END IF
 
@@ -696,136 +712,585 @@
 
 ! --- BEGIN MAIN TIME PROPAGATION LOOP ------------------------------------
 
+      tN = t0 ! Initialize simulation time. 
+!     Read initial wave function from file OR calculate initial wave function at tN = t0 using a subroutine available in psi module.
+!     Read initial external potential from file OR calculate inital external potential at tN = t0 using a subroutine available in vex module.
+!     Calculate initial values of angular velocity vector at tN = t0. 
+
       DO n = 0 , nTsteps
-
-         IF ( itpOn .EQV. .TRUE. ) THEN
-
-            tN = t0 + REAL ( n ) * dTIm
-
-         ELSE
-
-            tN = t0 + REAL ( n ) * dTRe
-
-         END IF
 
          CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
          IF ( MODULO ( n , nTwrite ) == 0 ) THEN
 
+!           Calculate expectation values.
+
             IF ( quadRule == 1 ) THEN 
             
-               normL2 = l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
-               avgX = x_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Psi3 )
-               avgX2 = x2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Psi3 ) 
-               avgY = y_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Y , Psi3 )
-               avgY2 = y2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Y , Psi3 )
-               avgZ = z_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Z , Psi3 )
-               avgZ2 = z2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Z , Psi3 )
-               avgVex = vex_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Vex3 , Psi3 )
-               avgVmf = vmf_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , gS , Psi3 )
+               normL2 = l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , PsiA )
+               avgX = x_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , PsiA )
+               avgX2 = x2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , PsiA ) 
+               avgY = y_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Y , PsiA )
+               avgY2 = y2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Y , PsiA )
+               avgZ = z_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Z , PsiA )
+               avgZ2 = z2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Z , PsiA )
+               avgVex = vex_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Vex , PsiA )
+               avgVmf = vmf_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , gS , PsiA )
 
-               IF ( fdOrder == 2 ) THEN
+!               IF ( fdOrder == 2 ) THEN
 
-                  avgPx = px_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , Psi3 )
-                  avgPx2 = px2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
-                  avgPy = py_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , Psi3 )
-                  avgPy2 = py2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
-                  avgPz = pz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , Psi3 )
-                  avgPz2 = pz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
-                  avgLx = lx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Y , Z , Psi3 )
-                  avgLx2 = lx2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Y , Z , Psi3 )
-                  avgLy = ly_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Z , Psi3 )
-                  avgLy2 = ly2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Z , Psi3 )
-                  avgLz = lz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Y , Psi3 )
-                  avgLz2 = lz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Y , Psi3 )
+                  avgPx = px_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , PsiA )
+                  avgPx2 = px2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , PsiA )
+                  avgPy = py_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , PsiA )
+                  avgPy2 = py2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , PsiA )
+                  avgPz = pz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , PsiA )
+                  avgPz2 = pz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , PsiA )
+                  avgLx = lx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Y , Z , PsiA )
+                  avgLx2 = lx2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Y , Z , PsiA )
+                  avgLy = ly_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Z , PsiA )
+                  avgLy2 = ly2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Z , PsiA )
+                  avgLz = lz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Y , PsiA )
+                  avgLz2 = lz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , X , Y , PsiA )
 
-               ELSE IF ( fdOrder == 4 ) THEN
+!               ELSE IF ( fdOrder == 4 ) THEN
+!               ELSE
+!               END IF
 
-               ELSE
-
-               END IF
+            ELSE ! quadRule is not supported. 
 
             END IF
 
-            CALL MPI_REDUCE ( normL2 , normL2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-            CALL MPI_REDUCE ( avgX , avgXsum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgX2 , avgX2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgY , avgYsum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgY2 , avgY2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgZ , avgZsum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgZ2 , avgZ2sum,  1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgVex , avgVexSum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgVmf , avgVmfSum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgPx , avgPxSum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgPx2 , avgPx2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgPy , avgPySum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgPy2 , avgPy2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgPz , avgPzSum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgPz2 , avgPz2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgLx , avgLxSum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgLx2 , avgLx2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgLy , avgLySum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgLy2 , avgLy2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgLz , avgLzSum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
-            CALL MPI_REDUCE ( avgLz2 , avgLz2sum , 1 , mpiRealKind , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+!           ... 
+
+            CALL MPI_REDUCE ( normL2 , normL20 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+            CALL MPI_REDUCE ( avgX , avgX0 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgX2 , avgX20 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgY , avgY0 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgY2 , avgY20 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgZ , avgZ0 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgZ2 , avgZ20,  1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgVex , avgVexSum , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgVmf , avgVmfSum , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgPx , avgPx0 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgPx2 , avgPx2sum , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgPy , avgPy0 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgPy2 , avgPy2sum , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgPz , avgPz0 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgPz2 , avgPz20 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgLx , avgLxSum , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgLx2 , avgLx20 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgLy , avgLySum , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgLy2 , avgLy20 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgLz , avgLzSum , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
+            CALL MPI_REDUCE ( avgLz2 , avgLz20 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD )
 
             IF ( mpiRank == MPI_MASTER ) THEN
 
-               sigX = SQRT ( avgX2sum - avgXsum**2 )
-               sigY = SQRT ( avgY2sum - avgYsum**2 )
-               sigZ = SQRT ( avgZ2sum - avgZsum**2 )
-               sigPx = SQRT ( avgPx2sum - avgPxSum**2 )
-               sigPy = SQRT ( avgPy2sum - avgPySum**2 )
-               sigPz = SQRT ( avgPz2sum - avgPzSum**2 )
-               sigLx = SQRT ( avgLx2sum - avgLxSum**2 )
-               sigLy = SQRT ( avgLy2sum - avgLySum**2 )
-               sigLz = SQRT ( avgLz2sum - avgLzSum**2 )
+!              Uncertainties in position, momentum and angular momentum.
 
-               avgL2 = avgLx2sum + avgLy2sum + avgLz2sum
- 
+               sigX  = SQRT ( avgX20 - avgX0**2 )
+               sigY  = SQRT ( avgY20 - avgY0**2 )
+               sigZ  = SQRT ( avgZ20 - avgZ0**2 )
+               sigPx = SQRT ( avgPx2sum - avgPx0**2 )
+               sigPy = SQRT ( avgPy2sum - avgPy0**2 )
+               sigPz = SQRT ( avgPz20 - avgPz0**2 )
+               sigLx = SQRT ( avgLx20 - avgLxSum**2 )
+               sigLy = SQRT ( avgLy20 - avgLySum**2 )
+               sigLz = SQRT ( avgLz20 - avgLzSum**2 )
+
+!              Expectation value of the square of the total angular momentum. 
+
+               avgL2 = avgLx20 + avgLy20 + avgLz20
+
+!              Expectation values of kinetic energy.
+
                avgTx = 0.5 * avgPx2sum
                avgTy = 0.5 * avgPy2sum
-               avgTz = 0.5 * avgPz2sum
+               avgTz = 0.5 * avgPz20
+
+!              Expectation value of the total energy.
 
                avgE = avgTx + avgTy + avgTz + avgVexSum + avgVmfSum
 
-               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) tN , normL2sum , avgXsum , avgX2sum , sigX , avgYsum , avgY2sum , sigY , avgZsum , avgZ2sum , sigZ , avgPxSum , avgPx2sum , sigPx , avgPySum , avgPy2sum , sigPy , avgPzSum , avgPz2sum , sigPz , avgLxSum , avgLx2sum , sigLx , avgLySum , avgLy2sum , sigLy , avgLzSum , avgLz2sum , sigLz , avgL2 , avgTx , avgTy , avgTz , avgVexSum , avgVmfSum , avgE , sigX * sigPx , sigY * sigPy , sigZ * sigPz , sigLx * sigLy , sigLy * sigLz , sigLz * sigLx
+!              Write expectation values, uncertainties and uncertainty relations to file from MPI_MASTER.
+
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) tN , normL20 , avgX0 , avgX20 , sigX , avgY0 , avgY20 , sigY , avgZ0 , avgZ20 , sigZ , avgPx0 , avgPx2sum , sigPx , avgPy0 , avgPy2sum , sigPy , avgPz0 , avgPz20 , sigPz , avgLxSum , avgLx20 , sigLx , avgLySum , avgLy20 , sigLy , avgLzSum , avgLz20 , sigLz , avgL2 , avgTx , avgTy , avgTz , avgVexSum , avgVmfSum , avgE , sigX * sigPx , sigY * sigPy , sigZ * sigPz , sigLx * sigLy , sigLy * sigLz , sigLz * sigLx
 
             END IF
-!
-            ! Compute parts of expectation values locally on each MPI process ...
-            ! ... then gather parts of expectation values on MPI_MASTER processs and ...
-            ! ... write expectation values to file from MPI_MASTER.
-            ! Gather parts of psi from all MPI processes to MPI_MASTER ... 
-            ! ... then write psi to file.
+            ! Write wave function to file from MPI_MASTER.
 
          END IF
 
          CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
-         ! Add solve steps here ...
-         ! Update wave function each time step on sub-grids ...
-         ! Then exchange sub-grid boundry values with nearest neighbor MPI processes ...
+!     -- GRK4 ALGORITHM STEP #1 -------------------------------------------
+!
+!        k_1 = f ( t_n , y_n )
+!
+!        Compute first stage of generalized 4th-order Runge-Kutta (GRK4) 
+!        method using either 2nd- or 4th-order central differences.
+!
+         IF ( fdOrder == 2 ) THEN
 
+            CALL f_gp_3d_rrf_mol_grk4_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiA , K1 )
+
+         ELSE IF ( fdOrder == 4 ) THEN
+
+            CALL f_gp_3d_rrf_mol_grk4_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiA , K1 )
+
+         END IF
+!
+!     -- GRK4 ALGORITHM STEP #2 -------------------------------------------
+!
+!        y_n + 0.5 * dT * k_1
+!
+!        Compute the intermediate wave function for the second stage of the 
+!        GRK4 method. Note that the intermediate wave function is only 
+!        computed on the interior grid points assigned to each MPI process.
+!
+!$OMP    PARALLEL DEFAULT ( SHARED )
+!$OMP    DO SCHEDULE ( STATIC )
+         DO l = nZa , nZb
+
+            DO k = nYa , nYb
+
+               DO j = nXa , nXb
+
+                  PsiB ( j , k , l ) = PsiA ( j , k , l ) + CMPLX ( 0.5 , 0.0 ) * dTz * K1 ( j , k , l )
+
+               END DO
+
+            END DO
+
+         END DO
+!$OMP    END DO
+!$OMP    END PARALLEL
+!
+!     -- GRK4 ALGORITHM STEP #3 -------------------------------------------
+!
+!        Send boundary condition information to nearest neighbor processes.
+!
+         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 0 , MPI_COMM_WORLD, mpiError )
+!               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n, mpiRank, MODULO ( mpiRank , 2 ), 'MPI_SEND 0', nZb + 1 - nZbc
+
+            END IF
+
+            IF ( mpiRank /= MPI_MASTER ) THEN
+
+               CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 1 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n , mpiRank, MODULO ( mpiRank , 2 ), 'MPI_RECV 1', nZa - nZbc
+
+            END IF
+
+         ELSE
+
+            CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 0 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n , mpiRank, MODULO ( mpiRank , 2 ), 'MPI_RECV 0', nZa - nZbc
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 1 , MPI_COMM_WORLD , mpiError )
+!               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n , mpiRank, MODULO ( mpiRank , 2 ), 'MPI_SEND 1', nZb + 1 - nZbc
+
+            END IF
+
+         END IF
+
+         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+
+         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+
+            IF ( mpiRank /= MPI_MASTER ) THEN
+
+               CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 2 , MPI_COMM_WORLD , mpiError )
+!               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n , mpiRank, MODULO ( mpiRank , 2 ), 'MPI_SEND 2', nZa
+
+            END IF
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 3 , MPI_COMM_WORLD , MPIStatus , mpiError )
+               !WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n , mpiRank, MODULO ( mpiRank , 2 ), 'MPI_RECV 3', nZb + 1
+
+            END IF
+
+         ELSE
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 2 , MPI_COMM_WORLD , MPIStatus , mpiError )
+               !WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n , mpiRank, MODULO ( mpiRank , 2 ), 'MPI_RECV 2', nZb + 1
+
+            END IF
+
+            CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 3 , MPI_COMM_WORLD , mpiError )
+            !WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n , mpiRank, MODULO ( mpiRank , 2 ), 'MPI_SEND 3', nZa
+
+         END IF
+
+         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+ 
+!               normL2 = l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , PsiA )
+!               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) 'After 1st bc update ...'
+!               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) mpiRank, normL2
+
+!     -- GRK4 ALGORITHM STEP #4 -------------------------------------------
+!
+!        Calculate V ( x , t_n + dT / 2 ), W ( t_n + dT / 2)
+
+         tN = t0 + ( REAL ( n ) + 0.5 ) * dT
+
+         ! Insert Vex ... Omega ... functions ... update at half time step .... 
+!
+!     -- GRK4 ALGORITHM STEP #5 -------------------------------------------
+!
+!        k_2 = f ( t_n + 0.5 * dT , y_n + 0.5 * dT * k_1 )
+!
+!        Calculate second stage of GRK4 ...
+
+         IF ( fdOrder == 2 ) THEN
+
+            CALL f_gp_3d_rrf_mol_grk4_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K2 )
+
+         ELSE IF ( fdOrder == 4 ) THEN
+
+            CALL f_gp_3d_rrf_mol_grk4_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K2 )
+
+         END IF
+!
+!     -- GRK4 ALGORITHM STEP #6 -------------------------------------------
+!
+!        y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( lambda / 2 ) * dT * k_2
+!
+!        Compute the intermediate wave function for the third stage of the
+!        GRK4 method. Again, note that the wave function is computed only
+!        on the interior grid points assigned to each MPI processes.
+!
+!$OMP    PARALLEL DEFAULT ( SHARED )
+!$OMP    DO SCHEDULE ( STATIC )
+         DO l = nZa , nZb
+
+            DO k = nYa , nYb
+
+               DO j = nXa , nXb
+
+                  PsiB ( j , k , l ) = PsiA ( j , k , l ) + dTz * ( CMPLX ( 0.5 - 1.0 / rk4Lambda , 0.0 ) * K1 ( j , k , l ) + CMPLX ( 1.0 / rk4Lambda , 0.0 ) * K2 ( j , k , l ) )
+
+               END DO
+
+            END DO
+
+         END DO
+!$OMP    END DO
+!$OMP    END PARALLEL
+!
+!     -- GRK4 ALGORITHM STEP #7 -------------------------------------------
+!
+!        Distribute boundary conditions ... again ...
+!
+         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 4 , MPI_COMM_WORLD, mpiError )
+
+            END IF
+
+            IF ( mpiRank /= MPI_MASTER ) THEN
+
+               CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 5 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+            END IF
+
+         ELSE
+
+            CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 4 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 5 , MPI_COMM_WORLD , mpiError )
+
+            END IF
+
+         END IF
+
+         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+
+         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+
+            IF ( mpiRank /= MPI_MASTER ) THEN
+
+               CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 6 , MPI_COMM_WORLD , mpiError )
+
+            END IF
+
+            IF ( mpiRank /= mpiProcesses  - 1 ) THEN
+
+               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 7 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+            END IF
+
+         ELSE
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 6 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+            END IF
+
+            CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 7 , MPI_COMM_WORLD , mpiError )
+
+         END IF
+
+         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+!
+!     -- GRK4 ALGORITHM STEP #8 -------------------------------------------
+!
+!        k_3 = f ( t_n + 0.5 * dT , y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( 1 / lambda ) * dT * k_2
+!
+!        Compute stage three ...
+!
+         IF ( fdOrder == 2 ) THEN
+
+            CALL f_gp_3d_rrf_mol_grk4_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K3 )
+
+         ELSE IF ( fdOrder == 4 ) THEN
+
+            CALL f_gp_3d_rrf_mol_grk4_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K3 )
+
+         ELSE
+
+            ! ERROR: fdOrder not available.
+
+         END IF
+!
+!     -- GRK4 ALGORITHM STEP #9 ------------------------------------------
+!
+!        y_n + ( 1 - lambda / 2 ) * dT * k_2 + ( lambda / 2 ) * dT * k_3
+!
+!        Compute intermediate wave function for the fourth stage of the
+!        GRK4 method ...
+!
+!$OMP    PARALLEL DEFAULT ( SHARED )
+!$OMP    DO SCHEDULE ( STATIC )
+         DO l = nZa , nZb
+
+            DO k = nYa , nYb
+
+               DO j = nXa , nXb
+
+                  PsiB ( j , k , l ) = PsiA ( j , k , l ) + dTz * ( CMPLX ( 1.0 - 0.5 * rk4Lambda , 0.0 ) * K2 ( j , k , l ) + CMPLX ( 0.5 * rk4Lambda , 0.0 ) * K3 ( j , k , l ) )
+
+               END DO
+
+            END DO
+
+         END DO
+!$OMP    END DO
+!$OMP    END PARALLEL
+!
+!     -- GRK4 ALGORITHM STEP #10 ------------------------------------------
+!
+!        Distribute boundary conditions ...
+!
+         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 8 , MPI_COMM_WORLD, mpiError )
+
+            END IF
+
+            IF ( mpiRank /= MPI_MASTER ) THEN
+
+               CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 9 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+            END IF
+
+         ELSE
+
+            CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 8 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 9 , MPI_COMM_WORLD , mpiError )
+
+            END IF
+
+         END IF
+
+         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+
+         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+
+            IF ( mpiRank /= MPI_MASTER ) THEN
+
+               CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 10 , MPI_COMM_WORLD , mpiError )
+
+            END IF
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 11 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+            END IF
+
+         ELSE
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 10 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+            END IF
+
+            CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 11 , MPI_COMM_WORLD , mpiError )
+
+         END IF
+
+         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+!
+!     -- GRK4 ALGORITHM STEP #11 ------------------------------------------
+!
+!        Calculate V ( x , t_n + dT ), W ( t_n + dT )
+
+         tN = t0 + REAL ( n + 1 ) * dT
+
+         ! Insert Vex ... Omega ... functions ... update another half time step ...
+!
+!     -- GRK4 ALGORITHM STEP #12 ------------------------------------------
+!
+!        k_4 = f ( t_n + dT , y_n + ( 1 - lamda / 2 ) * dT * k_2 + ( lamda / 2) * dT * k_3 
+!
+!        Compute the fourth stage ...
+!
+         IF ( fdOrder == 2 ) THEN
+
+            CALL f_gp_3d_rrf_mol_grk4_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K4 )
+
+         ELSE IF ( fdOrder == 4 ) THEN
+
+            CALL f_gp_3d_rrf_mol_grk4_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K4 )
+
+         ELSE
+
+            ! ERROR: fdOrder not available.
+
+         END IF
+!
+!     -- GRK4 ALGORITHM STEP #13 ------------------------------------------
+!
+!        y_{ n + 1 } = y_n + ( dT / 6 ) * [ k_1 + ( 4 - lambda ) * k_2 + lambda * k_3 + k_4 ]
+!
+!        Compute wave function at nth+1 time step ...
+!
+!$OMP    PARALLEL DEFAULT ( SHARED )
+!$OMP    DO SCHEDULE ( STATIC )
+         DO l = nZa , nZb
+
+            DO k = nYa , nYb
+
+               DO j = nXa , nXb
+
+                  PsiB ( j , k , l ) = PsiA ( j , k , l ) + CMPLX ( 1.0 / 6.0 , 0.0 ) * dTz * ( K1 ( j , k , l ) + CMPLX ( 4.0 - rk4Lambda , 0.0 ) * K2 ( j , k , l ) + CMPLX ( rk4Lambda , 0.0 ) * K3 ( j , k , l ) + K4 ( j , k , l ) )
+
+               END DO
+
+            END DO
+
+         END DO
+!$OMP    END DO
+!$OMP    END PARALLEL
+!
+!     -- GRK4 ALGORITHM STEP #14 ------------------------------------------
+!
+!        Distribute boundary conditions ...
+!
+         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 12 , MPI_COMM_WORLD, mpiError )
+
+            END IF
+
+            IF ( mpiRank /= MPI_MASTER ) THEN
+
+               CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 13 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+            END IF
+
+         ELSE
+
+            CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 12 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 13 , MPI_COMM_WORLD , mpiError )
+
+            END IF
+
+         END IF
+
+         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+
+         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+
+            IF ( mpiRank /= MPI_MASTER ) THEN
+
+               CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 14 , MPI_COMM_WORLD , mpiError )
+
+            END IF
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 15 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+            END IF
+
+         ELSE
+
+            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 14 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+            END IF
+
+            CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 15 , MPI_COMM_WORLD , mpiError )
+
+         END IF
+
+         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+!
+!     -- GRK4 ALGORITHM STEP #15 ------------------------------------------
+!
+!        y_{ n + 1 } ---> y_n        
+!
+         PsiA = PsiB
+!
+!     ---------------------------------------------------------------------
+         
          CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )        
 
       END DO
 
 ! --- END MAIN TIME PROPAGATION LOOP / BEGIN CLEAN UP TO STOP -------------
 
-      DEALLOCATE ( Vex3 )
-      DEALLOCATE ( Psi3 )
+      DEALLOCATE ( Vex )
       DEALLOCATE ( Z )
       DEALLOCATE ( Y )
       DEALLOCATE ( X ) 
 
       IF ( mpiRank == MPI_MASTER ) THEN
 
-         ALLOCATE ( StopValues ( 8 ) ) 
-         CALL DATE_AND_TIME ( stopDate , stopTime , stopZone , StopValues )
+         ALLOCATE ( StopVals ( 8 ) ) 
+         CALL DATE_AND_TIME ( stopDate , stopTime , stopZone , StopVals )
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     RUN STOPPED @ ', stopTime, ' ON ', stopDate, ' ... '
-         DEALLOCATE ( StopValues )
-         DEALLOCATE ( StartValues )
+         DEALLOCATE ( StopVals )
+         DEALLOCATE ( StartVals )
 
       END IF
       
