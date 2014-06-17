@@ -1,24 +1,24 @@
 &gpseIn
    itpOn      = .FALSE.     ! Perform imaginary time propagation? .TRUE. = Yes ; .FALSE. = No
    rk4Lambda  = 2           ! 1 = Tan-Chen Lambda-1 ; 2 = Classical 4th-Order Runge-Kutta ; 3 = Tan-Chen Lambda-3 ; 4 = England ; 5 = Tan-Chen Lambda-5
-   fdOrder    = 4           ! 2 = 2nd-Order Central Differences ; 4 = 4th-Order Central Differences 
+   fdOrder    = 2           ! 2 = 2nd-Order Central Differences ; 4 = 4th-Order Central Differences 
    quadRule   = 1           ! 1 = Rectangle Rule ; 2 = Trapezoidal Rule
-   nTsteps    = 204800       ! Number of time steps in simulation
-   nTwrite    = 256          ! Period of writes to disk; i.e. Number of time steps between writes
+   nTsteps    = 819200       ! Number of time steps in simulation
+   nTwrite    = 1024          ! Period of writes to disk; i.e. Number of time steps between writes
    nX         = 128         ! Number of grid points along x-axis
-   nXbc       = 2           ! 
+   nXbc       = 1           ! 
    nY         = 128         ! Number of grid points along y-axis
-   nYbc       = 2           !
+   nYbc       = 1           !
    nZ         = 128         ! Number of grid points along z-axis
-   nZbc       = 2           !
+   nZbc       = 1           !
    t0         = 0.0         ! Time at start of simulation
    xO         = 0.0         ! X-coordinate of origin used to define computational grid
    yO         = 0.0         ! Y-coordinate of origin used to define computational grid
    zO         = 0.0         ! Z-coordinate of origin used to define computational grid
-   dT         = 0.00048828125   ! Interval of time step
-   dX         = 0.125       ! Distance between grid points along x-axis
-   dY         = 0.125       ! Distance between grid points along y-axis
-   dZ         = 0.125       ! Distance between grid points along z-axis
+   dT         = 1.220703125e-4 ! Interval of time step
+   dX         = 0.125      ! Distance between grid points along x-axis
+   dY         = 0.125      ! Distance between grid points along y-axis
+   dZ         = 0.125      ! Distance between grid points along z-axis
    gS         = 0.0         ! Nonlinear coupling constant
    psiRead    = .FALSE.     ! Read initial wave function from file? .TRUE. = Yes ; .FALSE. = No
    psiInFile  = 'psi.in'    ! Initial wave function filename ( if applicable ).
@@ -27,12 +27,12 @@
    psiWrite   = .TRUE.      ! Write wave function to file? .TRUE. = Yes ; .FALSE. = No
    psiOutFmt  = 1           ! Format of output wave function file(s)? 1 = Unformatted ( Binary ) ; 2 = Formatted ( GPI ) ; 3 = VTK ; 4 = VTK_XML
    psiOutUnit = 1001        !   
-   psiInit    = 3           ! 1 = Isotropic 3D SHO ; 2 = Anisotropic 3D SHO ; 3 = Axially-Symmetric 3D SHO
+   psiInit    = 2           ! 1 = Isotropic 3D SHO ; 2 = Anisotropic 3D SHO ; 3 = Axially-Symmetric 3D SHO
    psiNx      = 0           ! Degree of Hermite polynomial used to define anisotropic SHO wave function along x-axis
    psiNy      = 0           ! Degree of Hermite polynomial used to define anisotropic SHO wave function along y-axis
    psiNz      = 0           ! Degree of Hermite polynomial used to define both anisotropic and axially-symmetric SHO wave functions along z-axis
    psiNr      = 0           ! Degree of (associated) Laguerre polynomials used to define radial components of isotropic and axially-symmetric SHO wave functions
-   psiMl      = 1           ! Projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
+   psiMl      = 0           ! Projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
    psiXo      = 0.0         ! X-coordinate of origin used to define initial wave function
    psiYo      = 0.0         ! Y-coordinate of origin used to define initial wave function 
    psiZo      = 0.0         ! Z-coordinate of origin used to define initial wave function

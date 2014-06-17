@@ -33,118 +33,184 @@
 #
 # LAST UPDATED
 #
-#     Tuesday, May 27th, 2014
+#     Tuesday, June 17th, 2014
 #
 # -------------------------------------------------------------------------
 
-#     Specify the SHELL that interprets this Makefile. 
+#     Specify the SHELL that will interpret this Makefile. This line avoids
+#     issues on systems where the SHELL variable might be inherited from
+#     the environment. 
 
-SHELL    = /bin/bash
+SHELL    := /bin/bash
 
-#     Get machine architecture information
+#     Get hostname of the machine gpse will be compiled and run on.
 
-ARCH     = $(shell uname -m)
+HNAME    := $(shell hostname)
 
-#     Provide directory and file location information.
+#     Provide directory paths required for compilation.
 
-DIR_EXE  = ./
-DIR_SRC  = ./source/
-DIR_OBJ  = ./objects/
-DIR_MOD  = ./modules/
+DIR_EXE  := ./
+DIR_SRC  := ./source/
+DIR_OBJ  := ./objects/
+DIR_MOD  := ./modules/
 
-#     Specify general user-defined compilation options here.
+#     Specify general user-defined compilation options.
 
-COMPILER = gfortran
-INTEGER  = DOUBLE
-REAL     = DOUBLE
-DEBUG    = NO
-OPTIMIZE = NO
-OPENMP   = ON
-MPI      = OFF
+MPIF90   := mpif90
+COMPILER := gfortran
+DEBUG    := OFF
+OPTIMIZE := ON
+OPENMP   := OFF
 
-#     Specify compiler-specific compilation options here.
+
+#     Specify compiler-specific compilation options.
 #
-#     gfortran:
+#     GNU Fortran (GCC) 4.8.2 ( ivymike )
+#     GNU Fortran (GCC) 4.1.2 20080704 (Red Hat 4.1.2-48) ( dugong.sdsu.edu )
 
-STD_GNU  = -fimplicit-none -ffree-form -ffree-line-length-none -fall-intrinsics -fdefault-real-8
-INT_GNU  =
-RE_GNU   = 
-DBG_GNU  = -fmodule-private -ffpe-trap=invalid,overflow -fbacktrace -fdump-core -finit-real=nan
-CHK_GNU  = -fcheck=all
-WRN_GNU  = -Wall -fmax-errors=0 -Wno-array-temporaries -Warray-bounds -Wcharacter-truncation -Wline-truncation -Wconversion-extra -Wimplicit-interface -Wimplicit-procedure -Wunderflow -Wextra -Wuninitialized
-OPT_GNU  = -O3
-OMP_GNU  = -fopenmp
+STD_GNU  := -fimplicit-none -ffree-form -ffree-line-length-none -fall-intrinsics
+INT_GNU  :=
+REAL_GNU := -fdefault-real-8
+OPT_GNU  := -O3 #-ffast-math -funroll-loops
+OMP_GNU  := -fopenmp
+AUTO_GNU :=
+CHK_GNU  := -fcheck=all
+DBG_GNU  := -fmodule-private -ffpe-trap=invalid,overflow -fbacktrace -fdump-core -finit-real=nan
+WRN_GNU  := -Wall -fmax-errors=0 -Wno-array-temporaries -Warray-bounds -Wcharacter-truncation -Wline-truncation -Wconversion-extra -Wimplicit-interface -Wimplicit-procedure -Wunderflow -Wextra -Wuninitialized
 
-#     ifort: 
+#     ifort (IFORT) 11.1 20100414 ( dugong.sdsu.edu )
 
-STD_INTC = 
-INT_INTC = 
-RE_INTC  = 
-DBG_INTC = -debug all
-CHK_INTC = -check all
-WRN_INTC = -warn all
-OPT_INTC = -O3
-OMP_INTC = -openmp
-MPI_INTC =
+STD_IFORT  := -stand f03 -implicitnone -free -m64 -static -static-intel -static-libgcc -mkl=parallel
+INT_IFORT  := -integer-size 64
+REAL_IFORT := -real-size 64
+OPT_IFORT  := -archSSE4.1 -fast -fp-model fast=2 unroll-agressive -vec -opt-report 3 -opt-report-file=gpse.opt -vec-report5
+OPM_IFORT  := -openmp -openmp-report2
+AUTO_IFORT := -parallel -par-num-threads=4 -par-schedule=auto -par-report3
+CHK_IFORT  := -check all
+DBG_IFORT  := -debug all
+WRN_IFORT  := -warn all
+
+#     pgf90 10.9-0 64-bit target on x86-64 Linux -tp istanbul-64 ( dugong.sdsu.edu )
+
+STD_PGI    := -Mfree -m64 -mcmodel=medium -Minfo -Mneginfo -Mpreprocess -Dpgf95
+INT_PGI    := -i4
+REAL_PGI   := -r8
+OPT_PGI    := -fast#-Mipa=fast,inline -Munroll
+OMP_PGI    := -mp=allcores
+AUTO_PGI   := -Mconcur=allcores
+CHK_PGI    := -C
+DBG_PGI    :=
+WRN_PGI    :=
 
 #     Set compiler-specific options.
 
 ifeq ($(COMPILER),gfortran)
 
-   FC    = gfortran
-   STD   = $(STD_GNU)
-   INT   = $(INT_GNU)
-   RE    = $(RE_GNU)
-   DBG   = $(DBG_GNU)
-   CHK   = $(CHK_GNU)
-   WRN   = $(WRN_GNU)
-   OPT   = $(OPT_GNU)
-   OMP   = $(OMP_GNU)
+   STD  := $(STD_GNU)
+   INT  := $(INT_GNU)
+   REAL := $(REAL_GNU)
+   OPT  := $(OPT_GNU)
+   OMP  := $(OMP_GNU)
+   CHK  := $(CHK_GNU)
+   DBG  := $(DBG_GNU)
+   WRN  := $(WRN_GNU)
 
 endif
 
-FC = mpif90
-FFLAGS = $(STD) $(OPT) #$(OMP)
+ifeq ($(COMPILER),ifort)
+
+   STD  := $(STD_IFORT)
+   INT  := $(INT_IFORT)
+   REAL := $(REAL_IFORT)
+   OPT  := $(OPT_IFORT)
+   OMP  := $(OMP_IFORT)
+   AUTO := $(AUTO_IFORT)
+   CHK  := $(CHK_IFORT)
+   DBG  := $(DBG_IFORT)
+   WRN  := $(WRN_IFORT)
+
+endif
+
+ifeq ($(COMPILER),pgf90)
+
+   STD  := $(STD_PGI)
+   INT  := $(INT_PGI)
+   REAL := $(REAL_PGI)
+   OPT  := $(OPT_PGI)
+   OMP  := $(OMP_PGI)
+   AUTO := $(AUTO_PGI)
+   CHK  := $(CHK_PGI)
+   DBG  := $(DBG_PGI)
+   WRN  := $(WRN_PGI)
+
+endif
+
+FFLAGS := $(STD) $(INT) $(REAL)
+
+ifeq ($(DEBUG),ON)
+
+   FFLAGS += -O0 -C -g $(CHK) $(DBG) $(WRN)
+
+endif
+
+ifeq ($(OPTIMIZE),ON)
+
+   FFLAGS += $(OPT)
+
+endif
+
+ifeq ($(OPENMP),ON)
+
+   FFLAGS += $(OMP)
+
+else
+
+   FFLAGS += $(AUTO)
+
+endif
 
 all : gpse.x
 
-gpse.x : gpse.o evua.o grid.o grk4.o io.o math.o psi.o vex.o lib_vtk_io.o lib_base64.o ir_precision.o
-	$(FC) $(FFLAGS) -o $@ $^
+gpse.x : gpse.o evua.o grid.o io.o math.o psi.o vex.o lib_vtk_io.o lib_base64.o ir_precision.o
+	$(MPIF90) $(FFLAGS) -o $@ $^
 
-gpse.o : gpse.f90 evua.mod grid.mod grk4.mod io.mod math.mod psi.mod vex.mod lib_vtk_io.mod lib_base64.mod ir_precision.mod
-	$(FC) $(FFLAGS) -c -cpp $<
+gpse.o : gpse.f90 evua.mod grid.mod io.mod math.mod psi.mod vex.mod lib_vtk_io.mod lib_base64.mod ir_precision.mod
+	$(MPIF90) $(FFLAGS) -c -cpp $<
 
 evua.o evua.mod : evua.f90 math.mod
-	$(FC) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c -cpp $<
 
 grid.o grid.mod : grid.f90
-	$(FC) $(FFLAGS) -c -cpp $<
-
-grk4.o grk4.mod : grk4.f90
-	$(FC) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c -cpp $<
 
 io.o io.mod : io.f90 grid.mod lib_vtk_io.mod
-	$(FC) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c -cpp $<
 
 math.o math.mod : math.f90
-	$(FC) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c -cpp $<
 
 psi.o psi.mod : psi.f90 math.mod
-	$(FC) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c -cpp $<
 
 vex.o vex.mod : vex.f90
-	$(FC) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c -cpp $<
 
 lib_vtk_io.o lib_vtk_io.mod : lib_vtk_io.f90 lib_base64.mod ir_precision.mod
-	$(FC) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c -cpp $<
 
 lib_base64.o lib_base64.mod : lib_base64.f90 ir_precision.mod
-	$(FC) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c -cpp $<
 
 ir_precision.o ir_precision.mod : ir_precision.f90
-	$(FC) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c -cpp $<
 
+.PHONY : printfflags
+.NOTPARALLEL : printfflags
+printfflags :
+	@echo $(FFLAGS)
+
+.PHONY : clean
 clean : 
-	rm -f *.x *.o *.mod *.out
+	rm -f *.x *.o *.mod
 
 # =========================================================================

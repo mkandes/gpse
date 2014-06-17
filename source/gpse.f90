@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, May 27th, 2014
+!     Tuesday, June 17th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -43,7 +43,6 @@
       USE            :: MPI
       USE            :: EVUA
       USE            :: GRID
-      USE            :: GRK4
       USE            :: IO
       USE            :: MATH
       USE            :: PSI
@@ -56,7 +55,7 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.1.6'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.1.7'
 
       INTEGER, PARAMETER :: INT_DEFAULT_KIND   = KIND ( 0 ) 
       INTEGER, PARAMETER :: REAL_DEFAULT_KIND  = KIND ( 0.0 )
@@ -327,7 +326,7 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!     LAST UPDATED'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!         Tuesday, May 27th, 2014'
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!         Tuesday, June 17th, 2014'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '! -------------------------------------------------------------------------'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '!'
@@ -686,6 +685,8 @@
 
       END IF
 
+      CALL mpi_ghost_exchange ( PsiA )
+
       IF ( vexRead .EQV. .TRUE. ) THEN ! initialize external potential from file ...
 
       END IF
@@ -830,16 +831,8 @@
 !        Compute first stage of generalized 4th-order Runge-Kutta (GRK4) 
 !        method using either 2nd- or 4th-order central differences.
 !
-         IF ( fdOrder == 2 ) THEN
+         CALL compute_f ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiA , K1 )
 
-            CALL f_gp_3d_rrf_mol_grk4_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiA , K1 )
-
-         ELSE IF ( fdOrder == 4 ) THEN
-
-            CALL f_gp_3d_rrf_mol_grk4_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiA , K1 )
-
-         END IF
-!
 !     -- GRK4 ALGORITHM STEP #2 -------------------------------------------
 !
 !        y_n + 0.5 * dT * k_1
@@ -870,73 +863,64 @@
 !
 !        Send boundary condition information to nearest neighbor processes.
 !
-         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
 
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+         CALL mpi_ghost_exchange ( PsiB )
 
-               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 0 , MPI_COMM_WORLD, mpiError )
-!               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n, mpiRank, MODULO ( mpiRank , 2 ), 'MPI_SEND 0', nZb + 1 - nZbc
-
-            END IF
-
-            IF ( mpiRank /= MPI_MASTER ) THEN
-
-               CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 1 , MPI_COMM_WORLD , MPIStatus , mpiError )
-!               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n , mpiRank, MODULO ( mpiRank , 2 ), 'MPI_RECV 1', nZa - nZbc
-
-            END IF
-
-         ELSE
-
-            CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 0 , MPI_COMM_WORLD , MPIStatus , mpiError )
-!            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n , mpiRank, MODULO ( mpiRank , 2 ), 'MPI_RECV 0', nZa - nZbc
-
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
-
-               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 1 , MPI_COMM_WORLD , mpiError )
-!               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n , mpiRank, MODULO ( mpiRank , 2 ), 'MPI_SEND 1', nZb + 1 - nZbc
-
-            END IF
-
-         END IF
-
-         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
-
-         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
-
-            IF ( mpiRank /= MPI_MASTER ) THEN
-
-               CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 2 , MPI_COMM_WORLD , mpiError )
-!               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n , mpiRank, MODULO ( mpiRank , 2 ), 'MPI_SEND 2', nZa
-
-            END IF
-
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
-
-               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 3 , MPI_COMM_WORLD , MPIStatus , mpiError )
-               !WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n , mpiRank, MODULO ( mpiRank , 2 ), 'MPI_RECV 3', nZb + 1
-
-            END IF
-
-         ELSE
-
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
-
-               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 2 , MPI_COMM_WORLD , MPIStatus , mpiError )
-               !WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n , mpiRank, MODULO ( mpiRank , 2 ), 'MPI_RECV 2', nZb + 1
-
-            END IF
-
-            CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 3 , MPI_COMM_WORLD , mpiError )
-            !WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) n , mpiRank, MODULO ( mpiRank , 2 ), 'MPI_SEND 3', nZa
-
-         END IF
-
-         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
- 
-!               normL2 = l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , PsiA )
-!               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) 'After 1st bc update ...'
-!               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) mpiRank, normL2
+!         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+!
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 0 , MPI_COMM_WORLD, mpiError )
+!
+!            END IF
+!
+!            IF ( mpiRank /= MPI_MASTER ) THEN
+!
+!               CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 1 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            END IF
+!
+!         ELSE
+!
+!            CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 0 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 1 , MPI_COMM_WORLD , mpiError )
+!
+!            END IF
+!
+!         END IF
+!
+!         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+!
+!         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+!
+!            IF ( mpiRank /= MPI_MASTER ) THEN
+!
+!               CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 2 , MPI_COMM_WORLD , mpiError )
+!
+!            END IF
+!
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 3 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            END IF
+!
+!         ELSE
+!
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 2 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            END IF
+!
+!            CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 3 , MPI_COMM_WORLD , mpiError )
+!
+!         END IF
+!
+!         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
 !     -- GRK4 ALGORITHM STEP #4 -------------------------------------------
 !
@@ -944,24 +928,14 @@
 
          tN = t0 + ( REAL ( n ) + 0.5 ) * dT
 
-         ! Insert Vex ... Omega ... functions ... update at half time step .... 
-!
 !     -- GRK4 ALGORITHM STEP #5 -------------------------------------------
 !
 !        k_2 = f ( t_n + 0.5 * dT , y_n + 0.5 * dT * k_1 )
 !
 !        Calculate second stage of GRK4 ...
 
-         IF ( fdOrder == 2 ) THEN
+         CALL compute_f ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K2 )
 
-            CALL f_gp_3d_rrf_mol_grk4_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K2 )
-
-         ELSE IF ( fdOrder == 4 ) THEN
-
-            CALL f_gp_3d_rrf_mol_grk4_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K2 )
-
-         END IF
-!
 !     -- GRK4 ALGORITHM STEP #6 -------------------------------------------
 !
 !        y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( lambda / 2 ) * dT * k_2
@@ -978,7 +952,7 @@
 
                DO j = nXa , nXb
 
-                  PsiB ( j , k , l ) = PsiA ( j , k , l ) + dTz * ( CMPLX ( 0.5 - 1.0 / rk4Lambda , 0.0 ) * K1 ( j , k , l ) + CMPLX ( 1.0 / rk4Lambda , 0.0 ) * K2 ( j , k , l ) )
+                  PsiB ( j , k , l ) = PsiA ( j , k , l ) + dTz * ( CMPLX ( 0.5 - 1.0 / REAL( rk4Lambda ) , 0.0 ) * K1 ( j , k , l ) + CMPLX ( 1.0 / REAL ( rk4Lambda ) , 0.0 ) * K2 ( j , k , l ) )
 
                END DO
 
@@ -992,82 +966,73 @@
 !
 !        Distribute boundary conditions ... again ...
 !
-         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
 
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+         CALL mpi_ghost_exchange ( PsiB )
 
-               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 4 , MPI_COMM_WORLD, mpiError )
-
-            END IF
-
-            IF ( mpiRank /= MPI_MASTER ) THEN
-
-               CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 5 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-            END IF
-
-         ELSE
-
-            CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 4 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
-
-               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 5 , MPI_COMM_WORLD , mpiError )
-
-            END IF
-
-         END IF
-
-         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
-
-         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
-
-            IF ( mpiRank /= MPI_MASTER ) THEN
-
-               CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 6 , MPI_COMM_WORLD , mpiError )
-
-            END IF
-
-            IF ( mpiRank /= mpiProcesses  - 1 ) THEN
-
-               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 7 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-            END IF
-
-         ELSE
-
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
-
-               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 6 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-            END IF
-
-            CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 7 , MPI_COMM_WORLD , mpiError )
-
-         END IF
-
-         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+!         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
 !
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 4 , MPI_COMM_WORLD, mpiError )
+!
+!            END IF
+!
+!            IF ( mpiRank /= MPI_MASTER ) THEN
+!!
+!               CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 5 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            END IF
+!
+!         ELSE
+!
+!            CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 4 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 5 , MPI_COMM_WORLD , mpiError !)
+!
+!            END IF
+!
+!         END IF
+!
+!         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+!
+!         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+!
+!            IF ( mpiRank /= MPI_MASTER ) !THEN
+!
+!               CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 6 , MPI_COMM_WORLD , mpiError )
+!
+!            END IF
+!
+!            IF ( mpiRank /= mpiProcesses  - 1 ) THEN
+!
+!               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 7 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            END IF
+!
+!         ELSE
+!
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 6 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            END IF
+!
+!            CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 7 , MPI_COMM_WORLD , mpiError )
+!
+!         END IF
+!
+!         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+!!
 !     -- GRK4 ALGORITHM STEP #8 -------------------------------------------
 !
 !        k_3 = f ( t_n + 0.5 * dT , y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( 1 / lambda ) * dT * k_2
 !
 !        Compute stage three ...
-!
-         IF ( fdOrder == 2 ) THEN
 
-            CALL f_gp_3d_rrf_mol_grk4_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K3 )
+         CALL compute_f ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K3 )
 
-         ELSE IF ( fdOrder == 4 ) THEN
-
-            CALL f_gp_3d_rrf_mol_grk4_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K3 )
-
-         ELSE
-
-            ! ERROR: fdOrder not available.
-
-         END IF
-!
 !     -- GRK4 ALGORITHM STEP #9 ------------------------------------------
 !
 !        y_n + ( 1 - lambda / 2 ) * dT * k_2 + ( lambda / 2 ) * dT * k_3
@@ -1083,7 +1048,7 @@
 
                DO j = nXa , nXb
 
-                  PsiB ( j , k , l ) = PsiA ( j , k , l ) + dTz * ( CMPLX ( 1.0 - 0.5 * rk4Lambda , 0.0 ) * K2 ( j , k , l ) + CMPLX ( 0.5 * rk4Lambda , 0.0 ) * K3 ( j , k , l ) )
+                  PsiB ( j , k , l ) = PsiA ( j , k , l ) + dTz * ( CMPLX ( 1.0 - 0.5 * REAL ( rk4Lambda ) , 0.0 ) * K2 ( j , k , l ) + CMPLX ( 0.5 * REAL ( rk4Lambda ) , 0.0 ) * K3 ( j , k , l ) )
 
                END DO
 
@@ -1097,90 +1062,79 @@
 !
 !        Distribute boundary conditions ...
 !
-         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
 
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+         CALL mpi_ghost_exchange ( PsiB )
 
-               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 8 , MPI_COMM_WORLD, mpiError )
-
-            END IF
-
-            IF ( mpiRank /= MPI_MASTER ) THEN
-
-               CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 9 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-            END IF
-
-         ELSE
-
-            CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 8 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
-
-               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 9 , MPI_COMM_WORLD , mpiError )
-
-            END IF
-
-         END IF
-
-         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
-
-         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
-
-            IF ( mpiRank /= MPI_MASTER ) THEN
-
-               CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 10 , MPI_COMM_WORLD , mpiError )
-
-            END IF
-
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
-
-               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 11 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-            END IF
-
-         ELSE
-
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
-
-               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 10 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-            END IF
-
-            CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 11 , MPI_COMM_WORLD , mpiError )
-
-         END IF
-
-         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+!         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
 !
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 8 , MPI_COMM_WORLD, mpiError )
+!
+!            END IF
+!
+!            IF ( mpiRank /= MPI_MASTER ) THEN
+!
+!               CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 9 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            END IF
+!
+!         ELSE
+!
+!            CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 8 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 9 , MPI_COMM_WORLD , mpiError )
+!
+!            END IF
+!
+!         END IF
+!
+!         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+!
+!         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+!
+!            IF ( mpiRank /= MPI_MASTER ) THEN
+!
+!               CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 10 , MPI_COMM_WORLD , mpiError )
+!
+!            END IF
+!
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 11 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            END IF
+!
+!         ELSE
+!
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 10 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            END IF
+!
+!            CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 11 , MPI_COMM_WORLD , mpiError )
+!
+!         END IF
+!
+!         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+!!
 !     -- GRK4 ALGORITHM STEP #11 ------------------------------------------
 !
 !        Calculate V ( x , t_n + dT ), W ( t_n + dT )
 
          tN = t0 + REAL ( n + 1 ) * dT
 
-         ! Insert Vex ... Omega ... functions ... update another half time step ...
-!
 !     -- GRK4 ALGORITHM STEP #12 ------------------------------------------
 !
 !        k_4 = f ( t_n + dT , y_n + ( 1 - lamda / 2 ) * dT * k_2 + ( lamda / 2) * dT * k_3 
 !
 !        Compute the fourth stage ...
-!
-         IF ( fdOrder == 2 ) THEN
 
-            CALL f_gp_3d_rrf_mol_grk4_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K4 )
+         CALL compute_f ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K4 )
 
-         ELSE IF ( fdOrder == 4 ) THEN
-
-            CALL f_gp_3d_rrf_mol_grk4_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , PsiB , K4 )
-
-         ELSE
-
-            ! ERROR: fdOrder not available.
-
-         END IF
-!
 !     -- GRK4 ALGORITHM STEP #13 ------------------------------------------
 !
 !        y_{ n + 1 } = y_n + ( dT / 6 ) * [ k_1 + ( 4 - lambda ) * k_2 + lambda * k_3 + k_4 ]
@@ -1195,7 +1149,7 @@
 
                DO j = nXa , nXb
 
-                  PsiB ( j , k , l ) = PsiA ( j , k , l ) + CMPLX ( 1.0 / 6.0 , 0.0 ) * dTz * ( K1 ( j , k , l ) + CMPLX ( 4.0 - rk4Lambda , 0.0 ) * K2 ( j , k , l ) + CMPLX ( rk4Lambda , 0.0 ) * K3 ( j , k , l ) + K4 ( j , k , l ) )
+                  PsiB ( j , k , l ) = PsiA ( j , k , l ) + CMPLX ( 1.0 / 6.0 , 0.0 ) * dTz * ( K1 ( j , k , l ) + CMPLX ( 4.0 - REAL ( rk4Lambda ) , 0.0 ) * K2 ( j , k , l ) + CMPLX ( REAL ( rk4Lambda ) , 0.0 ) * K3 ( j , k , l ) + K4 ( j , k , l ) )
 
                END DO
 
@@ -1209,62 +1163,65 @@
 !
 !        Distribute boundary conditions ...
 !
-         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
 
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+         CALL mpi_ghost_exchange ( PsiB )
 
-               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 12 , MPI_COMM_WORLD, mpiError )
-
-            END IF
-
-            IF ( mpiRank /= MPI_MASTER ) THEN
-
-               CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 13 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-            END IF
-
-         ELSE
-
-            CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 12 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
-
-               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 13 , MPI_COMM_WORLD , mpiError )
-
-            END IF
-
-         END IF
-
-         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
-
-         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
-
-            IF ( mpiRank /= MPI_MASTER ) THEN
-
-               CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 14 , MPI_COMM_WORLD , mpiError )
-
-            END IF
-
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
-
-               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 15 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-            END IF
-
-         ELSE
-
-            IF ( mpiRank /= mpiProcesses - 1 ) THEN
-
-               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 14 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-            END IF
-
-            CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 15 , MPI_COMM_WORLD , mpiError )
-
-         END IF
-
-         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+!         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
 !
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 12 , MPI_COMM_WORLD, mpiError )
+!!
+!            END IF
+!
+!            IF ( mpiRank /= MPI_MASTER ) THEN
+!
+!               CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 13 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            END IF
+!
+!         ELSE
+!
+!            CALL MPI_RECV ( PsiB ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 12 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_SEND ( PsiB ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 13 , MPI_COMM_WORLD , mpiError )
+!
+!            END IF
+!
+!         END IF
+!
+!         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+!
+!         IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+!
+!            IF ( mpiRank /= MPI_MASTER ) THEN
+!
+!               CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 14 , MPI_COMM_WORLD , mpiError )
+!
+!            END IF
+!
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 15 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            END IF
+!
+!         ELSE
+!
+!            IF ( mpiRank /= mpiProcesses - 1 ) THEN
+!
+!               CALL MPI_RECV ( PsiB ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 14 , MPI_COMM_WORLD , MPIStatus , mpiError )
+!
+!            END IF
+!
+!            CALL MPI_SEND ( PsiB ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 15 , MPI_COMM_WORLD , mpiError )
+!
+!        END IF
+!
+!         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+!!
 !     -- GRK4 ALGORITHM STEP #15 ------------------------------------------
 !
 !        y_{ n + 1 } ---> y_n        
@@ -1301,6 +1258,408 @@
 ! --- FORMAT STATEMENTS ---------------------------------------------------
 
       STOP
+
+      CONTAINS
+
+         SUBROUTINE compute_f ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: fdOrder
+            INTEGER, INTENT ( IN ) :: nXa
+            INTEGER, INTENT ( IN ) :: nXb
+            INTEGER, INTENT ( IN ) :: nXbc
+            INTEGER, INTENT ( IN ) :: nYa
+            INTEGER, INTENT ( IN ) :: nYb
+            INTEGER, INTENT ( IN ) :: nYbc
+            INTEGER, INTENT ( IN ) :: nZa 
+            INTEGER, INTENT ( IN ) :: nZb 
+            INTEGER, INTENT ( IN ) :: nZbc
+
+            REAL, INTENT ( IN ) :: dX
+            REAL, INTENT ( IN ) :: dY
+            REAL, INTENT ( IN ) :: dZ
+            REAL, INTENT ( IN ) :: wX
+            REAL, INTENT ( IN ) :: wY
+            REAL, INTENT ( IN ) :: wZ
+            REAL, INTENT ( IN ) :: gS
+
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
+            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
+            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex
+
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( OUT ) :: F
+
+            IF ( fdOrder == 2 ) THEN 
+
+               CALL f_gp_3d_rrf_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
+
+            ELSE IF ( fdOrder == 4 ) THEN
+
+               CALL f_gp_3d_rrf_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
+
+            ELSE IF ( fdOrder == 6 ) THEN
+
+               CALL f_gp_3d_rrf_cd6 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
+
+            ELSE IF ( fdOrder == 8 ) THEN
+
+               CALL f_gp_3d_rrf_cd8 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
+
+            ELSE
+
+               ! fdOrder not supported ...
+
+            END IF
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE f_gp_3d_rrf_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F ) 
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: nXa 
+            INTEGER, INTENT ( IN ) :: nXb 
+            INTEGER, INTENT ( IN ) :: nXbc
+            INTEGER, INTENT ( IN ) :: nYa 
+            INTEGER, INTENT ( IN ) :: nYb 
+            INTEGER, INTENT ( IN ) :: nYbc
+            INTEGER, INTENT ( IN ) :: nZa 
+            INTEGER, INTENT ( IN ) :: nZb 
+            INTEGER, INTENT ( IN ) :: nZbc
+
+            REAL, INTENT ( IN ) :: dX
+            REAL, INTENT ( IN ) :: dY
+            REAL, INTENT ( IN ) :: dZ
+            REAL, INTENT ( IN ) :: wX
+            REAL, INTENT ( IN ) :: wY
+            REAL, INTENT ( IN ) :: wZ
+            REAL, INTENT ( IN ) :: gS
+
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
+            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
+            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex 
+
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi 
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( OUT ) :: F
+
+            INTEGER :: j , k , l
+
+!$OMP       PARALLEL DEFAULT ( SHARED )
+!$OMP       DO SCHEDULE ( STATIC )
+            DO l = nZa , nZb 
+
+               DO k = nYa , nYb 
+
+                  DO j = nXa , nXb 
+
+                     F ( j , k , l ) = &
+                        & CMPLX ( 0.5 * ( wY * X ( j ) - wX * Y ( k ) ) / dZ , 0.5 / dZ**2 ) * Psi ( j , k , l - 1 ) + & 
+                        & CMPLX ( 0.5 * ( wX * Z ( l ) - wZ * X ( j ) ) / dY , 0.5 / dY**2 ) * Psi ( j , k - 1 , l ) + & 
+                        & CMPLX ( 0.5 * ( wZ * Y ( k ) - wY * Z ( l ) ) / dX , 0.5 / dX**2 ) * Psi ( j - 1 , k , l ) - & 
+                        & CMPLX ( 0.0 , 1.0 / dX**2 + 1.0 / dY**2 + 1.0 / dZ**2 + Vex ( j , k , l ) + & 
+                        &    gS * ABS ( Psi ( j , k , l ) )**2 ) * Psi ( j , k , l ) + & 
+                        & CMPLX ( 0.5 * ( wY * Z ( l ) - wZ * Y ( k ) ) / dX , 0.5 / dX**2 ) * Psi ( j + 1 , k , l ) + & 
+                        & CMPLX ( 0.5 * ( wZ * X ( j ) - wX * Z ( l ) ) / dY , 0.5 / dY**2 ) * Psi ( j , k + 1 , l ) + & 
+                        & CMPLX ( 0.5 * ( wX * Y ( k ) - wY * X ( j ) ) / dZ , 0.5 / dZ**2 ) * Psi ( j , k , l + 1 ) 
+
+                  END DO
+
+               END DO
+
+            END DO
+!$OMP       END DO
+!$OMP       END PARALLEL
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE f_gp_3d_rrf_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F ) 
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: nXa 
+            INTEGER, INTENT ( IN ) :: nXb 
+            INTEGER, INTENT ( IN ) :: nXbc
+            INTEGER, INTENT ( IN ) :: nYa 
+            INTEGER, INTENT ( IN ) :: nYb 
+            INTEGER, INTENT ( IN ) :: nYbc
+            INTEGER, INTENT ( IN ) :: nZa 
+            INTEGER, INTENT ( IN ) :: nZb 
+            INTEGER, INTENT ( IN ) :: nZbc
+
+            REAL, INTENT ( IN ) :: dX
+            REAL, INTENT ( IN ) :: dY
+            REAL, INTENT ( IN ) :: dZ
+            REAL, INTENT ( IN ) :: wX
+            REAL, INTENT ( IN ) :: wY
+            REAL, INTENT ( IN ) :: wZ
+            REAL, INTENT ( IN ) :: gS
+
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
+            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
+            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex 
+
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi 
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( OUT ) :: F
+
+            INTEGER :: j , k , l
+
+!$OMP       PARALLEL DEFAULT ( SHARED )
+!$OMP       DO SCHEDULE ( STATIC )
+            DO l = nZa , nZb 
+
+               DO k = nYa , nYb 
+
+                  DO j = nXa , nXb 
+
+                     F ( j , k , l ) = & 
+                        & CMPLX ( ( wX * Y ( k ) - wY * X ( j ) ) / ( 12.0 * dZ ) , -1.0 / ( 24.0 * dZ**2 ) ) * Psi ( j , k , l - 2 ) + & 
+                        & CMPLX ( 0.75 * ( wY * X ( j ) - wX * Y ( k ) ) / dZ , 2.0 / ( 3.0 * dZ**2 ) ) * Psi ( j , k , l - 1 ) + & 
+                        & CMPLX ( ( wZ * X ( j ) - wX * Z ( l ) ) / ( 12.0 * dY ) , -1.0 / ( 24.0 * dY**2 ) ) * Psi ( j , k - 2 , l ) + & 
+                        & CMPLX ( 0.75 * ( wX * Z ( l ) - wZ * X ( j ) ) / dY , 2.0 / ( 3.0 * dY**2 ) ) * Psi ( j , k - 1 , l ) + & 
+                        & CMPLX ( ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 12.0 * dX ) , -1.0 / ( 24.0 * dX**2 ) ) * Psi ( j - 2 , k , l ) + & 
+                        & CMPLX ( 0.75 * ( wZ * Y ( k ) - wY * Z ( l ) ) / dX , 2.0 / ( 3.0 * dX**2 ) ) * Psi ( j - 1 , k , l ) + & 
+                        & CMPLX ( 0.0 , -1.25 * ( 1.0 / dX**2 + 1.0 / dY**2 + 1.0 / dZ**2 ) - Vex ( j , k , l ) - & 
+                        &    gS * ABS ( Psi ( j , k , l ) )**2 ) * Psi ( j , k , l ) + & 
+                        & CMPLX ( 0.75 * ( wY * Z ( l ) - wZ * Y ( k ) ) / dX , 2.0 / ( 3.0 * dX**2 ) ) * Psi ( j + 1 , k , l ) + & 
+                        & CMPLX ( ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 12.0 * dX ) , -1.0 / ( 24.0 * dX**2 ) ) * Psi ( j + 2 , k , l ) + & 
+                        & CMPLX ( 0.75 * ( wZ * X ( j ) - wX * Z ( l ) ) / dY , 2.0 / ( 3.0 * dY**2 ) ) * Psi ( j , k + 1 , l ) + & 
+                        & CMPLX ( ( wX * Z ( l ) - wZ * X ( j ) ) / ( 12.0 * dY ) , -1.0 / ( 24.0 * dY**2 ) ) * Psi ( j , k + 2 , l ) + & 
+                        & CMPLX ( 0.75 * ( wX * Y ( k ) - wY * X ( j ) ) / dZ , 2.0 / ( 3.0 * dZ**2 ) ) * Psi ( j , k , l + 1 ) + & 
+                        & CMPLX ( ( wY * X ( j ) - wX * Y ( k ) ) / ( 12.0 * dZ ) , -1.0 / ( 24.0 * dZ**2 ) ) * Psi ( j , k , l + 2 ) 
+
+                  END DO
+
+               END DO
+
+            END DO
+!$OMP       END DO
+!$OMP       END PARALLEL
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE f_gp_3d_rrf_cd6 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: nXa
+            INTEGER, INTENT ( IN ) :: nXb
+            INTEGER, INTENT ( IN ) :: nXbc
+            INTEGER, INTENT ( IN ) :: nYa
+            INTEGER, INTENT ( IN ) :: nYb
+            INTEGER, INTENT ( IN ) :: nYbc
+            INTEGER, INTENT ( IN ) :: nZa
+            INTEGER, INTENT ( IN ) :: nZb
+            INTEGER, INTENT ( IN ) :: nZbc
+
+            REAL, INTENT ( IN ) :: dX
+            REAL, INTENT ( IN ) :: dY
+            REAL, INTENT ( IN ) :: dZ
+            REAL, INTENT ( IN ) :: wX
+            REAL, INTENT ( IN ) :: wY
+            REAL, INTENT ( IN ) :: wZ
+            REAL, INTENT ( IN ) :: gS
+
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
+            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
+            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex
+
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( OUT ) :: F
+
+            INTEGER :: j , k , l
+
+!$OMP       PARALLEL DEFAULT ( SHARED )
+!$OMP       DO SCHEDULE ( STATIC )
+            DO l = nZa , nZb
+
+               DO k = nYa , nYb
+
+                  DO j = nXa , nXb
+
+                     F ( j , k , l ) = &
+                        & CMPLX (       ( wY * X ( j ) - wX * Y ( k ) ) / ( 60.0 * dZ ) ,  1.0 / ( 180.0 * dZ**2 ) ) * Psi ( j , k , l - 3 ) + &
+                        & CMPLX ( 3.0 * ( wX * Y ( k ) - wY * X ( j ) ) / ( 20.0 * dZ ) , -3.0 / ( 40.0 * dZ**2 ) ) * Psi ( j , k , l - 2 ) + &
+                        & CMPLX ( 3.0 * ( wY * X ( j ) - wX * Y ( k ) ) / ( 4.0  * dZ ) ,  3.0 / ( 4.0 * dZ**2 ) ) * Psi ( j , k , l - 1 ) + &
+                        & CMPLX (       ( wX * Z ( l ) - wZ * X ( j ) ) / ( 60.0 * dY ) ,  1.0 / ( 180.0 * dY**2 ) ) * Psi ( j , k - 3 , l ) + &
+                        & CMPLX ( 3.0 * ( wZ * X ( j ) - wX * Z ( l ) ) / ( 20.0 * dY ) , -3.0 / ( 40.0 * dY**2 ) ) * Psi ( j , k - 2 , l ) + &
+                        & CMPLX ( 3.0 * ( wX * Z ( l ) - wZ * X ( j ) ) / ( 4.0  * dY ) ,  3.0 / ( 4.0 * dY**2 ) ) * Psi ( j , k - 1 , l ) + &
+                        & CMPLX (       ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 60.0 * dX ) ,  1.0 / ( 180.0 * dX**2 ) ) * Psi ( j - 3 , k , l ) + &
+                        & CMPLX ( 3.0 * ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 20.0 * dX ) , -3.0 / ( 40.0 * dX**2 ) ) * Psi ( j - 2 , k , l ) + &
+                        & CMPLX ( 3.0 * ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 4.0  * dX ) ,  3.0 / ( 4.0 * dX**2 ) ) * Psi ( j - 1 , k , l ) - &
+                        & CMPLX ( 0.0 , ( 49.0 / 36.0 ) * ( 1.0 / dX**2 + 1.0 / dY**2 + 1.0 / dZ**2 ) + Vex ( j , k , l ) + gS * ABS ( Psi ( j , k , l ) )**2 ) * Psi ( j , k , l ) + &
+                        & CMPLX ( 3.0 * ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 4.0  * dX ) ,  3.0 / ( 4.0 * dX**2 ) ) * Psi ( j + 1 , k , l ) + &
+                        & CMPLX ( 3.0 * ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 20.0 * dX ) , -3.0 / ( 40.0 * dX**2 ) ) * Psi ( j + 2 , k , l ) + &
+                        & CMPLX (       ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 60.0 * dX ) ,  1.0 / ( 180.0 * dX**2 ) ) * Psi ( j + 3 , k , l ) + &
+                        & CMPLX ( 3.0 * ( wZ * X ( j ) - wX * Z ( l ) ) / ( 4.0  * dY ) ,  3.0 / ( 4.0 * dY**2 ) ) * Psi ( j , k + 1 , l ) + &
+                        & CMPLX ( 3.0 * ( wX * Z ( l ) - wZ * X ( j ) ) / ( 20.0 * dY ) , -3.0 / ( 40.0 * dY**2 ) ) * Psi ( j , k + 2 , l ) + &
+                        & CMPLX (       ( wZ * X ( j ) - wX * Z ( l ) ) / ( 60.0 * dY ) ,  1.0 / ( 180.0 * dY**2 ) ) * Psi ( j , k + 3 , l ) + &
+                        & CMPLX ( 3.0 * ( wX * Y ( k ) - wY * X ( j ) ) / ( 4.0  * dZ ) ,  3.0 / ( 4.0 * dZ**2 ) ) * Psi ( j , k , l + 1 ) + &
+                        & CMPLX ( 3.0 * ( wY * X ( j ) - wX * Y ( k ) ) / ( 20.0 * dZ ) , -3.0 / ( 40.0 * dZ**2 ) ) * Psi ( j , k , l + 2 ) + &
+                        & CMPLX (       ( wX * Y ( k ) - wY * X ( j ) ) / ( 60.0 * dZ ) ,  1.0 / ( 180.0 * dZ**2 ) ) * Psi ( j , k , l + 3 )   
+
+                  END DO
+
+               END DO
+
+            END DO
+!$OMP       END DO
+!$OMP       END PARALLEL
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE f_gp_3d_rrf_cd8 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: nXa
+            INTEGER, INTENT ( IN ) :: nXb
+            INTEGER, INTENT ( IN ) :: nXbc
+            INTEGER, INTENT ( IN ) :: nYa
+            INTEGER, INTENT ( IN ) :: nYb
+            INTEGER, INTENT ( IN ) :: nYbc
+            INTEGER, INTENT ( IN ) :: nZa
+            INTEGER, INTENT ( IN ) :: nZb
+            INTEGER, INTENT ( IN ) :: nZbc
+
+            REAL, INTENT ( IN ) :: dX
+            REAL, INTENT ( IN ) :: dY
+            REAL, INTENT ( IN ) :: dZ
+            REAL, INTENT ( IN ) :: wX
+            REAL, INTENT ( IN ) :: wY
+            REAL, INTENT ( IN ) :: wZ
+            REAL, INTENT ( IN ) :: gS
+
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
+            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
+            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex
+
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( OUT ) :: F
+
+            INTEGER :: j , k , l
+
+!$OMP       PARALLEL DEFAULT ( SHARED )
+!$OMP       DO SCHEDULE ( STATIC )
+            DO l = nZa , nZb
+
+               DO k = nYa , nYb
+
+                  DO j = nXa , nXb
+
+                     F ( j , k , l ) = &
+                        & CMPLX (       ( wX * Y ( k ) - wY * X ( j ) ) / ( 280.0 * dZ ) , -1.0 / ( 1120.0 * dZ**2 ) ) * Psi ( j , k , l - 4 ) + &
+                        & CMPLX ( 4.0 * ( wY * X ( j ) - wX * Y ( k ) ) / ( 105.0 * dZ ) ,  4.0 / ( 315.0 * dZ**2 ) ) * Psi ( j , k , l - 3 ) + &
+                        & CMPLX (       ( wX * Y ( k ) - wY * X ( j ) ) / ( 5.0   * dZ ) , -1.0 / ( 10.0 * dZ**2 ) ) * Psi ( j , k , l - 2 ) + &
+                        & CMPLX ( 4.0 * ( wY * X ( j ) - wX * Y ( k ) ) / ( 5.0   * dZ ) ,  4.0 / ( 5.0 * dZ**2 ) ) * Psi ( j , k , l - 1 ) + &
+                        & CMPLX (       ( wZ * X ( j ) - wX * Z ( l ) ) / ( 280.0 * dY ) , -1.0 / ( 1120 * dY**2 ) ) * Psi ( j , k - 4 , l ) + &
+                        & CMPLX ( 4.0 * ( wX * Z ( l ) - wZ * X ( j ) ) / ( 105.0 * dY ) ,  4.0 / ( 315.0 * dY**2 ) ) * Psi ( j , k - 3 , l ) + &
+                        & CMPLX (       ( wZ * X ( j ) - wX * Z ( l ) ) / ( 5.0   * dY ) , -1.0 / ( 10.0 * dY**2 ) ) * Psi ( j , k - 2 , l ) + &
+                        & CMPLX ( 4.0 * ( wX * Z ( l ) - wZ * X ( j ) ) / ( 5.0   * dY ) ,  4.0 / ( 5.0 * dY**2 ) ) * Psi ( j , k - 1 , l ) + &
+                        & CMPLX (       ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 280.0 * dX ) , -1.0 / ( 1120.0 * dX**2 ) ) * Psi ( j - 4 , k , l ) + &
+                        & CMPLX ( 4.0 * ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 105.0 * dX ) ,  4.0 / ( 315.0 * dX**2 ) ) * Psi ( j - 3 , k , l ) + &
+                        & CMPLX (       ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 5.0   * dX ) , -1.0 / ( 10.0 * dX**2 ) ) * Psi ( j - 2 , k , l ) + &
+                        & CMPLX ( 4.0 * ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 5.0   * dX ) ,  4.0 / ( 5.0 * dX**2 ) ) * Psi ( j - 1 , k , l ) - &
+                        & CMPLX ( 0.0 , ( 205.0 / 144.0 ) * ( 1.0 / dX**2 + 1.0 / dY**2 + 1.0 / dZ**2 ) + Vex ( j , k , l ) + gS * ABS ( Psi ( j , k , l ) )**2 ) * Psi ( j , k , l ) + &
+                        & CMPLX ( 4.0 * ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 5.0   * dX ) ,  4.0 / ( 5.0 * dX**2 ) ) * Psi ( j + 1 , k , l ) + &
+                        & CMPLX (       ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 5.0   * dX ) , -1.0 / ( 10.0 * dX**2 ) ) * Psi ( j + 2 , k , l ) + &
+                        & CMPLX ( 4.0 * ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 105.0 * dX ) ,  4.0 / ( 315.0 * dX**2 ) ) * Psi ( j + 3 , k , l ) + &
+                        & CMPLX (       ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 280.0 * dX ) , -1.0 / ( 1120.0 * dX**2 ) ) * Psi ( j + 4 , k , l ) + &
+                        & CMPLX ( 4.0 * ( wZ * X ( j ) - wX * Z ( l ) ) / ( 5.0   * dY ) ,  4.0 / ( 5.0 * dY**2 ) ) * Psi ( j , k + 1 , l ) + &
+                        & CMPLX (       ( wX * Z ( l ) - wZ * X ( j ) ) / ( 5.0   * dY ) , -1.0 / ( 10.0 * dY**2 ) ) * Psi ( j , k + 2 , l ) + & 
+                        & CMPLX ( 4.0 * ( wZ * X ( j ) - wX * Z ( l ) ) / ( 105.0 * dY ) ,  4.0 / ( 315.0 * dY**2 ) ) * Psi ( j , k + 3 , l ) + &
+                        & CMPLX (       ( wX * Z ( l ) - wZ * X ( j ) ) / ( 280.0 * dY ) , -1.0 / ( 1120.0 * dY**2 ) ) * Psi ( j , k + 4 , l ) + &
+                        & CMPLX ( 4.0 * ( wX * Y ( k ) - wY * X ( j ) ) / ( 5.0   * dX ) ,  4.0 / ( 5.0 * dX**2 ) ) * Psi ( j , k , l + 1 ) + &
+                        & CMPLX (       ( wY * X ( j ) - wX * Y ( k ) ) / ( 5.0   * dX ) , -1.0 / ( 10.0 * dY**2 ) ) * Psi ( j , k , l + 2 ) + &
+                        & CMPLX ( 4.0 * ( wX * Y ( k ) - wY * X ( j ) ) / ( 105.0 * dX ) ,  4.0 / ( 315.0 * dY**2 ) ) * Psi ( j , k , l + 3 ) + &
+                        & CMPLX (       ( wY * X ( j ) - wX * Y ( k ) ) / ( 280.0 * dZ ) , -1.0 / ( 1120.0 * dZ**2 ) ) * Psi ( j , k , l + 4 ) 
+
+                  END DO
+
+               END DO
+
+            END DO
+!$OMP       END DO
+!$OMP       END PARALLEL
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE mpi_ghost_exchange ( Psi ) 
+
+            IMPLICIT NONE
+
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Psi
+
+            IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN 
+
+               IF ( mpiRank /= mpiProcesses - 1 ) THEN 
+
+                  CALL MPI_SEND ( Psi ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 0 , MPI_COMM_WORLD, mpiError )
+
+               END IF
+
+               IF ( mpiRank /= MPI_MASTER ) THEN 
+
+                  CALL MPI_RECV ( Psi ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 1 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+               END IF
+
+            ELSE 
+
+               CALL MPI_RECV ( Psi ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 0 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+               IF ( mpiRank /= mpiProcesses - 1 ) THEN 
+
+                  CALL MPI_SEND ( Psi ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 1 , MPI_COMM_WORLD , mpiError )
+
+               END IF
+
+            END IF
+
+            IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+
+               IF ( mpiRank /= MPI_MASTER ) THEN
+
+                  CALL MPI_SEND ( Psi ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 2 , MPI_COMM_WORLD , mpiError )
+
+               END IF
+
+               IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+                  CALL MPI_RECV ( Psi ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 3 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+               END IF
+
+            ELSE
+
+               IF ( mpiRank /= mpiProcesses - 1 ) THEN
+
+                  CALL MPI_RECV ( Psi ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 2 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+               END IF
+               CALL MPI_SEND ( Psi ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 3 , MPI_COMM_WORLD , mpiError )
+
+            END IF
+
+            RETURN
+
+         END SUBROUTINE
 
       END PROGRAM
 

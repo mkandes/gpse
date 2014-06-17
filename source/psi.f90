@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Monday, April 28th, 2014
+!     Saturday, June 7th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -84,11 +84,11 @@
 
 !$OMP       PARALLEL DEFAULT ( SHARED )
 !$OMP       DO SCHEDULE ( STATIC )
-            DO l = nZa - nZbc , nZb + nZbc
+            DO l = nZa , nZb
 
-               DO k = nYa - nYbc , nYb + nYbc
+               DO k = nYa , nYb
 
-                  DO j = nXa - nXbc , nXb + nXbc
+                  DO j = nXa , nXb
 
                      Psi3 ( j , k , l )  = CMPLX ( & 
                         & ( 1.0 / SQRT ( REAL ( 2**psiNx * factorial ( psiNx ) ) ) ) * SQRT ( SQRT ( psiWx / PI ) ) * & 
@@ -174,11 +174,11 @@
 
 !$OMP       PARALLEL DEFAULT ( SHARED )
 !$OMP       DO SCHEDULE ( STATIC )
-            DO l = nZa - nZbc , nZb + nZbc
+            DO l = nZa , nZb
 
-               DO k = nYa - nYbc , nYb + nYbc
+               DO k = nYa , nYb
 
-                  DO j = nXa - nXbc , nXb + nXbc 
+                  DO j = nXa , nXb  
 
                      Psi3 ( j , k , l ) = CMPLX ( &
                         & SQRT ( ( psiWr**( ABS ( psiMl ) + 1 ) * REAL ( factorial ( psiNr ) ) ) / & 

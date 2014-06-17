@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Wednesday, April 2nd, 2014
+!     Thursday, May 29th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -74,7 +74,7 @@
                ELSE
 
                   nFactorial = -1
-                  WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - n must be an integer greater than or equal to 0, but less than or equal to 12 because KIND ( n ) = INT32'
+                  WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - n must be an integer greater than or equal to 0, but less than or equal to 12 because KIND ( n ) = INT32.'
                   STOP
 
                END IF
@@ -92,7 +92,7 @@
                ELSE
 
                   nFactorial = -1
-                  WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - n must be an integer greater than or equal to 0, but less than or equal to 20 because KIND ( n ) = INT64'
+                  WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - n must be an integer greater than or equal to 0, but less than or equal to 20 because KIND ( n ) = INT64.'
                   STOP
 
                END IF
