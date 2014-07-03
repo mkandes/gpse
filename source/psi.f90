@@ -31,49 +31,163 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, June 7th, 2014
+!     Wednesday, July 2nd, 2014
 !
 ! -------------------------------------------------------------------------
 
       MODULE PSI
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
+      USE            :: MPI
+      USE            :: GRID, ONLY: nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc
       USE            :: MATH
 
       IMPLICIT NONE
-      PRIVATE
+      PUBLIC
 
-      PUBLIC :: psi_3d_se_sho_ani
-      PUBLIC :: psi_3d_se_sho_axi
-      !PUBLIC :: psi_3d_se_sho_iso
+      INTEGER, PARAMETER, PRIVATE :: unitPsiIn   = 502
+      INTEGER, PARAMETER, PRIVATE :: unitPsiInit = 999 
+
+      LOGICAL, PUBLIC :: readPsiInit = .FALSE. ! Read initial wave function from file ( init.psi ) ? .TRUE. = Yes ; .FALSE. = No
+      LOGICAL, PUBLIC :: writePsi    = .FALSE. ! Write wave function to file? .TRUE. = Yes ; .FALSE. = No
+
+      INTEGER, PUBLIC :: psiInit = -1 ! 0 = Isotropic 3D SHO ; 1 = Anisotropic 3D SHO ; 2 = Axially-Symmetric 3D SHO
+      INTEGER, PUBLIC :: psiNx   = 0  ! Degree of Hermite polynomial used to define anisotropic SHO wave function along x-axis
+      INTEGER, PUBLIC :: psiNy   = 0  ! Degree of Hermite polynomial used to define anisotropic SHO wave function along y-axis
+      INTEGER, PUBLIC :: psiNz   = 0  ! Degree of Hermite polynomial used to define both anisotropic and axially-symmetric SHO wave functions along z-axis
+      INTEGER, PUBLIC :: psiNr   = 0  ! Degree of (associated) Laguerre polynomials used to define radial components of isotropic and axi-symmetric SHO 
+      INTEGER, PUBLIC :: psiMl   = 0  ! Projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
+      INTEGER, PUBLIC :: fmtWritePsi = -1 ! File format for output wave functions? 0 = Binary ; 1 = GPI ; 2 = VTK ; 3 = VTK_XML
+
+      REAL, PUBLIC :: psiXo = 0.0 ! X-coordinate of origin used to define initial wave function
+      REAL, PUBLIC :: psiYo = 0.0 ! Y-coordinate of origin used to define initial wave function
+      REAL, PUBLIC :: psiZo = 0.0 ! Z-coordinate of origin used to define initial wave function
+      REAL, PUBLIC :: psiWx = 0.0 ! Angular frequency of SHO potential along x-axis used to define anisotropic SHO wave function
+      REAL, PUBLIC :: psiWy = 0.0 ! Angular frequency of SHO potential along y-axis used to define anisotropic SHO wave function
+      REAL, PUBLIC :: psiWz = 0.0 ! Angular frequency of SHO potential along z-axis used to define both anisotropic and axially-symmetric SHO wave functions
+      REAL, PUBLIC :: psiWr = 0.0 ! Angular frequency of isotropic (radially-symmetric) SHO potential used to define ...    
+
+      PUBLIC :: psi_read_inputs
+      PUBLIC :: psi_write_inputs
+      PUBLIC :: psi_mpi_bcast_inputs
+      PUBLIC :: psi_read_init
+      PUBLIC :: psi_compute_init
+      PUBLIC :: psi_normalize
+
+      PRIVATE :: psi_3d_se_sho_ani
+      PRIVATE :: psi_3d_se_sho_axi
+      PRIVATE :: psi_3d_se_sho_iso
+
+      NAMELIST /nmlPsiIn/ readPsiInit , psiInit , psiNx , psiNy , psiNz , psiNr , psiMl , psiXo , psiYo , psiZo , psiWx , psiWy , psiWz , psiWr , writePsi , fmtWritePsi
 
       CONTAINS
 
-         SUBROUTINE psi_3d_se_sho_ani ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , psiNx , psiNy , psiNz , psiXo , &
-            & psiYo , psiZo , psiWx , psiWy , psiWz , X , Y , Z , Psi3 )
+         SUBROUTINE psi_read_inputs ( )
+
+            IMPLICIT NONE
+
+            OPEN ( UNIT = unitPsiIn, FILE = 'psi.in' , ACTION = 'READ' , FORM = 'FORMATTED' , STATUS = 'OLD' )
+               READ ( UNIT = unitPsiIn , NML = nmlPsiIn )
+            CLOSE ( UNIT = unitPsiIn , STATUS = 'KEEP' )
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE psi_write_inputs ( )
+
+            IMPLICIT NONE
+
+            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiInit = ', psiInit
+            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiNx   = ', psiNx
+            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiNy   = ', psiNy
+            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiNz   = ', psiNz
+            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiNr   = ', psiNr
+            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiMl   = ', psiMl
+            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiXo   = ', psiXo
+            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiYo   = ', psiYo
+            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiZo   = ', psiZo
+            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiWx   = ', psiWx
+            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiWy   = ', psiWy
+            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiWz   = ', psiWz
+            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiWr   = ', psiWr
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE psi_mpi_bcast_inputs ( mpiMaster , mpiInt , mpiReal , mpiCmplx , mpiError )
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN    ) :: mpiMaster
+            INTEGER, INTENT ( IN    ) :: mpiInt
+            INTEGER, INTENT ( IN    ) :: mpiReal
+            INTEGER, INTENT ( IN    ) :: mpiCmplx
+            INTEGER, INTENT ( INOUT ) :: mpiError
+
+            CALL MPI_BCAST ( psiInit , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiNx   , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiNy   , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiNz   , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiNr   , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiMl   , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiXo   , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiYo   , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiZo   , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiWx   , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiWy   , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiWz   , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiWr   , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+            RETURN
+
+         END SUBROUTINE 
+
+         SUBROUTINE psi_read_init ( )
+
+            IMPLICIT NONE
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE psi_compute_init ( X , Y , Z , Psi3 )
+
+            IMPLICIT NONE
+
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
+            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
+            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
+
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Psi3
+
+            IF ( psiInit == 0 ) THEN 
+
+               ! Error: Isotropic SHO not supported yet.
+
+            ELSE IF ( psiInit == 1 ) THEN 
+
+               CALL psi_3d_se_sho_ani ( X , Y , Z , Psi3 )
+
+            ELSE IF ( psiInit == 2 ) THEN 
+
+               CALL psi_3d_se_sho_axi ( X , Y , Z , Psi3 )
+
+            ELSE 
+
+               ! Error: psiInit not defined.
+
+            END IF
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE psi_3d_se_sho_ani ( X , Y , Z , Psi3 )
  
             IMPLICIT NONE
 
-            INTEGER, INTENT ( IN ) :: nXa
-            INTEGER, INTENT ( IN ) :: nXb
-            INTEGER, INTENT ( IN ) :: nXbc
-            INTEGER, INTENT ( IN ) :: nYa
-            INTEGER, INTENT ( IN ) :: nYb
-            INTEGER, INTENT ( IN ) :: nYbc
-            INTEGER, INTENT ( IN ) :: nZa
-            INTEGER, INTENT ( IN ) :: nZb
-            INTEGER, INTENT ( IN ) :: nZbc
-            INTEGER, INTENT ( IN ) :: psiNx
-            INTEGER, INTENT ( IN ) :: psiNy
-            INTEGER, INTENT ( IN ) :: psiNz
-
-            REAL, INTENT ( IN ) :: psiXo
-            REAL, INTENT ( IN ) :: psiYo
-            REAL, INTENT ( IN ) :: psiZo
-            REAL, INTENT ( IN ) :: psiWx
-            REAL, INTENT ( IN ) :: psiWy
-            REAL, INTENT ( IN ) :: psiWz
- 
             REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
             REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
             REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
@@ -110,60 +224,10 @@
 
          END SUBROUTINE
 
-!         COMPLEX FUNCTION psi_3d_se_sho_ani ( nX , nY , nZ , xO , yO , zO , wX , wY , wZ , x , y , z )
-!
-!         IMPLICIT NONE
-!
-!         INTEGER, INTENT ( IN ) :: nX
-!         INTEGER, INTENT ( IN ) :: nY
-!         INTEGER, INTENT ( IN ) :: nZ
-!          
-!         REAL, INTENT ( IN ) :: xO
-!         REAL, INTENT ( IN ) :: yO
-!         REAL, INTENT ( IN ) :: zO
-!         REAL, INTENT ( IN ) :: wX
-!         REAL, INTENT ( IN ) :: wY
-!         REAL, INTENT ( IN ) :: wZ
-!         REAL, INTENT ( IN ) :: x
-!         REAL, INTENT ( IN ) :: y
-!         REAL, INTENT ( IN ) :: z
-!
-!         psi_3d_se_sho_ani = CMPLX ( &
-!            & ( 1.0 / SQRT ( REAL ( 2**nX * factorial ( nX ) ) ) ) * SQRT ( SQRT ( wX / PI ) ) * &
-!            & ( 1.0 / SQRT ( REAL ( 2**nY * factorial ( nY ) ) ) ) * SQRT ( SQRT ( wY / PI ) ) * &
-!            & ( 1.0 / SQRT ( REAL ( 2**nZ * factorial ( nZ ) ) ) ) * SQRT ( SQRT ( wZ / PI ) ) * &
-!            & hermite ( nX , SQRT ( wX ) * ( x - xO ) ) * EXP ( -0.5 * wX * ( x - xO )**2 ) * &
-!            & hermite ( nY , SQRT ( wY ) * ( y - yO ) ) * EXP ( -0.5 * wY * ( y - yO )**2 ) * &
-!            & hermite ( nZ , SQRT ( wZ ) * ( z - zO ) ) * EXP ( -0.5 * wZ * ( z - zO )**2 ) , 0.0 )
-!
-!         RETURN
-!
-!         END FUNCTION
-
-         SUBROUTINE psi_3d_se_sho_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , psiNr , psiMl , psiNz , psiXo , & 
-            & psiYo , psiZo , psiWr , psiWz , X , Y , Z , Psi3 )
+         SUBROUTINE psi_3d_se_sho_axi ( X , Y , Z , Psi3 )
 
             IMPLICIT NONE
 
-            INTEGER, INTENT ( IN ) :: nXa
-            INTEGER, INTENT ( IN ) :: nXb
-            INTEGER, INTENT ( IN ) :: nXbc
-            INTEGER, INTENT ( IN ) :: nYa
-            INTEGER, INTENT ( IN ) :: nYb
-            INTEGER, INTENT ( IN ) :: nYbc
-            INTEGER, INTENT ( IN ) :: nZa
-            INTEGER, INTENT ( IN ) :: nZb
-            INTEGER, INTENT ( IN ) :: nZbc
-            INTEGER, INTENT ( IN ) :: psiNr
-            INTEGER, INTENT ( IN ) :: psiMl
-            INTEGER, INTENT ( IN ) :: psiNz
-
-            REAL, INTENT ( IN ) :: psiXo
-            REAL, INTENT ( IN ) :: psiYo
-            REAL, INTENT ( IN ) :: psiZo
-            REAL, INTENT ( IN ) :: psiWr
-            REAL, INTENT ( IN ) :: psiWz
- 
             REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
             REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
             REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
@@ -202,36 +266,21 @@
 
          END SUBROUTINE
 
-!         COMPLEX FUNCTION psi_3d_se_sho_axi ( nR , mL , nZ , xO , yO , zO , wR , wZ , x , y , z )
-!
-!         IMPLICIT NONE
-!
-!         INTEGER, INTENT ( IN ) :: nR
-!         INTEGER, INTENT ( IN ) :: mL
-!         INTEGER, INTENT ( IN ) :: nZ
-!
-!         REAL, INTENT ( IN ) :: xO
-!         REAL, INTENT ( IN ) :: yO
-!         REAL, INTENT ( IN ) :: zO
-!         REAL, INTENT ( IN ) :: wR
-!         REAL, INTENT ( IN ) :: wZ
-!         REAL, INTENT ( IN ) :: x
-!         REAL, INTENT ( IN ) :: y
-!         REAL, INTENT ( IN ) :: z
-!
-!         psi_3d_se_sho_axi = CMPLX ( &
-!            & SQRT ( ( wR**( ABS ( mL ) + 1 ) * REAL ( factorial ( nR ) ) ) / &
-!            & ( PI * REAL ( factorial ( nR + ABS ( mL ) ) ) ) ) * & 
-!            & ( 1.0 / SQRT ( REAL ( 2**nZ * factorial ( nZ ) ) ) ) * SQRT ( SQRT ( wZ / PI ) ) * &
-!            & SQRT ( ( x - xO )**2 + ( y - yO )**2 )**ABS ( mL ) * &
-!            & alaguerre ( nR , ABS ( mL ) , wR * ( ( x - xO )**2 + ( y - yO )**2 ) ) * &
-!            & EXP ( -0.5 * wR * ( ( x - xO )**2 + ( y - yO )**2 ) ) * &
-!            & hermite ( nZ , SQRT ( wZ ) * ( z - zO ) ) * EXP ( -0.5 * wZ * ( z - zO )**2 ) , 0.0 ) * &
-!            & EXP ( CMPLX ( 0.0 , REAL ( mL ) * ATAN2 ( y - yO , x - xO ) ) )
-!
-!         RETURN
-!
-!         END FUNCTION
+         SUBROUTINE psi_3d_se_sho_iso ( )
+
+            IMPLICIT NONE
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE psi_normalize ( ) 
+
+            IMPLICIT NONE
+
+            RETURN
+
+         END SUBROUTINE
 
       END MODULE
 

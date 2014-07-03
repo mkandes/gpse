@@ -33,7 +33,7 @@
 #
 # LAST UPDATED
 #
-#     Tuesday, June 17th, 2014
+#     Thursday, June 19th, 2014
 #
 # -------------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ MPIF90   := mpif90
 COMPILER := gfortran
 DEBUG    := OFF
 OPTIMIZE := ON
-OPENMP   := OFF
+OPENMP   := ON
 
 
 #     Specify compiler-specific compilation options.
@@ -177,7 +177,7 @@ gpse.x : gpse.o evua.o grid.o io.o math.o psi.o vex.o lib_vtk_io.o lib_base64.o 
 gpse.o : gpse.f90 evua.mod grid.mod io.mod math.mod psi.mod vex.mod lib_vtk_io.mod lib_base64.mod ir_precision.mod
 	$(MPIF90) $(FFLAGS) -c -cpp $<
 
-evua.o evua.mod : evua.f90 math.mod
+evua.o evua.mod : evua.f90 grid.mod math.mod
 	$(MPIF90) $(FFLAGS) -c -cpp $<
 
 grid.o grid.mod : grid.f90
@@ -189,7 +189,7 @@ io.o io.mod : io.f90 grid.mod lib_vtk_io.mod
 math.o math.mod : math.f90
 	$(MPIF90) $(FFLAGS) -c -cpp $<
 
-psi.o psi.mod : psi.f90 math.mod
+psi.o psi.mod : psi.f90 grid.mod math.mod
 	$(MPIF90) $(FFLAGS) -c -cpp $<
 
 vex.o vex.mod : vex.f90

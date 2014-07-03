@@ -1,0 +1,11 @@
+&nmlGridIn	
+   nX = 128	! number of grid points along the x-axis
+   nY = 128	! number of grid points along the y-axis
+   nZ = 128	! number of grid points along the z-axis
+   xO = 0.0	! x-coordinate of the centre of the grid
+   yO = 0.0	! y-coordinate of the centre of the grid
+   zO = 0.0	! z-coordinate of the centre of the grid
+   dX = 0.125	! distance between grid points along the x-axis
+   dY = 0.125 	! distance between grid points along the y-axis
+   dZ = 0.125 	! distance between grid points along the z-axis
+/
