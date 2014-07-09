@@ -4,15 +4,15 @@
    vexFmtIn  = 1       ! 0 = Unformatted ( Binary ) ; 1 = Formatted ( GPI )
    vexFmtOut = 1       ! 0 = Unformatted ( Binary ) ; 1 = Formatted ( GPI ) ; 2 = VTK ; 3 = VTK_XML
    vexInit   = 1       ! 0 =  Linear ; 1 = SHO ; 2 = SHOR
-   xO = 0.0 !   
-   yO = 0.0 !   
-   zO = 0.0 !   
-   rO = 0.0 !
-   fX = 0.0 !   
-   fY = 0.0 !   
-   fZ = 0.0 !   
-   wX = 1.0 !   
-   wY = 1.0 !   
-   wZ = 1.0 !   
-   wR = 1.0 !   
+   vexXo = 0.0 !   
+   vexYo = 0.0 !   
+   vexZo = 0.0 !   
+   vexRo = 0.0 !
+   vexFx = 0.0 !   
+   vexFy = 0.0 !   
+   vexFz = 0.0 !   
+   vexWx = 1.0 !   
+   vexWy = 1.0 !   
+   vexWz = 1.0 !   
+   vexWr = 1.0 !   
 / 

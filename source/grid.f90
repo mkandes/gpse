@@ -31,14 +31,13 @@
 !
 ! LAST UPDATED
 !
-!     Wednesday, July 2nd, 2014
+!     Tuesday, July 8th, 2014
 !
 ! -------------------------------------------------------------------------
 
       MODULE GRID
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
-      USE            :: MPI
 
       IMPLICIT NONE
       PRIVATE
@@ -58,16 +57,15 @@
       INTEGER, PUBLIC :: nZb  = 0 
       INTEGER, PUBLIC :: nZbc = 0
 
-      REAL, PRIVATE :: xO = 0.0
-      REAL, PRIVATE :: yO = 0.0
-      REAL, PRIVATE :: zO = 0.0
+      REAL, PUBLIC :: xO = 0.0
+      REAL, PUBLIC :: yO = 0.0
+      REAL, PUBLIC :: zO = 0.0
       REAL, PUBLIC :: dX = 0.0
       REAL, PUBLIC :: dY = 0.0
       REAL, PUBLIC :: dZ = 0.0 
 
       PUBLIC :: grid_read_inputs
       PUBLIC :: grid_write_inputs
-      PUBLIC :: grid_mpi_bcast_inputs
       PUBLIC :: grid_bound_cond_size
       PUBLIC :: grid_regular
       PUBLIC :: grid_regular_axis
@@ -105,33 +103,6 @@
             RETURN
 
          END SUBROUTINE
-
-         SUBROUTINE grid_mpi_bcast_inputs ( mpiMaster , mpiInt , mpiReal , mpiCmplx , mpiError )
-
-            IMPLICIT NONE
-
-            INTEGER, INTENT ( IN    ) :: mpiMaster
-            INTEGER, INTENT ( IN    ) :: mpiInt
-            INTEGER, INTENT ( IN    ) :: mpiReal
-            INTEGER, INTENT ( IN    ) :: mpiCmplx
-            INTEGER, INTENT ( INOUT ) :: mpiError
-
-            CALL MPI_BCAST ( nX   , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( nXbc , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( nY   , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( nYbc , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )    
-            CALL MPI_BCAST ( nZ   , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( nZbc , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( xO   , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( yO   , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( zO   , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( dX   , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( dY   , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( dZ   , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-
-            RETURN
-
-         END SUBROUTINE 
 
          SUBROUTINE grid_bound_cond_size ( fdOrder )
 

@@ -31,19 +31,18 @@
 !
 ! LAST UPDATED
 !
-!     Wednesday, July 2nd, 2014
+!     Tuesday, July 8th, 2014
 !
 ! -------------------------------------------------------------------------
 
       MODULE PSI
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
-      USE            :: MPI
       USE            :: GRID, ONLY: nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc
       USE            :: MATH
 
       IMPLICIT NONE
-      PUBLIC
+      PRIVATE
 
       INTEGER, PARAMETER, PRIVATE :: unitPsiIn   = 502
       INTEGER, PARAMETER, PRIVATE :: unitPsiInit = 999 
@@ -69,7 +68,6 @@
 
       PUBLIC :: psi_read_inputs
       PUBLIC :: psi_write_inputs
-      PUBLIC :: psi_mpi_bcast_inputs
       PUBLIC :: psi_read_init
       PUBLIC :: psi_compute_init
       PUBLIC :: psi_normalize
@@ -115,34 +113,6 @@
             RETURN
 
          END SUBROUTINE
-
-         SUBROUTINE psi_mpi_bcast_inputs ( mpiMaster , mpiInt , mpiReal , mpiCmplx , mpiError )
-
-            IMPLICIT NONE
-
-            INTEGER, INTENT ( IN    ) :: mpiMaster
-            INTEGER, INTENT ( IN    ) :: mpiInt
-            INTEGER, INTENT ( IN    ) :: mpiReal
-            INTEGER, INTENT ( IN    ) :: mpiCmplx
-            INTEGER, INTENT ( INOUT ) :: mpiError
-
-            CALL MPI_BCAST ( psiInit , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( psiNx   , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( psiNy   , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( psiNz   , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( psiNr   , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( psiMl   , 1 , mpiInt  , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( psiXo   , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( psiYo   , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( psiZo   , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( psiWx   , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( psiWy   , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( psiWz   , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( psiWr   , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
-
-            RETURN
-
-         END SUBROUTINE 
 
          SUBROUTINE psi_read_init ( )
 
