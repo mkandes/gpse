@@ -1,8 +1,6 @@
 &nmlVexIn
    vexRead   = .FALSE. ! Read initial external potential from file ( init.vex ) ? .TRUE. = Yes ; .FALSE. = No ; If .FALSE., then compute_vex_init ( ).
-   vexWrite  = .FALSE. ! Write external potential to file? .TRUE. = Yes ; .FALSE. = No
    vexFmtIn  = 1       ! 0 = Unformatted ( Binary ) ; 1 = Formatted ( GPI )
-   vexFmtOut = 1       ! 0 = Unformatted ( Binary ) ; 1 = Formatted ( GPI ) ; 2 = VTK ; 3 = VTK_XML
    vexInit   = 1       ! 0 =  Linear ; 1 = SHO ; 2 = SHOR
    vexXo = 0.0 !   
    vexYo = 0.0 !   

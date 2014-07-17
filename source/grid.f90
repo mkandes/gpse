@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, July 8th, 2014
+!     Wednesday, July 16th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -65,7 +65,6 @@
       REAL, PUBLIC :: dZ = 0.0 
 
       PUBLIC :: grid_read_inputs
-      PUBLIC :: grid_write_inputs
       PUBLIC :: grid_bound_cond_size
       PUBLIC :: grid_regular
       PUBLIC :: grid_regular_axis
@@ -81,24 +80,6 @@
             OPEN ( UNIT = unitGridIn, FILE = 'grid.in' , ACTION = 'READ' , FORM = 'FORMATTED' , STATUS = 'OLD' )
                READ ( UNIT = unitGridIn , NML = nmlGridIn )
             CLOSE ( UNIT = unitGridIn , STATUS = 'KEEP' )
-
-            RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE grid_write_inputs ( )
-
-            IMPLICIT NONE
-
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# nX = ', nX
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# nY = ', nY
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# nZ = ', nZ
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# xO = ', xO
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# yO = ', yO
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# zO = ', zO
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# dX = ', dX
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# dY = ', dY
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# dZ = ', dZ
 
             RETURN
 

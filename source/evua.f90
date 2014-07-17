@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Sunday, June 29th, 2014
+!     Tuesday, July 15th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -45,47 +45,47 @@
          PRIVATE
 
          REAL, PUBLIC :: normL2 = 0.0
-         REAL, PUBLIC :: normL2Local = 0.0
+         REAL, PUBLIC :: normL2L = 0.0
          REAL, PUBLIC :: avgX = 0.0
-         REAL, PUBLIC :: avgXLocal = 0.0
+         REAL, PUBLIC :: avgXL = 0.0
          REAL, PUBLIC :: avgX2 = 0.0
-         REAL, PUBLIC :: avgX2Local = 0.0
+         REAL, PUBLIC :: avgX2L = 0.0
          REAL, PUBLIC :: avgY = 0.0
-         REAL, PUBLIC :: avgYLocal = 0.0
+         REAL, PUBLIC :: avgYL = 0.0
          REAL, PUBLIC :: avgY2 = 0.0
-         REAL, PUBLIC :: avgY2Local = 0.0
+         REAL, PUBLIC :: avgY2L = 0.0
          REAL, PUBLIC :: avgZ = 0.0
-         REAL, PUBLIC :: avgZLocal = 0.0
+         REAL, PUBLIC :: avgZL = 0.0
          REAL, PUBLIC :: avgZ2 = 0.0
-         REAL, PUBLIC :: avgZ2Local = 0.0
+         REAL, PUBLIC :: avgZ2L = 0.0
          REAL, PUBLIC :: avgPx = 0.0
-         REAL, PUBLIC :: avgPxLocal = 0.0
+         REAL, PUBLIC :: avgPxL = 0.0
          REAL, PUBLIC :: avgPx2 = 0.0
-         REAL, PUBLIC :: avgPx2Local = 0.0
+         REAL, PUBLIC :: avgPx2L = 0.0
          REAL, PUBLIC :: avgPy = 0.0
-         REAL, PUBLIC :: avgPyLocal = 0.0
+         REAL, PUBLIC :: avgPyL = 0.0
          REAL, PUBLIC :: avgPy2 = 0.0
-         REAL, PUBLIC :: avgPy2Local = 0.0
+         REAL, PUBLIC :: avgPy2L = 0.0
          REAL, PUBLIC :: avgPz = 0.0
-         REAL, PUBLIC :: avgPzLocal = 0.0
+         REAL, PUBLIC :: avgPzL = 0.0
          REAL, PUBLIC :: avgPz2 = 0.0
-         REAL, PUBLIC :: avgPz2Local = 0.0
+         REAL, PUBLIC :: avgPz2L = 0.0
          REAL, PUBLIC :: avgLx = 0.0
-         REAL, PUBLIC :: avgLxLocal = 0.0 
+         REAL, PUBLIC :: avgLxL = 0.0 
          REAL, PUBLIC :: avgLx2 = 0.0
-         REAL, PUBLIC :: avgLx2Local = 0.0
+         REAL, PUBLIC :: avgLx2L = 0.0
          REAL, PUBLIC :: avgLy = 0.0
-         REAL, PUBLIC :: avgLyLocal = 0.0
+         REAL, PUBLIC :: avgLyL = 0.0
          REAL, PUBLIC :: avgLy2 = 0.0
-         REAL, PUBLIC :: avgLy2Local = 0.0
+         REAL, PUBLIC :: avgLy2L = 0.0
          REAL, PUBLIC :: avgLz = 0.0
-         REAL, PUBLIC :: avgLzLocal = 0.0
+         REAL, PUBLIC :: avgLzL = 0.0
          REAL, PUBLIC :: avgLz2 = 0.0
-         REAL, PUBLIC :: avgLz2Local = 0.0
+         REAL, PUBLIC :: avgLz2L = 0.0
          REAL, PUBLIC :: avgVex = 0.0
-         REAL, PUBLIC :: avgVexLocal = 0.0
+         REAL, PUBLIC :: avgVexL = 0.0
          REAL, PUBLIC :: avgVmf = 0.0
-         REAL, PUBLIC :: avgVmfLocal = 0.0
+         REAL, PUBLIC :: avgVmfL = 0.0
          REAL, PUBLIC :: avgTx = 0.0
          REAL, PUBLIC :: avgTy = 0.0
          REAL, PUBLIC :: avgTz = 0.0

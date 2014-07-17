@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, July 8th, 2014
+!     Wednesday, July 9th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -47,7 +47,7 @@
       INTEGER, PARAMETER, PRIVATE :: unitPsiIn   = 502
       INTEGER, PARAMETER, PRIVATE :: unitPsiInit = 999 
 
-      LOGICAL, PUBLIC :: readPsiInit = .FALSE. ! Read initial wave function from file ( init.psi ) ? .TRUE. = Yes ; .FALSE. = No
+      LOGICAL, PUBLIC :: readPsi = .FALSE. ! Read initial wave function from file ( init.psi ) ? .TRUE. = Yes ; .FALSE. = No
       LOGICAL, PUBLIC :: writePsi    = .FALSE. ! Write wave function to file? .TRUE. = Yes ; .FALSE. = No
 
       INTEGER, PUBLIC :: psiInit = -1 ! 0 = Isotropic 3D SHO ; 1 = Anisotropic 3D SHO ; 2 = Axially-Symmetric 3D SHO
@@ -67,7 +67,6 @@
       REAL, PUBLIC :: psiWr = 0.0 ! Angular frequency of isotropic (radially-symmetric) SHO potential used to define ...    
 
       PUBLIC :: psi_read_inputs
-      PUBLIC :: psi_write_inputs
       PUBLIC :: psi_read_init
       PUBLIC :: psi_compute_init
       PUBLIC :: psi_normalize
@@ -76,7 +75,7 @@
       PRIVATE :: psi_3d_se_sho_axi
       PRIVATE :: psi_3d_se_sho_iso
 
-      NAMELIST /nmlPsiIn/ readPsiInit , psiInit , psiNx , psiNy , psiNz , psiNr , psiMl , psiXo , psiYo , psiZo , psiWx , psiWy , psiWz , psiWr , writePsi , fmtWritePsi
+      NAMELIST /nmlPsiIn/ readPsi , psiInit , psiNx , psiNy , psiNz , psiNr , psiMl , psiXo , psiYo , psiZo , psiWx , psiWy , psiWz , psiWr
 
       CONTAINS
 
@@ -87,28 +86,6 @@
             OPEN ( UNIT = unitPsiIn, FILE = 'psi.in' , ACTION = 'READ' , FORM = 'FORMATTED' , STATUS = 'OLD' )
                READ ( UNIT = unitPsiIn , NML = nmlPsiIn )
             CLOSE ( UNIT = unitPsiIn , STATUS = 'KEEP' )
-
-            RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE psi_write_inputs ( )
-
-            IMPLICIT NONE
-
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiInit = ', psiInit
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiNx   = ', psiNx
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiNy   = ', psiNy
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiNz   = ', psiNz
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiNr   = ', psiNr
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiMl   = ', psiMl
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiXo   = ', psiXo
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiYo   = ', psiYo
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiZo   = ', psiZo
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiWx   = ', psiWx
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiWy   = ', psiWy
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiWz   = ', psiWz
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# psiWr   = ', psiWr
 
             RETURN
 

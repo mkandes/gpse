@@ -33,7 +33,7 @@
 #
 # LAST UPDATED
 #
-#     Thursday, June 19th, 2014
+#     Wednesday, July 9th, 2014
 #
 # -------------------------------------------------------------------------
 
@@ -71,7 +71,7 @@ OPENMP   := ON
 STD_GNU  := -fimplicit-none -ffree-form -ffree-line-length-none -fall-intrinsics
 INT_GNU  :=
 REAL_GNU := -fdefault-real-8
-OPT_GNU  := -O3 #-ffast-math -funroll-loops
+OPT_GNU  := -O3 -ffast-math -funroll-loops
 OMP_GNU  := -fopenmp
 AUTO_GNU :=
 CHK_GNU  := -fcheck=all

@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, July 8th, 2014
+!     Wednesday, July 9th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -47,10 +47,8 @@
       INTEGER, PARAMETER, PRIVATE :: vexUnitInit = 998
 
       LOGICAL, PUBLIC :: vexRead   = .FALSE.
-      LOGICAL, PUBLIC :: vexWRITE  = .FALSE.
 
       INTEGER, PUBLIC :: vexFmtIn  = -1      ! 0 = Unformatted ( Binary ) ; 1 = Formatted ( GPI ) 
-      INTEGER, PUBLIC :: vexFmtOut = -1      ! 0 = Unformatted ( Binary ) ; 1 = Formatted ( GPI ) ; 2 = VTK ; 4 = VTK_XML
       INTEGER, PUBLIC :: vexInit = -1 ! 0 = Linear ; 1 = Simple Harmonic Oscillator ; 2 = Simple Harmonic Oscillator Ring
 
       REAL, PUBLIC :: vexXo = 0.0
@@ -66,7 +64,6 @@
       REAL, PUBLIC :: vexWr = 0.0
 
       PUBLIC :: vex_read_inputs
-      PUBLIC :: vex_write_inputs
       PUBLIC :: vex_read_init
       PUBLIC :: vex_compute_init
 
@@ -74,7 +71,7 @@
       PUBLIC :: vex_3d_sho
       PUBLIC :: vex_3d_shor
 
-      NAMELIST /nmlVexIn/ vexRead , vexWrite , vexFmtIn , vexFmtOut , vexInit , vexXo , vexYo , vexZo , vexRo , vexFx , vexFy , vexFz , vexWx , vexWy , vexWz , vexWr 
+      NAMELIST /nmlVexIn/ vexRead , vexFmtIn , vexInit , vexXo , vexYo , vexZo , vexRo , vexFx , vexFy , vexFz , vexWx , vexWy , vexWz , vexWr 
 
       CONTAINS
 
@@ -85,31 +82,6 @@
             OPEN ( UNIT = vexUnitIn, FILE = 'vex.in' , ACTION = 'READ' , FORM = 'FORMATTED' , STATUS = 'OLD' )
                READ ( UNIT = vexUnitIn , NML = nmlVexIn )
             CLOSE ( UNIT = vexUnitIn , STATUS = 'KEEP' )
-
-            RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE vex_WRITE_inputs ( )
-
-            IMPLICIT NONE
-
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexRead   = ', vexRead
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexWrite  = ', vexWrite
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexFmtIn  = ', vexFmtIn
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexFmtOut = ', vexFmtOut
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexInit   = ', vexInit
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexXo = ', vexXo
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexYo = ', vexYo
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexZo = ', vexZo
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexRo = ', vexRo
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexFx = ', vexFx
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexFy = ', vexFy
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexFz = ', vexFz
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexWx = ', vexWx
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexWy = ', vexWy
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexWz = ', vexWz
-            WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# vexWr = ', vexWr
 
             RETURN
 
