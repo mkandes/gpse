@@ -33,7 +33,7 @@
 #
 # LAST UPDATED
 #
-#     Wednesday, July 9th, 2014
+#     Monday, September 8th, 2014
 #
 # -------------------------------------------------------------------------
 
@@ -60,8 +60,7 @@ MPIF90   := mpif90
 COMPILER := gfortran
 DEBUG    := OFF
 OPTIMIZE := ON
-OPENMP   := ON
-
+OPENMP   := OFF
 
 #     Specify compiler-specific compilation options.
 #

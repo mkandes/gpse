@@ -1,16 +1,16 @@
 &nmlGPSEin
-   itpOn      = .FALSE.     ! Perform imaginary time propagation? .TRUE. = Yes ; .FALSE. = No
-   fullIO     = .TRUE.      ! Write external potential and wave function to file? .TRUE. = Yes ; .FALSE. = No
-   fmtIO      = 2           ! File format of output external potential and wave function? 0 = Binary ; 1 = GPI ; 2 = VTK ; 3 = VTK_XML   
+   itpOn      = .TRUE.      ! Perform imaginary time propagation? .TRUE. = Yes ; .FALSE. = No
+   fullIO     = .TRUE.     ! Write external potential and wave function to file? .TRUE. = Yes ; .FALSE. = No
+   fmtIO      = 1           ! File format of output external potential and wave function? 1 = GPI ; 2 = VTK ; 3 = VTK_XML   
    rk4Lambda  = 2           ! 1 = Tan-Chen Lambda-1 ; 2 = Classical 4th-Order Runge-Kutta ; 3 = Tan-Chen Lambda-3 ; 4 = England ; 5 = Tan-Chen Lambda-5
    fdOrder    = 2           ! 2 = 2nd-Order Central Differences ( CD ); 4 = 4th-Order CD ; 6 = 6th-Order CD; 8 = 8th-Order CD
    quadRule   = 1           ! 1 = Rectangle Rule ; 2 = Trapezoidal Rule
    nTsteps    = 51200       ! Total number of time steps in simulation
-   nTwrite    = 512         ! Period of writes to disk; i.e., number of time steps between writes to disk
+   nTwrite    = 128         ! Period of writes to disk; i.e., number of time steps between writes to disk
    t0         = 0.0         ! Simulation time at the beginning of the simulation
    dT         = 1.953125e-3 ! Interval of a time step
    wX         = 0.0         ! X-component of the rotating reference frame's angular velocity vector
    wY         = 0.0         ! Y-component of the rotating reference frame's angular velocity vector
-   wZ         = 0.1         ! Z-component of the rotating reference frame's angular velocity vector 
-   gS         = 100.0       ! Nonlinear atom-atom interaction coupling constant
+   wZ         = 0.5         ! Z-component of the rotating reference frame's angular velocity vector 
+   gS         = 100.0      ! Nonlinear atom-atom interaction coupling constant
 /

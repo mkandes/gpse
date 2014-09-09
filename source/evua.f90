@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, July 15th, 2014
+!     Thursday, August 21st, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -91,6 +91,7 @@
          REAL, PUBLIC :: avgTz = 0.0
          REAL, PUBLIC :: avgE = 0.0
          REAL, PUBLIC :: avgL2 = 0.0
+         REAL, PUBLIC :: mu = 0.0
          REAL, PUBLIC :: sigX = 0.0
          REAL, PUBLIC :: sigY = 0.0
          REAL, PUBLIC :: sigZ = 0.0

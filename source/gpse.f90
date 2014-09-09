@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Thursday, July 17th, 2014
+!     Tuesday, September 9th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -55,8 +55,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.2.0'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Thursday, July 17th, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.2.1'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Tuesday, September 9th, 2014'
 
       INTEGER, PARAMETER :: INT_DEFAULT_KIND   = KIND ( 0 ) 
       INTEGER, PARAMETER :: REAL_DEFAULT_KIND  = KIND ( 0.0 )
@@ -68,7 +68,7 @@
 ! --- VARIABLE DECLARATIONS -----------------------------------------------
 
       LOGICAL :: itpOn  = .FALSE. ! Perform imaginary time propagation? .TRUE. = Yes ; .FALSE. = No
-      LOGICAL :: fullIO = .FALSE. 
+      LOGICAL :: fullIO = .FALSE.
 
       CHARACTER ( LEN = 8  ) :: startDate = 'NONE'
       CHARACTER ( LEN = 10 ) :: startTime = 'NONE'
@@ -162,7 +162,7 @@
 
 !$OMP PARALLEL DEFAULT ( SHARED )
 
-      ompThreads = OMP_GET_NUM_THREADS ( )
+!      ompThreads = OMP_GET_NUM_THREADS ( )
 
 !$OMP END PARALLEL
 
@@ -363,11 +363,17 @@
 
       END IF
 
-      IF ( readPsi .EQV. .TRUE. ) THEN ! read initial wave function from file
+      IF ( readPsi .EQV. .TRUE. ) THEN ! read initial wave function from file on MPI_MASTER and scatter to MPI processes
 
-         CALL psi_read_init ( ) 
+         IF ( mpiRank == MPI_MASTER ) THEN
 
-      ELSE ! compute initial wave function
+            CALL read_bin ( 'psilast' , 0 , PsiM )
+
+         END IF
+
+         CALL mpi_scatter_custom ( )
+
+      ELSE ! compute initial wave function across all MPI processes
 
          CALL psi_compute_init ( X , Y , Z , PsiA )
 
@@ -495,6 +501,10 @@
 
                avgE = avgTx + avgTy + avgTz + avgVex + avgVmf
 
+!              Chemical potential
+
+               mu =  avgTx + avgTy + avgTz + avgVex + 2.0 * avgVmf
+
 !              Write expectation values, uncertainties and uncertainty 
 !              relations to file from MPI_MASTER
 
@@ -510,11 +520,9 @@
                   &               avgLz , avgLz2 , sigLz ,                   &
                   & avgL2 ,                                                  &
                   &               avgTx , avgTy  , avgTz , avgVex , avgVmf , &
-                  & avgE ,                                                   &
+                  & avgE , mu ,                                              &
                   &         sigX  * sigPx , sigY  * sigPy , sigZ  * sigPz ,  &
                   &         sigLx * sigLy , sigLy * sigLz , sigLz * sigLx
-
-!              Write wave function to file from MPI_MASTER
 
             END IF
 
@@ -525,7 +533,22 @@
                IF ( mpiRank == MPI_MASTER ) THEN ! write external potential and wave function to file from MPI_MASTER
 
                   fileNumber = fileNumber + 1
-                  CALL write_vtk ( 'gpse-vex-psi' , fileNumber , Xm , Ym , Zm , VexM , PsiM )
+
+                  IF ( fmtIO == 1 ) THEN
+
+                     CALL write_gpi ( 'gpse_psi_vex_' , fileNumber , Xm , Ym , Zm , VexM , PsiM )
+
+                  ELSE IF ( fmtIO == 2 ) THEN
+
+                     CALL write_vtk ( 'gpse_psi_vex_' , fileNumber , Xm , Ym , Zm , VexM , PsiM )
+
+                  ELSE
+
+                     ! fmt not supported yet
+
+                  END IF
+
+                  CALL write_bin ( 'psilast' , 0 , PsiM ) ! checkpointing wave function in binary formatted file
 
                END IF
 
@@ -650,8 +673,18 @@
 
          CALL mpi_exchange_ghosts ( PsiB )
 
-!        y_{ n + 1 } ---> y_n        
+!        Update wave function each time step: y_{ n + 1 } ---> y_n        
          PsiA = PsiB
+
+!        If using ITP, then also renormalize wave function each time step
+         IF ( itpOn .EQV. .TRUE. ) THEN
+
+            normL2L = l2_norm_3d_rect ( PsiA )
+            CALL MPI_REDUCE ( normL2L , normL2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( normL2 , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+            PsiA = PsiA / SQRT ( normL2 )
+
+         END IF
 
       END DO
 
@@ -808,6 +841,7 @@
             CALL MPI_BCAST ( vexWz     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( vexWr     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
 
+            CALL MPI_BCAST ( readPsi   , 1 , MPI_LOGICAL , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( psiInit   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( psiNx     , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( psiNy     , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
@@ -902,6 +936,80 @@
                END DO
 
             END IF 
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE mpi_scatter_custom ( )
+
+            IMPLICIT NONE
+
+            INTEGER :: mpiDest
+            INTEGER :: nZaDest
+            INTEGER :: nZbDest
+
+            IF ( mpiRank == MPI_MASTER ) THEN ! send wave function to all MPI processes
+
+!$OMP          PARALLEL DEFAULT ( SHARED )
+!$OMP          DO SCHEDULE ( STATIC )
+               DO l = nZa , nZb
+
+                  DO k = nYa , nYb
+
+                     DO j = nXa , nXb
+
+                        PsiA ( j , k , l ) = PsiM ( j + nX * ( ( k - 1 ) + nY * ( l - 1 ) ) )
+
+                     END DO 
+
+                  END DO 
+
+               END DO 
+!$OMP          END DO
+!$OMP          END PARALLEL
+
+               DO mpiDest = 1 , mpiProcesses - 1
+
+                  CALL MPI_RECV ( nZaDest , 1 , mpiInt , mpiDest , 0 , MPI_COMM_WORLD , MPIStatus , mpiError )
+                  CALL MPI_RECV ( nZbDest , 1 , mpiInt , mpiDest , 1 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+                  DO l = nZaDest , nZbDest
+
+                     DO k = 1 , nY
+
+                        DO j = 1 , nX
+
+                           CALL MPI_SSEND ( PsiM ( j + nX * ( ( k - 1 ) + nY * ( l - 1 ) ) ) , 1 , mpiCmplx , mpiDest , 2 , MPI_COMM_WORLD , mpiError )
+
+                        END DO
+
+                     END DO
+
+                  END DO
+
+               END DO
+
+            ELSE ! receive wave function from MPI_MASTER
+
+               CALL MPI_SSEND ( nZa , 1 , mpiInt , MPI_MASTER , 0 , MPI_COMM_WORLD , mpiError )
+               CALL MPI_SSEND ( nZb , 1 , mpiInt , MPI_MASTER , 1 , MPI_COMM_WORLD , mpiError )
+
+               DO l = nZa , nZb
+
+                  DO k = 1 , nY
+
+                     DO j = 1 , nY
+
+                        CALL MPI_RECV ( PsiA ( j , k , l ) , 1 , mpiCmplx , MPI_MASTER , 2 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+                     END DO
+
+                  END DO
+
+               END DO
+
+            END IF
 
             RETURN
 

@@ -1,5 +1,5 @@
 &nmlPsiIn
-   readPsi = .FALSE. ! Read initial wave function from file ( init.psi ) ? .TRUE. = Yes ; .FALSE. = No ; If .FALSE., then compute_psi_init ( ).
+   readPsi = .TRUE. ! Read initial wave function from file ( init.psi ) ? .TRUE. = Yes ; .FALSE. = No ; If .FALSE., then compute_psi_init ( ).
    psiInit = 2       ! 0 = Isotropic 3D SHO ; 1 = Anisotropic 3D SHO ; 2 = Axially-Symmetric 3D SHO
    psiNx   = 0       ! Degree of Hermite polynomial used to define anisotropic SHO wave function along x-axis
    psiNy   = 0       ! Degree of Hermite polynomial used to define anisotropic SHO wave function along y-axis

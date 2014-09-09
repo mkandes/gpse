@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Thursday, July 17th, 2014
+!     Monday, September 8th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -66,12 +66,140 @@
       CHARACTER ( LEN = MAX_LEN ), PRIVATE :: vtkVariableLocation
       CHARACTER ( LEN = MAX_LEN ), PRIVATE :: vtkVariableName
 
-      INTEGER, PUBLIC :: vtkFileNum = -1
       INTEGER, PUBLIC :: vtkError   = -1
 
+      PUBLIC :: read_bin
+      PUBLIC :: write_bin
+!      PUBLIC :: read_gpi
+      PUBLIC :: write_gpi
       PUBLIC :: write_vtk
 
       CONTAINS
+
+         SUBROUTINE read_bin ( fileName , fileNumber , Psi )
+
+            IMPLICIT NONE
+
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
+
+            INTEGER, INTENT ( IN ) :: fileNumber
+
+            COMPLEX, ALLOCATABLE, DIMENSION ( : ), INTENT ( INOUT ) :: Psi
+
+            CHARACTER ( LEN = 4 ) :: fileNumberStr
+
+            WRITE ( UNIT = fileNumberStr , FMT = '(I4.4)' ) fileNumber
+            OPEN  ( UNIT = fileNumber , FILE = trim(fileName//fileNumberStr//'.bin') , ACTION = 'READ' , FORM = 'UNFORMATTED' , STATUS = 'OLD' )
+            READ ( UNIT = fileNumber ) Psi
+            CLOSE ( UNIT = fileNumber , STATUS = 'KEEP' )
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE write_bin ( fileName , fileNumber , Psi )
+
+            IMPLICIT NONE
+
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
+
+            INTEGER, INTENT ( IN ) :: fileNumber
+
+            COMPLEX, ALLOCATABLE, DIMENSION ( : ), INTENT ( IN ) :: Psi 
+
+            CHARACTER ( LEN = 4 ) :: fileNumberStr
+
+            WRITE ( UNIT = fileNumberStr , FMT = '(I4.4)' ) fileNumber
+            OPEN  ( UNIT = fileNumber , FILE = trim(fileName//fileNumberStr//'.bin') , ACTION = 'WRITE' , FORM = 'UNFORMATTED' , STATUS = 'UNKNOWN' )
+            WRITE ( UNIT = fileNumber ) Psi
+            CLOSE ( UNIT = fileNumber , STATUS = 'KEEP' )
+
+            RETURN
+
+         END SUBROUTINE
+
+!         SUBROUTINE read_gpi ( fileName , fileNumber , X , Y , Z , Vex , Psi )
+!
+!            IMPLICIT NONE
+!
+!            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
+!
+!            INTEGER, INTENT ( IN ) :: fileNumber
+!
+!            REAL, DIMENSION ( : ), INTENT ( IN ) :: X
+!            REAL, DIMENSION ( : ), INTENT ( IN ) :: Y
+!            REAL, DIMENSION ( : ), INTENT ( IN ) :: Z
+!            REAL, DIMENSION ( : ), INTENT ( IN ) :: Vex 
+!
+!            COMPLEX, ALLOCATABLE, DIMENSION ( : ), INTENT ( IN ) :: Psi 
+!
+!            CHARACTER ( LEN = 4 ) :: fileNumberStr
+!            CHARACTER ( LEN = 1 ) :: spaceStr
+!
+!            INTEGER :: j , k , l
+!
+!            WRITE ( UNIT = fileNumberStr , FMT = '(I4.4)' ) fileNumber
+!           OPEN  ( UNIT = fileNumber , FILE = trim(fileName//fileNumberStr//'.gpi') , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
+!            DO l = 1 , nZ
+!
+!               DO k = 1 , nY
+!
+!                  DO j = 1 , nX
+!
+!                     READ ( UNIT = fileNumber , FMT = '( 1X , 6 ( F23.15 ) )' ) X ( j ) , Y ( k ) , Z ( l ) , Vex ( j + nX * ( ( k - 1 ) + nY * ( l - 1 ) ) ) , REAL ( Psi ( j + nX * ( ( k - 1 ) + nY * ( l - 1 ) ) ) ) , AIMAG ( Psi ( j + nX * ( ( k - 1 ) + nY * ( l - 1 ) ) ) )
+!
+!                  END DO
+!
+!               END DO
+!               READ ( UNIT = fileNumber , FMT = * ) spaceStr
+!
+!            END DO
+!            CLOSE ( UNIT = fileNumber , STATUS = 'KEEP' )
+!
+!            RETURN
+!
+!         END SUBROUTINE 
+
+         SUBROUTINE write_gpi ( fileName , fileNumber , X , Y , Z , Vex , Psi )
+
+            IMPLICIT NONE
+
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
+
+            INTEGER, INTENT ( IN ) :: fileNumber
+
+            REAL, DIMENSION ( : ), INTENT ( IN ) :: X
+            REAL, DIMENSION ( : ), INTENT ( IN ) :: Y
+            REAL, DIMENSION ( : ), INTENT ( IN ) :: Z
+            REAL, DIMENSION ( : ), INTENT ( IN ) :: Vex 
+
+            COMPLEX, ALLOCATABLE, DIMENSION ( : ), INTENT ( IN ) :: Psi 
+
+            CHARACTER ( LEN = 4 ) :: fileNumberStr
+
+            INTEGER :: j , k , l
+
+            WRITE ( UNIT = fileNumberStr , FMT = '(I4.4)' ) fileNumber
+            OPEN  ( UNIT = fileNumber , FILE = trim(fileName//fileNumberStr//'.gpi') , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
+            DO l = 1 , nZ
+            
+               DO k = 1 , nY
+            
+                  DO j = 1 , nX
+
+                     WRITE ( UNIT = fileNumber , FMT = '( 1X , 6 ( F23.15 ) )' ) X ( j ) , Y ( k ) , Z ( l ) , Vex ( j + nX * ( ( k - 1 ) + nY * ( l - 1 ) ) ) , REAL ( Psi ( j + nX * ( ( k - 1 ) + nY * ( l - 1 ) ) ) ) , AIMAG ( Psi ( j + nX * ( ( k - 1 ) + nY * ( l - 1 ) ) ) )
+
+                  END DO
+
+               END DO
+               WRITE ( UNIT = fileNumber , FMT = * )
+
+            END DO
+            CLOSE ( UNIT = fileNumber , STATUS = 'KEEP' )
+
+            RETURN
+
+         END SUBROUTINE
 
          SUBROUTINE write_vtk ( fileName , fileNumber , X , Y , Z , Vex , Psi )
 
