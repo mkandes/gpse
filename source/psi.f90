@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Wednesday, July 9th, 2014
+!     Tuesday, September 22nd, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -70,6 +70,7 @@
       PUBLIC :: psi_read_init
       PUBLIC :: psi_compute_init
       PUBLIC :: psi_normalize
+      PUBLIC :: psi_boost
 
       PRIVATE :: psi_3d_se_sho_ani
       PRIVATE :: psi_3d_se_sho_axi
@@ -224,6 +225,47 @@
          SUBROUTINE psi_normalize ( ) 
 
             IMPLICIT NONE
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE psi_boost ( pX , pY , pZ , xO , yO , zO , X , Y , Z , Psi3 )
+
+            IMPLICIT NONE
+
+            REAL, INTENT ( IN ) :: pX
+            REAL, INTENT ( IN ) :: pY
+            REAL, INTENT ( IN ) :: pZ
+            REAL, INTENT ( IN ) :: xO
+            REAL, INTENT ( IN ) :: yO
+            REAL, INTENT ( IN ) :: zO
+
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
+            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
+            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
+
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Psi3
+
+            INTEGER :: j , k , l
+
+!$OMP       PARALLEL DEFAULT ( SHARED )
+!$OMP       DO SCHEDULE ( STATIC )
+            DO l = nZa , nZb
+
+               DO k = nYa , nYb
+
+                  DO j = nXa , nXb
+
+                     Psi3 ( j , k , l ) = Psi3 ( j , k , l ) * EXP ( CMPLX ( 0.0 , pX * ( X ( j ) - xO ) + pY * ( Y ( k ) -yO ) + pZ * ( Z ( l ) - zO ) ) )
+
+                  END DO
+
+               END DO
+
+            END DO
+!$OMP       END DO
+!$OMP       END PARALLEL
 
             RETURN
 

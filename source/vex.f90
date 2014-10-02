@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Wednesday, July 9th, 2014
+!     Tuesday, September 9th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -69,6 +69,7 @@
 
       PUBLIC :: vex_3d_lin
       PUBLIC :: vex_3d_sho
+!      PUBLIC :: vex_3d_sho_rot
       PUBLIC :: vex_3d_shor
 
       NAMELIST /nmlVexIn/ vexRead , vexFmtIn , vexInit , vexXo , vexYo , vexZo , vexRo , vexFx , vexFy , vexFz , vexWx , vexWy , vexWz , vexWr 
