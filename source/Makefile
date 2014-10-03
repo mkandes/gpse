@@ -60,7 +60,7 @@ MPIF90   := mpif90
 COMPILER := gfortran
 DEBUG    := OFF
 OPTIMIZE := ON
-OPENMP   := OFF
+OPENMP   := ON
 
 #     Specify compiler-specific compilation options.
 #

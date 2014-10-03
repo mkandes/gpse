@@ -11,6 +11,6 @@
    dT         = 1.953125e-3 ! Interval of a time step
    wX         = 0.0         ! X-component of the rotating reference frame's angular velocity vector
    wY         = 0.0         ! Y-component of the rotating reference frame's angular velocity vector
-   wZ         = 0.1         ! Z-component of the rotating reference frame's angular velocity vector 
+   wZ         = 0.0         ! Z-component of the rotating reference frame's angular velocity vector 
    gS         = 0.0      ! Nonlinear atom-atom interaction coupling constant
 /

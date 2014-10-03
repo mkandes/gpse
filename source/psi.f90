@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, September 22nd, 2014
+!     Friday, October 3rd, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -65,6 +65,9 @@
       REAL, PUBLIC :: psiWy = 0.0 ! Angular frequency of SHO potential along y-axis used to define anisotropic SHO wave function
       REAL, PUBLIC :: psiWz = 0.0 ! Angular frequency of SHO potential along z-axis used to define both anisotropic and axially-symmetric SHO wave functions
       REAL, PUBLIC :: psiWr = 0.0 ! Angular frequency of isotropic (radially-symmetric) SHO potential used to define ...    
+      REAL, PUBLIC :: psiPx = 0.0 
+      REAL, PUBLIC :: psiPy = 0.0
+      REAL, PUBLIC :: psiPz = 0.0
 
       PUBLIC :: psi_read_inputs
       PUBLIC :: psi_read_init
@@ -76,7 +79,7 @@
       PRIVATE :: psi_3d_se_sho_axi
       PRIVATE :: psi_3d_se_sho_iso
 
-      NAMELIST /nmlPsiIn/ readPsi , psiInit , psiNx , psiNy , psiNz , psiNr , psiMl , psiXo , psiYo , psiZo , psiWx , psiWy , psiWz , psiWr
+      NAMELIST /nmlPsiIn/ readPsi , psiInit , psiNx , psiNy , psiNz , psiNr , psiMl , psiXo , psiYo , psiZo , psiWx , psiWy , psiWz , psiWr , psiPx , psiPy , psiPz
 
       CONTAINS
 
@@ -230,16 +233,9 @@
 
          END SUBROUTINE
 
-         SUBROUTINE psi_boost ( pX , pY , pZ , xO , yO , zO , X , Y , Z , Psi3 )
+         SUBROUTINE psi_boost ( X , Y , Z , Psi3 )
 
             IMPLICIT NONE
-
-            REAL, INTENT ( IN ) :: pX
-            REAL, INTENT ( IN ) :: pY
-            REAL, INTENT ( IN ) :: pZ
-            REAL, INTENT ( IN ) :: xO
-            REAL, INTENT ( IN ) :: yO
-            REAL, INTENT ( IN ) :: zO
 
             REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
             REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
@@ -257,7 +253,7 @@
 
                   DO j = nXa , nXb
 
-                     Psi3 ( j , k , l ) = Psi3 ( j , k , l ) * EXP ( CMPLX ( 0.0 , pX * ( X ( j ) - xO ) + pY * ( Y ( k ) -yO ) + pZ * ( Z ( l ) - zO ) ) )
+                     Psi3 ( j , k , l ) = Psi3 ( j , k , l ) * EXP ( CMPLX ( 0.0 , psiPx * ( X ( j ) - psiXo ) + psiPy * ( Y ( k ) - psiYo ) + psiPz * ( Z ( l ) - psiZo ) ) )
 
                   END DO
 

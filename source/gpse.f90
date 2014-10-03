@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Thursday, October 2nd, 2014
+!     Friday, October 3rd, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -55,8 +55,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.2.2'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Wednesday, October 1st, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.2.3'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Friday, October 3rd, 2014'
 
       INTEGER, PARAMETER :: INT_DEFAULT_KIND   = KIND ( 0 ) 
       INTEGER, PARAMETER :: REAL_DEFAULT_KIND  = KIND ( 0.0 )
@@ -163,7 +163,7 @@
 
 !$OMP PARALLEL DEFAULT ( SHARED )
 
-!      ompThreads = OMP_GET_NUM_THREADS ( )
+      ompThreads = OMP_GET_NUM_THREADS ( )
 
 !$OMP END PARALLEL
 
@@ -266,6 +266,9 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiWy     = ', psiWy
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiWz     = ', psiWz
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiWr     = ', psiWr
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiPx     = ', psiPx
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiPy     = ', psiPy
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiPz     = ', psiPz
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     RANGE CHECKING INPUT PARAMETERS ... '
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     BROADCASTING INPUT PARAMETERS TO ALL MPI PROCESSES ... '
 
@@ -377,6 +380,7 @@
       ELSE ! compute initial wave function across all MPI processes
 
          CALL psi_compute_init ( X , Y , Z , PsiA )
+         CALL psi_boost ( X , Y , Z , PsiA )
 
       END IF
 
@@ -580,7 +584,7 @@
 !              relations to file from MPI_MASTER
 
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) &
-                  & tN , l2Norm , avgE   , avgL2  , avgTx  , avgTy  , avgTz  , avgVex , avgVmf ,       &  
+                  & tN , l2Norm , avgE   , avgL2  , mu , avgTx  , avgTy  , avgTz  , avgVex , avgVmf ,  &  
                   &               avgX   , avgX2  , sigX   , avgPx  , avgPx2 , sigPx  , sigX * sigPx , &
                   &               avgY   , avgY2  , sigY   , avgPy  , avgPy2 , sigPy  , sigY * sigPy , &
                   &               avgZ   , avgZ2  , sigZ   , avgPz  , avgPz2 , sigPz  , sigZ * sigPz , &
@@ -926,6 +930,9 @@
             CALL MPI_BCAST ( psiWy     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( psiWz     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( psiWr     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiPx     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiPy     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiPz     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
 
             RETURN
 
