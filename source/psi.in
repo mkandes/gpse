@@ -13,7 +13,7 @@
    psiWy   = 1.0     ! Angular frequency of SHO potential along y-axis used to define anisotropic SHO wave function
    psiWz   = 1.0     ! Angular frequency of SHO potential along z-axis used to define both anisotropic and axially-symmetric SHO wave functions
    psiWr   = 1.0     ! Angular frequency of isotropic (radially-symmetric) SHO potential used to define ... 
-   psiPx   = 3.5     !
+   psiPx   = 0.0     !
    psiPy   = 0.0     !
    psiPz   = 0.0     !
 / 

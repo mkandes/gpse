@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Thursday, October 2nd, 2014
+!     Monay, October 6th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -47,10 +47,13 @@
          REAL, PUBLIC :: l2Norm = 0.0
          REAL, PUBLIC :: avgX = 0.0
          REAL, PUBLIC :: avgX2 = 0.0
+         REAL, PUBLIC :: avgX2COM = 0.0
          REAL, PUBLIC :: avgY = 0.0
          REAL, PUBLIC :: avgY2 = 0.0
+         REAL, PUBLIC :: avgY2COM = 0.0
          REAL, PUBLIC :: avgZ = 0.0
          REAL, PUBLIC :: avgZ2 = 0.0
+         REAL, PUBLIC :: avgZ2COM = 0.0
          REAL, PUBLIC :: avgRxy = 0.0
          REAL, PUBLIC :: avgR2xy = 0.0
          REAL, PUBLIC :: avgRxyz = 0.0
@@ -62,37 +65,46 @@
          REAL, PUBLIC :: avgPz = 0.0
          REAL, PUBLIC :: avgPz2 = 0.0
          REAL, PUBLIC :: avgLx = 0.0
+         REAL, PUBLIC :: avgLxCOM = 0.0
          REAL, PUBLIC :: avgLx2 = 0.0
+         REAL, PUBLIC :: avgLx2COM = 0.0
          REAL, PUBLIC :: avgLy = 0.0
+         REAL, PUBLIC :: avgLyCOM = 0.0 
          REAL, PUBLIC :: avgLy2 = 0.0
+         REAL, PUBLIC :: avgLy2COM = 0.0 
          REAL, PUBLIC :: avgLz = 0.0
+         REAL, PUBLIC :: avgLzCOM = 0.0
          REAL, PUBLIC :: avgLz2 = 0.0
+         REAL, PUBLIC :: avgLz2COM = 0.0
          REAL, PUBLIC :: avgFx = 0.0
          REAL, PUBLIC :: avgFy = 0.0
          REAL, PUBLIC :: avgFz = 0.0
          REAL, PUBLIC :: avgTauX = 0.0
+         REAL, PUBLIC :: avgTauXCOM = 0.0
          REAL, PUBLIC :: avgTauY = 0.0
+         REAL, PUBLIC :: avgTauYCOM = 0.0
          REAL, PUBLIC :: avgTauZ = 0.0
+         REAL, PUBLIC :: avgTauZCOM = 0.0
          REAL, PUBLIC :: avgVex = 0.0
          REAL, PUBLIC :: avgVmf = 0.0
-         REAL, PUBLIC :: avgIxxCM = 0.0
-         REAL, PUBLIC :: avgIyyCM = 0.0
-         REAL, PUBLIC :: avgIzzCM = 0.0
-         REAL, PUBLIC :: avgIxyCM = 0.0
-         REAL, PUBLIC :: avgIyzCM = 0.0
-         REAL, PUBLIC :: avgIxzCM = 0.0
-         REAL, PUBLIC :: avgIxxO = 0.0
-         REAL, PUBLIC :: avgIyyO = 0.0
-         REAL, PUBLIC :: avgIzzO = 0.0
-         REAL, PUBLIC :: avgIxyO = 0.0
-         REAL, PUBLIC :: avgIyzO = 0.0
-         REAL, PUBLIC :: avgIxzO = 0.0
+         REAL, PUBLIC :: avgIxx = 0.0
+         REAL, PUBLIC :: avgIyy = 0.0
+         REAL, PUBLIC :: avgIzz = 0.0
+         REAL, PUBLIC :: avgIxy = 0.0
+         REAL, PUBLIC :: avgIyz = 0.0
+         REAL, PUBLIC :: avgIxz = 0.0
+         REAL, PUBLIC :: avgIxxCOM = 0.0
+         REAL, PUBLIC :: avgIyyCOM = 0.0
+         REAL, PUBLIC :: avgIzzCOM = 0.0
+         REAL, PUBLIC :: avgIxyCOM = 0.0
+         REAL, PUBLIC :: avgIyzCOM = 0.0
+         REAL, PUBLIC :: avgIxzCOM = 0.0
          REAL, PUBLIC :: avgTx = 0.0
          REAL, PUBLIC :: avgTy = 0.0
          REAL, PUBLIC :: avgTz = 0.0
          REAL, PUBLIC :: avgE = 0.0
          REAL, PUBLIC :: avgL2 = 0.0
-         REAL, PUBLIC :: mu = 0.0
+         REAL, PUBLIC :: avgMu = 0.0
          REAL, PUBLIC :: sigX = 0.0
          REAL, PUBLIC :: sigY = 0.0
          REAL, PUBLIC :: sigZ = 0.0
@@ -168,9 +180,19 @@
 
          CONTAINS
 
-            REAL FUNCTION l2_norm_3d_rect ( Psi3 )
+            REAL FUNCTION l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -202,9 +224,21 @@
 
             END FUNCTION
 
-            REAL FUNCTION x_3d_rect ( X , Psi3 )
+            REAL FUNCTION x_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , X , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc 
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc 
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO 
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
 
@@ -222,7 +256,7 @@
 
                      DO j = nXa , nXb  
 
-                        x_3d_rect = x_3d_rect + X ( j ) * ABS ( Psi3 ( j , k , l ) )**2
+                        x_3d_rect = x_3d_rect + ( X ( j ) - xO ) * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -238,9 +272,21 @@
 
             END FUNCTION
 
-            REAL FUNCTION y_3d_rect ( Y , Psi3 )
+            REAL FUNCTION y_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , Y , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc 
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc 
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: yO
 
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
 
@@ -258,7 +304,7 @@
 
                      DO j = nXa , nXb
 
-                        y_3d_rect = y_3d_rect + Y ( k ) * ABS ( Psi3 ( j , k , l ) )**2
+                        y_3d_rect = y_3d_rect + ( Y ( k ) - yO ) * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -274,9 +320,21 @@
 
             END FUNCTION
 
-            REAL FUNCTION z_3d_rect ( Z , Psi3 )
+            REAL FUNCTION z_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , zO , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc 
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc 
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: zO
 
                REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
 
@@ -294,7 +352,7 @@
 
                      DO j = nXa , nXb
 
-                        z_3d_rect = z_3d_rect + Z ( l ) * ABS ( Psi3 ( j , k , l ) )**2
+                        z_3d_rect = z_3d_rect + ( Z ( l ) - zO ) * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -310,9 +368,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION r_xy_3d_rect ( X , Y , Psi3 )
+            REAL FUNCTION r_xy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , X , Y , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: yO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X 
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y 
@@ -331,7 +402,7 @@
 
                      DO j = nXa , nXb
 
-                        r_xy_3d_rect = r_xy_3d_rect + SQRT ( X ( j )**2 + Y ( k )**2 ) * ABS ( Psi3 ( j , k , l ) )**2
+                        r_xy_3d_rect = r_xy_3d_rect + SQRT ( ( X ( j ) - xO )**2 + ( Y ( k ) - yO )**2 ) * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -347,9 +418,23 @@
 
             END FUNCTION
 
-            REAL FUNCTION r_xyz_3d_rect ( X , Y , Z , Psi3 )
+            REAL FUNCTION r_xyz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , X , Y , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: yO
+               REAL, INTENT ( IN ) :: zO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
@@ -369,7 +454,7 @@
 
                      DO j = nXa , nXb
 
-                        r_xyz_3d_rect = r_xyz_3d_rect + SQRT ( X ( j )**2 + Y ( k )**2 + Z ( l )**2 ) * ABS ( Psi3 ( j , k , l ) )**2 
+                        r_xyz_3d_rect = r_xyz_3d_rect + SQRT ( ( X ( j ) - xO )**2 + ( Y ( k ) - yO )**2 + ( Z ( l ) - zO )**2 ) * ABS ( Psi3 ( j , k , l ) )**2 
 
                      END DO
 
@@ -385,9 +470,21 @@
 
             END FUNCTION
 
-            REAL FUNCTION x2_3d_rect ( X , Psi3 )
+            REAL FUNCTION x2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , X , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
 
@@ -405,7 +502,7 @@
 
                      DO j = nXa , nXb  
 
-                        x2_3d_rect = x2_3d_rect + X ( j )**2 * ABS ( Psi3 ( j , k , l ) )**2
+                        x2_3d_rect = x2_3d_rect + ( X ( j ) - xO )**2 * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -421,9 +518,21 @@
 
             END FUNCTION
 
-            REAL FUNCTION y2_3d_rect ( Y , Psi3 )
+            REAL FUNCTION y2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , Y , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: yO
 
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
 
@@ -441,7 +550,7 @@
 
                      DO j = nXa , nXb
 
-                        y2_3d_rect = y2_3d_rect + Y ( k )**2 * ABS ( Psi3 ( j , k , l ) )**2
+                        y2_3d_rect = y2_3d_rect + ( Y ( k ) - yO )**2 * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -457,9 +566,21 @@
 
             END FUNCTION
 
-            REAL FUNCTION z2_3d_rect ( Z , Psi3 )
+            REAL FUNCTION z2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , zO , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: zO
 
                REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
 
@@ -477,7 +598,7 @@
 
                      DO j = nXa , nXb
 
-                        z2_3d_rect = z2_3d_rect + Z ( l )**2 * ABS ( Psi3 ( j , k , l ) )**2
+                        z2_3d_rect = z2_3d_rect + ( Z ( l ) - zO )**2 * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -493,9 +614,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION r2_xy_3d_rect ( X , Y , Psi3 )
+            REAL FUNCTION r2_xy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO ,  X , Y , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: yO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
@@ -514,7 +648,7 @@
 
                      DO j = nXa , nXb
 
-                        r2_xy_3d_rect = r2_xy_3d_rect + ( X ( j )**2 + Y ( k )**2 ) * ABS ( Psi3 ( j , k , l ) )**2
+                        r2_xy_3d_rect = r2_xy_3d_rect + ( ( X ( j ) - xO )**2 + ( Y ( k ) - yO )**2 ) * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -530,9 +664,23 @@
 
             END FUNCTION
 
-            REAL FUNCTION r2_xyz_3d_rect ( X , Y , Z , Psi3 )
+            REAL FUNCTION r2_xyz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , X , Y , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: yO
+               REAL, INTENT ( IN ) :: zO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
@@ -552,7 +700,7 @@
 
                      DO j = nXa , nXb
 
-                        r2_xyz_3d_rect = r2_xyz_3d_rect + ( X ( j )**2 + Y ( k )**2 + Z ( l )**2 ) * ABS ( Psi3 ( j , k , l ) )**2
+                        r2_xyz_3d_rect = r2_xyz_3d_rect + ( ( X ( j ) - xO )**2 + ( Y ( k ) - yO )**2 + ( Z ( l ) - zO )**2 ) * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -569,9 +717,19 @@
             END FUNCTION
 
 
-            REAL FUNCTION px_3d_rect_cd2 ( Psi3 )
+            REAL FUNCTION px_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -603,9 +761,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION px_3d_rect_cd4 ( Psi3 )
+            REAL FUNCTION px_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -637,9 +805,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION py_3d_rect_cd2 ( Psi3 )
+            REAL FUNCTION py_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -671,9 +849,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION py_3d_rect_cd4 ( Psi3 )
+            REAL FUNCTION py_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -705,9 +893,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION pz_3d_rect_cd2 ( Psi3 )
+            REAL FUNCTION pz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -739,9 +937,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION pz_3d_rect_cd4 ( Psi3 )
+            REAL FUNCTION pz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -773,9 +981,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION px2_3d_rect_cd2 ( Psi3 )
+            REAL FUNCTION px2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -807,9 +1025,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION px2_3d_rect_cd4 ( Psi3 )
+            REAL FUNCTION px2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -841,9 +1069,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION py2_3d_rect_cd2 ( Psi3 )
+            REAL FUNCTION py2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -875,9 +1113,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION py2_3d_rect_cd4 ( Psi3 )
+            REAL FUNCTION py2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -909,9 +1157,19 @@
        
             END FUNCTION
 
-            REAL FUNCTION pz2_3d_rect_cd2 ( Psi3 )
+            REAL FUNCTION pz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -943,9 +1201,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION pz2_3d_rect_cd4 ( Psi3 )
+            REAL FUNCTION pz2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -977,9 +1245,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION lx_3d_rect_cd2 ( Y , Z , Psi3 )
+            REAL FUNCTION lx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO ,  Y , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: yO
+               REAL, INTENT ( IN ) :: zO
 
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
                REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
@@ -998,7 +1279,7 @@
 
                      DO j = nXa , nXb
 
-                        lx_3d_rect_cd2 = lx_3d_rect_cd2 + REAL ( I * CONJG ( Psi3 ( j , k , l ) ) * ( CMPLX ( Y ( k ) / dZ , 0.0 ) * ( Psi3 ( j , k , l + 1 ) - Psi3 ( j , k , l - 1 ) ) - CMPLX ( Z ( l ) / dY , 0.0 ) * ( Psi3 ( j , k + 1 , l ) - Psi3 ( j , k - 1 , l ) ) ) )
+                        lx_3d_rect_cd2 = lx_3d_rect_cd2 + REAL ( I * CONJG ( Psi3 ( j , k , l ) ) * ( CMPLX ( ( Y ( k ) - yO ) / dZ , 0.0 ) * ( Psi3 ( j , k , l + 1 ) - Psi3 ( j , k , l - 1 ) ) - CMPLX ( ( Z ( l ) - zO ) / dY , 0.0 ) * ( Psi3 ( j , k + 1 , l ) - Psi3 ( j , k - 1 , l ) ) ) )
 
                      END DO
 
@@ -1014,9 +1295,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION lx_3d_rect_cd4 ( Y , Z , Psi3 )
+            REAL FUNCTION lx_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , Y , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: yO
+               REAL, INTENT ( IN ) :: zO 
 
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
                REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
@@ -1035,7 +1329,7 @@
 
                      DO j = nXa , nXb
 
-                        lx_3d_rect_cd4 = lx_3d_rect_cd4 + REAL ( I * CONJG ( Psi3 ( j , k , l ) ) * ( CMPLX ( Y ( k ) / dZ , 0.0 ) * ( -Psi3 ( j , k , l + 2 ) + CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j , k , l + 1 ) - Psi3 ( j , k , l - 1 ) ) + Psi3 ( j , k , l - 2 ) ) - CMPLX ( Z ( l ) / dY , 0.0 ) * ( -Psi3 ( j , k + 2 , l ) + CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j , k + 1 , l ) - Psi3 ( j , k - 1 , l ) ) + Psi3 ( j , k - 2 , l ) ) ) )
+                        lx_3d_rect_cd4 = lx_3d_rect_cd4 + REAL ( I * CONJG ( Psi3 ( j , k , l ) ) * ( CMPLX ( ( Y ( k ) - yO ) / dZ , 0.0 ) * ( -Psi3 ( j , k , l + 2 ) + CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j , k , l + 1 ) - Psi3 ( j , k , l - 1 ) ) + Psi3 ( j , k , l - 2 ) ) - CMPLX ( ( Z ( l ) - zO ) / dY , 0.0 ) * ( -Psi3 ( j , k + 2 , l ) + CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j , k + 1 , l ) - Psi3 ( j , k - 1 , l ) ) + Psi3 ( j , k - 2 , l ) ) ) )
 
                      END DO
 
@@ -1051,9 +1345,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION ly_3d_rect_cd2 ( X , Z , Psi3 )
+            REAL FUNCTION ly_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , X , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: zO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
                REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
@@ -1072,7 +1379,7 @@
 
                      DO j = nXa , nXb
 
-                        ly_3d_rect_cd2 = ly_3d_rect_cd2 + REAL ( I * CONJG ( Psi3 ( j , k , l ) ) * ( CMPLX ( Z ( l ) / dX , 0.0 ) * ( Psi3 ( j + 1 , k , l ) - Psi3 ( j - 1 , k , l ) ) - CMPLX ( X ( j ) / dZ , 0.0 ) * ( Psi3 ( j , k , l + 1 ) - Psi3 ( j , k , l - 1 ) ) ) )
+                        ly_3d_rect_cd2 = ly_3d_rect_cd2 + REAL ( I * CONJG ( Psi3 ( j , k , l ) ) * ( CMPLX ( ( Z ( l ) - zO ) / dX , 0.0 ) * ( Psi3 ( j + 1 , k , l ) - Psi3 ( j - 1 , k , l ) ) - CMPLX ( ( X ( j ) - xO ) / dZ , 0.0 ) * ( Psi3 ( j , k , l + 1 ) - Psi3 ( j , k , l - 1 ) ) ) )
 
                      END DO
 
@@ -1088,9 +1395,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION ly_3d_rect_cd4 ( X , Z , Psi3 )
+            REAL FUNCTION ly_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , X , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: zO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
                REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
@@ -1109,7 +1429,7 @@
 
                      DO j = nXa , nXb
 
-                        ly_3d_rect_cd4 = ly_3d_rect_cd4 + REAL ( I * CONJG ( Psi3 ( j , k , l ) ) * ( CMPLX ( Z ( l ) / dX , 0.0 ) * ( -Psi3 ( j + 2 , k , l ) + CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j + 1 , k , l ) - Psi3 ( j - 1 , k , l ) ) + Psi3 ( j - 2 , k , l ) ) - CMPLX ( X ( j ) / dZ , 0.0 ) * ( -Psi3 ( j , k , l + 2 ) + CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j , k , l + 1 ) - Psi3 ( j , k , l - 1 ) ) + Psi3 ( j , k , l - 2 ) ) ) )
+                        ly_3d_rect_cd4 = ly_3d_rect_cd4 + REAL ( I * CONJG ( Psi3 ( j , k , l ) ) * ( CMPLX ( ( Z ( l ) - zO ) / dX , 0.0 ) * ( -Psi3 ( j + 2 , k , l ) + CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j + 1 , k , l ) - Psi3 ( j - 1 , k , l ) ) + Psi3 ( j - 2 , k , l ) ) - CMPLX ( ( X ( j ) - xO ) / dZ , 0.0 ) * ( -Psi3 ( j , k , l + 2 ) + CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j , k , l + 1 ) - Psi3 ( j , k , l - 1 ) ) + Psi3 ( j , k , l - 2 ) ) ) )
 
                      END DO
 
@@ -1125,9 +1445,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION lz_3d_rect_cd2 ( X , Y , Psi3 )
+            REAL FUNCTION lz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , X , Y , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: yO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
@@ -1146,7 +1479,7 @@
 
                      DO j = nXa , nXb
 
-                        lz_3d_rect_cd2 = lz_3d_rect_cd2 + REAL ( I * CONJG ( Psi3 ( j , k , l ) ) * ( CMPLX ( X ( j ) / dY , 0.0 ) * ( Psi3 ( j , k + 1 , l ) - Psi3 ( j , k - 1 , l ) ) - CMPLX ( Y ( k ) / dX , 0.0 ) * ( Psi3 ( j + 1 , k , l ) - Psi3 ( j - 1 , k , l ) ) ) )
+                        lz_3d_rect_cd2 = lz_3d_rect_cd2 + REAL ( I * CONJG ( Psi3 ( j , k , l ) ) * ( CMPLX ( ( X ( j ) - xO ) / dY , 0.0 ) * ( Psi3 ( j , k + 1 , l ) - Psi3 ( j , k - 1 , l ) ) - CMPLX ( ( Y ( k ) - yO ) / dX , 0.0 ) * ( Psi3 ( j + 1 , k , l ) - Psi3 ( j - 1 , k , l ) ) ) )
 
                      END DO
 
@@ -1162,9 +1495,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION lz_3d_rect_cd4 ( X , Y , Psi3 )
+            REAL FUNCTION lz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , X , Y , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: yO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X 
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y 
@@ -1183,7 +1529,7 @@
 
                      DO j = nXa , nXb
 
-                        lz_3d_rect_cd4 = lz_3d_rect_cd4 + REAL ( I * CONJG ( Psi3 ( j , k , l ) ) * ( CMPLX ( X ( j ) / dY , 0.0 ) * ( -Psi3 ( j , k + 2 , l ) + CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j , k + 1 , l ) - Psi3 ( j , k - 1 , l ) ) + Psi3 ( j , k - 2 , l ) ) - CMPLX ( Y ( k ) / dX , 0.0 ) * ( -Psi3 ( j + 2 , k , l ) + CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j + 1 , k , l ) - Psi3 ( j - 1 , k , l ) ) + Psi3 ( j - 2 , k , l ) ) ) )
+                        lz_3d_rect_cd4 = lz_3d_rect_cd4 + REAL ( I * CONJG ( Psi3 ( j , k , l ) ) * ( CMPLX ( ( X ( j ) - xO ) / dY , 0.0 ) * ( -Psi3 ( j , k + 2 , l ) + CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j , k + 1 , l ) - Psi3 ( j , k - 1 , l ) ) + Psi3 ( j , k - 2 , l ) ) - CMPLX ( ( Y ( k ) - yO ) / dX , 0.0 ) * ( -Psi3 ( j + 2 , k , l ) + CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j + 1 , k , l ) - Psi3 ( j - 1 , k , l ) ) + Psi3 ( j - 2 , k , l ) ) ) )
 
                      END DO
 
@@ -1199,9 +1545,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION lx2_3d_rect_cd2 ( Y , Z , Psi3 )
+            REAL FUNCTION lx2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , Y , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: yO
+               REAL, INTENT ( IN ) :: zO
 
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
                REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
@@ -1222,16 +1581,16 @@
 
                         lx2_3d_rect_cd2 = lx2_3d_rect_cd2 + &
                            & REAL ( CONJG ( Psi3 ( j , k , l ) ) * ( &
-                           &    CMPLX ( ( Y ( k ) / dZ )**2 , 0.0 ) * ( &
+                           &    CMPLX ( ( ( Y ( k ) - yO ) / dZ )**2 , 0.0 ) * ( &
                            &       Psi3 ( j , k , l + 1 ) - CMPLX ( 2.0 , 0.0 ) * Psi3 ( j , k , l ) + Psi3 ( j , k , l - 1 ) ) - &
-                           &    CMPLX ( 0.5 * Y ( k ) / dY , 0.0 ) * ( &
+                           &    CMPLX ( 0.5 * ( Y ( k ) - yO ) / dY , 0.0 ) * ( &
                            &       Psi3 ( j , k + 1 , l ) - Psi3 ( j , k - 1 , l ) ) - &
-                           &    CMPLX ( 0.5 * Y ( k ) * Z ( l ) / ( dY * dZ ) , 0.0 ) * ( &
+                           &    CMPLX ( 0.5 * ( Y ( k ) - yO ) * ( Z ( l ) - zO ) / ( dY * dZ ) , 0.0 ) * ( &
                            &       Psi3 ( j , k + 1 , l + 1 ) - Psi3 ( j , k + 1 , l - 1 ) - &
                            &       Psi3 ( j , k - 1 , l + 1 ) + Psi3 ( j , k - 1 , l - 1 ) ) - &
-                           &    CMPLX ( 0.5 * Z ( l ) / dZ , 0.0 ) * ( &
+                           &    CMPLX ( 0.5 * ( Z ( l ) - zO ) / dZ , 0.0 ) * ( &
                            &       Psi3 ( j , k , l + 1 ) - Psi3 ( j , k , l - 1 ) ) + &
-                           &    CMPLX ( ( Z ( l ) / dY )**2 , 0.0 ) * ( &
+                           &    CMPLX ( ( ( Z ( l ) - zO ) / dY )**2 , 0.0 ) * ( &
                            &       Psi3 ( j , k + 1 , l ) - CMPLX ( 2.0 , 0.0 ) * Psi3 ( j , k , l ) + Psi3 ( j , k - 1 , l ) ) ) )
 
                      END DO
@@ -1248,9 +1607,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION lx2_3d_rect_cd4 ( Y , Z , Psi3 )
+            REAL FUNCTION lx2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , Y , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: yO
+               REAL, INTENT ( IN ) :: zO
 
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y 
                REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z 
@@ -1271,13 +1643,13 @@
 
                         lx2_3d_rect_cd4 = lx2_3d_rect_cd4 + &
                            & REAL ( CONJG ( Psi3 ( j , k , l ) ) * ( &
-                           &    CMPLX ( ( Y ( k ) / dZ )**2 , 0.0 ) * ( -Psi3 ( j , k , l - 2 ) + &
+                           &    CMPLX ( ( ( Y ( k ) - yO ) / dZ )**2 , 0.0 ) * ( -Psi3 ( j , k , l - 2 ) + &
                            &       CMPLX ( 16.0 , 0.0 ) * Psi3 ( j , k , l - 1 ) - CMPLX ( 30.0 , 0.0 ) * Psi3 ( j , k , l ) + &
                            &       CMPLX ( 16.0 , 0.0 ) * Psi3 ( j , k , l + 1 ) - Psi3 ( j , k , l + 2 ) ) + &
-                           &    CMPLX ( Y ( k ) / dY , 0.0 ) * ( Psi3 ( j , k + 2 , l ) - &
+                           &    CMPLX ( ( Y ( k ) - yO ) / dY , 0.0 ) * ( Psi3 ( j , k + 2 , l ) - &
                            &       CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j , k + 1 , l ) - Psi3 ( j , k - 1 , l ) ) - &
                            &       Psi3 ( j , k - 2 , l ) ) - &
-                           &    CMPLX ( Y ( k ) * Z ( l ) / ( 6.0 * dZ * dY ) , 0.0 ) * ( Psi3 ( j , k - 2 , l - 2 ) + &
+                           &    CMPLX ( ( Y ( k ) - yO ) * ( Z ( l ) - zO ) / ( 6.0 * dZ * dY ) , 0.0 ) * ( Psi3 ( j , k - 2 , l - 2 ) + &
                            &       CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j , k + 1 , l - 2 ) - Psi3 ( j , k - 1 , l - 2 ) ) - &
                            &       Psi3 ( j , k + 2 , l - 2 ) - CMPLX ( 8.0 , 0.0 ) * Psi3 ( j , k - 2 , l - 1 ) - &
                            &       CMPLX ( 64.0 , 0.0 ) * ( Psi3 ( j , k + 1 , l - 1 ) - Psi3 ( j , k - 1 , l - 1 ) ) + &
@@ -1286,10 +1658,10 @@
                            &       CMPLX ( 8.0 , 0.0 ) * Psi3 ( j , k + 2 , l + 1 ) - Psi3 ( j , k - 2 , l + 2 ) - &
                            &       CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j , k + 1 , l + 2 ) - Psi3 ( j , k - 1 , l + 2 ) ) + & 
                            &       Psi3 ( j , k + 2 , l + 2 ) ) + &
-                           &    CMPLX ( Z ( l ) / dZ , 0.0 ) * ( Psi3 ( j , k , l + 2 ) - &
+                           &    CMPLX ( ( Z ( l ) - zO ) / dZ , 0.0 ) * ( Psi3 ( j , k , l + 2 ) - &
                            &       CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j , k , l + 1 ) - Psi3 ( j , k , l - 1 ) ) - &
                            &       Psi3 ( j , k , l - 2 ) ) + &
-                           &    CMPLX ( ( Z ( l ) / dY )**2 , 0.0 ) * ( -Psi3 ( j , k - 2 , l ) + &
+                           &    CMPLX ( ( ( Z ( l ) - zO ) / dY )**2 , 0.0 ) * ( -Psi3 ( j , k - 2 , l ) + &
                            &    CMPLX ( 16.0 , 0.0 ) * Psi3 ( j , k - 1 , l ) - CMPLX ( 30.0 , 0.0 ) * Psi3 ( j , k , l ) + &
                            &    CMPLX ( 16.0 , 0.0 ) * Psi3 ( j , k + 1 , l ) - Psi3 ( j , k + 2 , l ) ) ) )
 
@@ -1307,9 +1679,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION ly2_3d_rect_cd2 ( X , Z , Psi3 )
+            REAL FUNCTION ly2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , X , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc 
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc 
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc 
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: zO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
                REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
@@ -1330,16 +1715,16 @@
 
                         ly2_3d_rect_cd2 = ly2_3d_rect_cd2 + &
                            & REAL ( CONJG ( Psi3 ( j , k , l ) ) * ( &
-                           &    CMPLX ( ( Z ( l ) / dX )**2 , 0.0 ) * ( &
+                           &    CMPLX ( ( ( Z ( l ) - zO ) / dX )**2 , 0.0 ) * ( &
                            &       Psi3 ( j + 1 , k , l ) - CMPLX ( 2.0 , 0.0 ) * Psi3 ( j , k , l ) + Psi3 ( j - 1 , k , l ) ) - &
-                           &    CMPLX ( 0.5 * Z ( l ) / dZ , 0.0 ) * ( &
+                           &    CMPLX ( 0.5 * ( Z ( l ) - zO ) / dZ , 0.0 ) * ( &
                            &       Psi3 ( j , k , l + 1 ) - Psi3 ( j , k , l - 1 ) ) - &
-                           &    CMPLX ( 0.5 * X ( j ) * Z ( l ) / ( dX * dZ ) , 0.0 ) * ( &
+                           &    CMPLX ( 0.5 * ( X ( j ) - xO ) * ( Z ( l ) - zO ) / ( dX * dZ ) , 0.0 ) * ( &
                            &       Psi3 ( j + 1 , k , l + 1 ) - Psi3 ( j - 1 , k , l + 1 ) - &
                            &       Psi3 ( j + 1 , k , l - 1 ) + Psi3 ( j - 1 , k , l - 1 ) ) - &
-                           &    CMPLX ( 0.5 * X ( j ) / dX , 0.0 ) * ( &
+                           &    CMPLX ( 0.5 * ( X ( j ) - xO ) / dX , 0.0 ) * ( &
                            &       Psi3 ( j + 1 , k , l ) - Psi3 ( j - 1 , k , l ) ) + &
-                           &    CMPLX ( ( X ( j ) / dZ )**2 , 0.0 ) * ( &
+                           &    CMPLX ( ( ( X ( j ) - xO ) / dZ )**2 , 0.0 ) * ( &
                            &       Psi3 ( j , k , l + 1 ) - CMPLX ( 2.0 , 0.0 ) * Psi3 ( j , k , l ) + Psi3 ( j , k , l - 1 ) ) ) )
 
                      END DO
@@ -1356,9 +1741,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION ly2_3d_rect_cd4 ( X , Z , Psi3 )
+            REAL FUNCTION ly2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , X , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc 
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc 
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc 
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: zO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
                REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
@@ -1379,13 +1777,13 @@
 
                         ly2_3d_rect_cd4 = ly2_3d_rect_cd4 + &
                            & REAL ( CONJG ( Psi3 ( j , k , l ) ) * ( &
-                           &    CMPLX ( ( Z ( l ) / dX )**2 , 0.0 ) * ( -Psi3 ( j - 2 , k , l ) + &
+                           &    CMPLX ( ( ( Z ( l ) - zO ) / dX )**2 , 0.0 ) * ( -Psi3 ( j - 2 , k , l ) + &
                            &       CMPLX ( 16.0 , 0.0 ) * Psi3 ( j - 1 , k , l ) - CMPLX ( 30.0, 0.0 ) * Psi3 ( j , k , l ) + &
                            &       CMPLX ( 16.0 , 0.0 ) * Psi3 ( j + 1 , k , l ) - Psi3 ( j + 2 , k , l ) ) + &
-                           &    CMPLX ( Z ( l ) / dZ , 0.0 ) * ( Psi3 ( j , k , l + 2 ) - &
+                           &    CMPLX ( ( Z ( l ) - zO ) / dZ , 0.0 ) * ( Psi3 ( j , k , l + 2 ) - &
                            &       CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j , k , l + 1 ) - Psi3 ( j , k , l - 1 ) ) - &
                            &       Psi3 ( j , k , l - 2 ) ) - &
-                           &    CMPLX ( Z ( l ) * X ( j ) / ( 6.0 * dX * dZ ) , 0.0 ) * ( Psi3 ( j - 2 , k , l - 2 ) - &
+                           &    CMPLX ( ( Z ( l ) - zO ) * ( X ( j ) - xO ) / ( 6.0 * dX * dZ ) , 0.0 ) * ( Psi3 ( j - 2 , k , l - 2 ) - &
                            &       CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j - 1 , k , l - 2 ) - Psi3 ( j + 1 , k , l - 2 ) ) - &
                            &       Psi3 ( j + 2 , k , l - 2 ) - CMPLX ( 8.0 , 0.0 ) * Psi3 ( j - 2 , k , l - 1 ) + &
                            &       CMPLX ( 64.0 , 0.0 ) * ( Psi3 ( j - 1 , k , l - 1 ) - Psi3 ( j + 1 , k , l - 1 ) ) + &
@@ -1394,10 +1792,10 @@
                            &       CMPLX ( 8.0 , 0.0 ) * Psi3 ( j + 2 , k , l + 1 ) - Psi3 ( j - 2 , k , l + 2 ) + &
                            &       CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j - 1 , k , l + 2 ) - Psi3 ( j + 1 , k , l + 2 ) ) + &
                            &       Psi3 ( j + 2 , k , l + 2 ) ) + &
-                           &    CMPLX ( X ( j ) / dX , 0.0 ) * ( Psi3 ( j + 2 , k , l ) - &
+                           &    CMPLX ( ( X ( j ) - xO ) / dX , 0.0 ) * ( Psi3 ( j + 2 , k , l ) - &
                            &       CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j + 1 , k , l ) - Psi3 ( j - 1 , k , l ) ) - &
                            &       Psi3 ( j - 2 , k , l ) ) + &
-                           &    CMPLX ( ( X ( j ) / dZ )**2 , 0.0 ) * ( -Psi3 ( j , k , l - 2 ) + &
+                           &    CMPLX ( ( ( X ( j ) - xO ) / dZ )**2 , 0.0 ) * ( -Psi3 ( j , k , l - 2 ) + &
                            &       CMPLX ( 16.0 , 0.0 ) * Psi3 ( j , k , l - 1 ) - CMPLX ( 30.0 , 0.0 ) * Psi3 ( j , k , l ) + &
                            &       CMPLX ( 16.0 , 0.0 ) * Psi3 ( j , k , l + 1 ) - Psi3 ( j , k , l + 2 ) ) ) )
 
@@ -1415,9 +1813,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION lz2_3d_rect_cd2 ( X , Y , Psi3 )
+            REAL FUNCTION lz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , X , Y , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: yO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
@@ -1438,16 +1849,16 @@
 
                         lz2_3d_rect_cd2 = lz2_3d_rect_cd2 + &
                            & REAL ( CONJG ( Psi3 ( j , k , l ) ) * ( &
-                           &    CMPLX ( ( X ( j ) / dY )**2 , 0.0 ) * ( &
+                           &    CMPLX ( ( ( X ( j ) - xO ) / dY )**2 , 0.0 ) * ( &
                            &       Psi3 ( j , k + 1 , l ) - CMPLX ( 2.0 , 0.0 ) * Psi3 ( j , k , l ) + Psi3 ( j , k - 1 , l ) ) - &
-                           &    CMPLX ( 0.5 * X ( j ) / dX , 0.0 ) * ( &
+                           &    CMPLX ( 0.5 *  ( X ( j ) - xO ) / dX , 0.0 ) * ( &
                            &       Psi3 ( j + 1 , k , l ) - Psi3 ( j - 1 , k , l ) ) - &
-                           &    CMPLX ( 0.5 * X ( j ) * Y ( k ) / ( dX * dY ) , 0.0 ) * ( &
+                           &    CMPLX ( 0.5 * ( X ( j ) - xO ) * ( Y ( k ) - yO ) / ( dX * dY ) , 0.0 ) * ( &
                            &       Psi3 ( j + 1 , k + 1 , l ) - Psi3 ( j + 1 , k - 1 , l ) - &
                            &       Psi3 ( j - 1 , k + 1 , l ) + Psi3 ( j - 1 , k - 1 , l ) ) - &
-                           &    CMPLX ( 0.5 * Y ( k ) / dY , 0.0 ) * ( &
+                           &    CMPLX ( 0.5 * ( Y ( k ) - yO ) / dY , 0.0 ) * ( &
                            &       Psi3 ( j , k + 1 , l ) - Psi3 ( j , k - 1 , l ) ) + &
-                           &    CMPLX ( ( Y ( k ) / dX )**2 , 0.0 ) * ( &
+                           &    CMPLX ( ( ( Y ( k ) - yO ) / dX )**2 , 0.0 ) * ( &
                            &       Psi3 ( j + 1 , k , l ) - CMPLX ( 2.0 , 0.0 ) * Psi3 ( j , k , l ) + Psi3 ( j - 1 , k , l ) ) ) )
 
                      END DO
@@ -1464,9 +1875,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION lz2_3d_rect_cd4 ( X , Y , Psi3 )
+            REAL FUNCTION lz2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , X , Y , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: yO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X 
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y 
@@ -1487,13 +1911,13 @@
 
                         lz2_3d_rect_cd4 = lz2_3d_rect_cd4 + &
                            & REAL ( CONJG ( Psi3 ( j , k , l ) ) * ( &
-                           &    CMPLX ( ( X ( j ) / dY )**2 , 0.0 ) * ( -Psi3 ( j , k - 2 , l ) + &
+                           &    CMPLX ( ( ( X ( j ) - xO ) / dY )**2 , 0.0 ) * ( -Psi3 ( j , k - 2 , l ) + &
                            &       CMPLX ( 16.0 , 0.0 ) * Psi3 ( j , k - 1 , l ) - CMPLX ( 30.0 , 0.0 ) * Psi3 ( j , k , l ) + &
                            &       CMPLX ( 16.0 , 0.0 ) * Psi3 ( j , k + 1 , l ) - Psi3 ( j , k + 2 , l ) ) + &
-                           &    CMPLX ( X ( j ) / dX , 0.0 ) * ( Psi3 ( j + 2 , k , l ) - &
+                           &    CMPLX ( ( X ( j ) - xO ) / dX , 0.0 ) * ( Psi3 ( j + 2 , k , l ) - &
                            &       CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j + 1 , k , l ) - Psi3 ( j - 1 , k , l ) ) - &
                            &       Psi3 ( j - 2 , k , l ) ) - &
-                           &    CMPLX ( X ( j ) * Y ( k ) / ( 6.0 * dY * dX ) ) * ( Psi3 ( j - 2 , k - 2 , l ) - &
+                           &    CMPLX ( ( X ( j ) - xO ) * ( Y ( k ) - yO ) / ( 6.0 * dY * dX ) ) * ( Psi3 ( j - 2 , k - 2 , l ) - &
                            &       CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j - 2 , k - 1 , l ) - Psi3 ( j - 2 , k + 1 , l ) ) - &
                            &       Psi3 ( j - 2 , k + 2 , l ) - CMPLX ( 8.0 , 0.0 ) * Psi3 ( j - 1 , k - 2 , l ) + &
                            &       CMPLX ( 64.0 , 0.0 ) * ( Psi3 ( j - 1 , k - 1 , l ) - Psi3 ( j - 1 , k + 1 , l ) ) + &
@@ -1502,10 +1926,10 @@
                            &       CMPLX ( 8.0 , 0.0 ) * Psi3 ( j + 1 , k + 2 , l ) - Psi3 ( j + 2 , k - 2 , l ) + &
                            &       CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j + 2 , k - 1 , l ) - Psi3 ( j + 2 , k + 1 , l ) ) + &
                            &       Psi3 ( j + 2 , k + 2 , l ) ) + &
-                           &    CMPLX ( Y ( k ) / dY , 0.0 ) * ( Psi3 ( j , k + 2 , l ) - &
+                           &    CMPLX ( ( Y ( k ) - yO ) / dY , 0.0 ) * ( Psi3 ( j , k + 2 , l ) - &
                            &       CMPLX ( 8.0 , 0.0 ) * ( Psi3 ( j , k + 1 , l ) - Psi3 ( j , k - 1 , l ) ) - &
                            &       Psi3 ( j , k - 2 , l ) ) + &
-                           &    CMPLX ( ( Y ( k ) / dX )**2 , 0.0 ) * ( -Psi3 ( j - 2 , k , l ) + &
+                           &    CMPLX ( ( ( Y ( k ) - yO ) / dX )**2 , 0.0 ) * ( -Psi3 ( j - 2 , k , l ) + &
                            &       CMPLX ( 16.0 , 0.0 ) * Psi3 ( j - 1 , k , l ) - CMPLX ( 30.0 , 0.0 ) * Psi3 ( j , k , l ) + &
                            &       CMPLX ( 16.0 , 0.0 ) * Psi3 ( j + 1 , k , l ) - Psi3 ( j + 2 , k , l ) ) ) )
 
@@ -1523,9 +1947,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION fx_3d_rect_cd2 ( Vex3 , Psi3 )
+            REAL FUNCTION fx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex3 , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc 
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc 
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc 
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex3
 
@@ -1559,9 +1993,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION fx_3d_rect_cd4 ( Vex3 , Psi3 )
+            REAL FUNCTION fx_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex3 , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc 
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc 
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc 
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex3
 
@@ -1595,9 +2039,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION fy_3d_rect_cd2 ( Vex3 , Psi3 )
+            REAL FUNCTION fy_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex3 , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc 
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc 
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc 
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex3
 
@@ -1631,9 +2085,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION fy_3d_rect_cd4 ( Vex3 , Psi3 )
+            REAL FUNCTION fy_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex3 , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc 
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc 
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc 
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex3
 
@@ -1667,9 +2131,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION fz_3d_rect_cd2 ( Vex3 , Psi3 )
+            REAL FUNCTION fz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex3 , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc 
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc 
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc 
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex3
 
@@ -1703,9 +2177,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION fz_3d_rect_cd4 ( Vex3 , Psi3 )
+            REAL FUNCTION fz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex3 , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc 
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc 
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc 
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex3
 
@@ -1739,9 +2223,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION taux_3d_rect_cd2 ( Y , Z , Vex3 , Psi3 )
+            REAL FUNCTION taux_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , Y , Z , Vex3 , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: yO
+               REAL, INTENT ( IN ) :: zO
 
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
                REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
@@ -1761,7 +2258,7 @@
 
                      DO j = nXa , nXb
 
-                        taux_3d_rect_cd2 = taux_3d_rect_cd2 + ( Y ( k ) * ( Vex3 ( j , k , l - 1 ) - Vex3 ( j , k , l + 1 ) ) / dZ - Z ( l ) * ( Vex3 ( j , k - 1 , l ) -Vex3 ( j , k + 1 , l ) ) / dY ) * ABS ( Psi3 ( j , k , l ) )**2
+                        taux_3d_rect_cd2 = taux_3d_rect_cd2 + ( ( Y ( k ) - yO ) * ( Vex3 ( j , k , l - 1 ) - Vex3 ( j , k , l + 1 ) ) / dZ - ( Z ( l ) - zO ) * ( Vex3 ( j , k - 1 , l ) - Vex3 ( j , k + 1 , l ) ) / dY ) * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -1777,9 +2274,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION taux_3d_rect_cd4 ( Y , Z , Vex3 , Psi3 )
+            REAL FUNCTION taux_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , Y , Z , Vex3 , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: yO
+               REAL, INTENT ( IN ) :: zO  
 
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y 
                REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z 
@@ -1799,7 +2309,7 @@
 
                      DO j = nXa , nXb
 
-                        taux_3d_rect_cd4 = taux_3d_rect_cd4 + ( Y ( k ) * ( Vex3 ( j , k , l + 2 ) - 8.0 * ( Vex3 ( j , k , l + 1 ) - Vex3 ( j , k , l - 1 ) ) - Vex3 ( j , k , l - 2 ) ) / dZ - Z ( l ) * ( Vex3 ( j , k + 2 , l ) - 8.0 * ( Vex3 ( j , k + 1 , l ) - Vex3 ( j , k - 1 , l ) ) - Vex3 ( j , k - 2 , l ) ) / dY ) * ABS ( Psi3 ( j , k , l ) )**2
+                        taux_3d_rect_cd4 = taux_3d_rect_cd4 + ( ( Y ( k ) - yO ) * ( Vex3 ( j , k , l + 2 ) - 8.0 * ( Vex3 ( j , k , l + 1 ) - Vex3 ( j , k , l - 1 ) ) - Vex3 ( j , k , l - 2 ) ) / dZ - ( Z ( l ) - zO ) * ( Vex3 ( j , k + 2 , l ) - 8.0 * ( Vex3 ( j , k + 1 , l ) - Vex3 ( j , k - 1 , l ) ) - Vex3 ( j , k - 2 , l ) ) / dY ) * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -1815,7 +2325,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION tauy_3d_rect_cd2 ( X , Z , Vex3 , Psi3 ) 
+            REAL FUNCTION tauy_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , X , Z , Vex3 , Psi3 )
+
+               IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: zO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
                REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
@@ -1835,7 +2360,7 @@
 
                      DO j = nXa , nXb
 
-                        tauy_3d_rect_cd2 = tauy_3d_rect_cd2 + ( Z ( l ) * ( Vex3 ( j - 1 , k , l ) - Vex3 ( j + 1 , k , l ) ) / dX - X ( j ) * ( Vex3 ( j , k , l - 1 ) -Vex3 ( j , k , l + 1 ) ) / dZ ) * ABS ( Psi3 ( j , k , l ) )**2
+                        tauy_3d_rect_cd2 = tauy_3d_rect_cd2 + ( ( Z ( l ) - zO ) * ( Vex3 ( j - 1 , k , l ) - Vex3 ( j + 1 , k , l ) ) / dX - ( X ( j ) - xO ) * ( Vex3 ( j , k , l - 1 ) - Vex3 ( j , k , l + 1 ) ) / dZ ) * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -1849,9 +2374,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION tauy_3d_rect_cd4 ( X , Z , Vex3 , Psi3 )
+            REAL FUNCTION tauy_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , X , Z , Vex3 , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: zO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
                REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
@@ -1871,7 +2409,7 @@
 
                      DO j = nXa , nXb
 
-                        tauy_3d_rect_cd4 = tauy_3d_rect_cd4 + ( Z ( l ) * ( Vex3 ( j + 2 , k , l ) - 8.0 * ( Vex3 ( j + 1 , k , l ) - Vex3 ( j - 1 , k , l ) ) - Vex3 ( j - 2 , k , l ) ) / dX - X ( j ) * ( Vex3 ( j , k , l + 2 ) - 8.0 * ( Vex3 ( j , k , l + 1 ) - Vex3 ( j , k , l - 1 ) ) - Vex3 ( j , k , l - 2 ) ) / dZ ) * ABS ( Psi3 ( j , k , l ) )**2
+                        tauy_3d_rect_cd4 = tauy_3d_rect_cd4 + ( ( Z ( l ) - zO ) * ( Vex3 ( j + 2 , k , l ) - 8.0 * ( Vex3 ( j + 1 , k , l ) - Vex3 ( j - 1 , k , l ) ) - Vex3 ( j - 2 , k , l ) ) / dX - ( X ( j ) - xO ) * ( Vex3 ( j , k , l + 2 ) - 8.0 * ( Vex3 ( j , k , l + 1 ) - Vex3 ( j , k , l - 1 ) ) - Vex3 ( j , k , l - 2 ) ) / dZ ) * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -1887,9 +2425,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION tauz_3d_rect_cd2 ( X , Y , Vex3 , Psi3 )
+            REAL FUNCTION tauz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , X , Y , Vex3 , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: yO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
@@ -1909,7 +2460,7 @@
 
                      DO j = nXa , nXb
 
-                        tauz_3d_rect_cd2 = tauz_3d_rect_cd2 + ( X ( j ) * ( Vex3 ( j , k - 1 , l ) - Vex3 ( j , k + 1 , l ) ) / dY - Y ( k ) * ( Vex3 ( j - 1 , k , l ) - Vex3 ( j + 1 , k , l ) ) / dX ) * ABS ( Psi3 ( j , k , l ) )**2
+                        tauz_3d_rect_cd2 = tauz_3d_rect_cd2 + ( ( X ( j ) - xO ) * ( Vex3 ( j , k - 1 , l ) - Vex3 ( j , k + 1 , l ) ) / dY - ( Y ( k ) - yO ) * ( Vex3 ( j - 1 , k , l ) - Vex3 ( j + 1 , k , l ) ) / dX ) * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -1925,9 +2476,22 @@
 
             END FUNCTION
 
-            REAL FUNCTION tauz_3d_rect_cd4 ( X , Y , Vex3 , Psi3 )
+            REAL FUNCTION tauz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , X , Y , Vex3 , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: yO
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
                REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
@@ -1947,7 +2511,7 @@
 
                      DO j = nXa , nXb
 
-                        tauz_3d_rect_cd4 = tauz_3d_rect_cd4 + ( X ( j ) * ( Vex3 ( j , k + 2 , l ) - 8.0 * ( Vex3 ( j , k + 1 , l ) - Vex3 ( j , k - 1 , l ) ) - Vex3 ( j , k - 2, l ) ) / dY - Y ( k ) * ( Vex3 ( j + 2 , k , l ) - 8.0 * ( Vex3 ( j + 1 , k , l ) - Vex3 ( j - 1 , k , l ) ) - Vex3 ( j - 2 , k , l ) ) / dX ) * ABS ( Psi3 ( j , k , l ) )**2
+                        tauz_3d_rect_cd4 = tauz_3d_rect_cd4 + ( ( X ( j ) - xO ) * ( Vex3 ( j , k + 2 , l ) - 8.0 * ( Vex3 ( j , k + 1 , l ) - Vex3 ( j , k - 1 , l ) ) - Vex3 ( j , k - 2, l ) ) / dY - ( Y ( k ) - yO ) * ( Vex3 ( j + 2 , k , l ) - 8.0 * ( Vex3 ( j + 1 , k , l ) - Vex3 ( j - 1 , k , l ) ) - Vex3 ( j - 2 , k , l ) ) / dX ) * ABS ( Psi3 ( j , k , l ) )**2
 
                      END DO
 
@@ -1963,9 +2527,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION ixx_3d_rect ( yO , zO , Y , Z , Psi3 )
+            REAL FUNCTION ixx_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , Y , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                REAL, INTENT ( IN ) :: yO
                REAL, INTENT ( IN ) :: zO
@@ -2003,9 +2577,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION iyy_3d_rect ( xO , zO , X , Z , Psi3 )
+            REAL FUNCTION iyy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , X , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                REAL, INTENT ( IN ) :: xO
                REAL, INTENT ( IN ) :: zO
@@ -2043,9 +2627,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION izz_3d_rect ( xO , yO , X , Y , Psi3 )
+            REAL FUNCTION izz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , X , Y , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                REAL, INTENT ( IN ) :: xO
                REAL, INTENT ( IN ) :: yO
@@ -2083,9 +2677,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION ixy_3d_rect ( xO , yO , X , Y , Psi3 )
+            REAL FUNCTION ixy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , X , Y , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                REAL, INTENT ( IN ) :: xO
                REAL, INTENT ( IN ) :: yO
@@ -2123,9 +2727,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION iyz_3d_rect ( yO , zO , Y , Z , Psi3 )
+            REAL FUNCTION iyz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , Y , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                REAL, INTENT ( IN ) :: yO
                REAL, INTENT ( IN ) :: zO
@@ -2163,9 +2777,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION ixz_3d_rect ( xO , zO , X , Z , Psi3 )
+            REAL FUNCTION ixz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , X , Z , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                REAL, INTENT ( IN ) :: xO
                REAL, INTENT ( IN ) :: zO
@@ -2203,9 +2827,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION vex_3d_rect ( Vex3 , Psi3 )
+            REAL FUNCTION vex_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex3 , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex3
 
@@ -2239,9 +2873,19 @@
 
             END FUNCTION
 
-            REAL FUNCTION vmf_3d_rect ( gS , Psi3 )
+            REAL FUNCTION vmf_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , gS , Psi3 )
 
                IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc
 
                REAL, INTENT ( IN ) :: gS
 

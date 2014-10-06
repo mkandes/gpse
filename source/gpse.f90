@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Friday, October 3rd, 2014
+!     Monday, October 6th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -55,8 +55,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.2.3'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Friday, October 3rd, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.2.4'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Monday, October 6th, 2014'
 
       INTEGER, PARAMETER :: INT_DEFAULT_KIND   = KIND ( 0 ) 
       INTEGER, PARAMETER :: REAL_DEFAULT_KIND  = KIND ( 0.0 )
@@ -403,136 +403,249 @@
 
             IF ( quadRule == 1 ) THEN ! use rectangle rule
             
-               temp = l2_norm_3d_rect ( PsiA )
+               temp = l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , PsiA )
                CALL MPI_REDUCE ( temp , l2Norm , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
 
-               temp = x_3d_rect ( X , PsiA )
+               temp = x_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , X , PsiA )
                CALL MPI_REDUCE ( temp , avgX , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = x2_3d_rect ( X, PsiA )
-               CALL MPI_REDUCE ( temp , avgX2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = y_3d_rect ( Y , PsiA )
-               CALL MPI_REDUCE ( temp , avgY , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = y2_3d_rect ( Y , PsiA )
-               CALL MPI_REDUCE ( temp , avgY2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = z_3d_rect ( Z , PsiA )
-               CALL MPI_REDUCE ( temp , avgZ , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = z2_3d_rect ( Z , PsiA )
-               CALL MPI_REDUCE ( temp , avgZ2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = r_xy_3d_rect ( X , Y , PsiA )
-               CALL MPI_REDUCE ( temp , avgRxy , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-
                CALL MPI_BCAST ( avgX , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = x2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , X, PsiA )
+               CALL MPI_REDUCE ( temp , avgX2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = x2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , X, PsiA )
+               CALL MPI_REDUCE ( temp , avgX2COM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = y_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , Y , PsiA )
+               CALL MPI_REDUCE ( temp , avgY , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
                CALL MPI_BCAST ( avgY , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = y2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , Y , PsiA )
+               CALL MPI_REDUCE ( temp , avgY2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = y2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgY , Y , PsiA )
+               CALL MPI_REDUCE ( temp , avgY2COM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = z_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , Z , PsiA )
+               CALL MPI_REDUCE ( temp , avgZ , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
                CALL MPI_BCAST ( avgZ , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
 
-               temp = ixx_3d_rect ( avgY , avgZ , Y , Z , PsiA )
-               CALL MPI_REDUCE ( temp , avgIxxCM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = iyy_3d_rect ( avgX , avgZ , X , Z , PsiA )
-               CALL MPI_REDUCE ( temp , avgIyyCM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = izz_3d_rect ( avgX , avgY , X , Y , PsiA )
-               CALL MPI_REDUCE ( temp , avgIzzCM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = ixy_3d_rect ( avgX , avgY , X , Y , PsiA )
-               CALL MPI_REDUCE ( temp , avgIxyCM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = iyz_3d_rect ( avgY , avgZ , Y , Z , PsiA )
-               CALL MPI_REDUCE ( temp , avgIyzCM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = ixz_3d_rect ( avgX , avgZ , X , Z , PsiA )
-               CALL MPI_REDUCE ( temp , avgIxzCM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+               temp = z2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , Z , PsiA )
+               CALL MPI_REDUCE ( temp , avgZ2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
 
-               temp = ixx_3d_rect ( 0.0 , 0.0 , Y , Z , PsiA )
-               CALL MPI_REDUCE ( temp , avgIxxO , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = iyy_3d_rect ( 0.0 , 0.0 , X , Z , PsiA )
-               CALL MPI_REDUCE ( temp , avgIyyO , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = izz_3d_rect ( 0.0 , 0.0 , X , Y , PsiA )
-               CALL MPI_REDUCE ( temp , avgIzzO , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = ixy_3d_rect ( 0.0 , 0.0 , X , Y , PsiA )
-               CALL MPI_REDUCE ( temp , avgIxyO , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = iyz_3d_rect ( 0.0 , 0.0 , Y , Z , PsiA )
-               CALL MPI_REDUCE ( temp , avgIyzO , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = ixz_3d_rect ( 0.0 , 0.0 , X , Z , PsiA )
-               CALL MPI_REDUCE ( temp , avgIxzO , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+               temp = z2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgZ , Z , PsiA )
+               CALL MPI_REDUCE ( temp , avgZ2COM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
 
-               temp = vex_3d_rect ( Vex , PsiA )
+               temp = r_xy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Y , PsiA )
+               CALL MPI_REDUCE ( temp , avgRxy , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = ixx_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , Y , Z , PsiA )
+               CALL MPI_REDUCE ( temp , avgIxx , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = ixx_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgY , avgZ , Y , Z , PsiA )
+               CALL MPI_REDUCE ( temp , avgIxxCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = iyy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Z , PsiA )
+               CALL MPI_REDUCE ( temp , avgIyy , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = iyy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgZ , X , Z , PsiA )
+               CALL MPI_REDUCE ( temp , avgIyyCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = izz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Y , PsiA )
+               CALL MPI_REDUCE ( temp , avgIzz , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = izz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgY , X , Y , PsiA )
+               CALL MPI_REDUCE ( temp , avgIzzCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = ixy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Y , PsiA )
+               CALL MPI_REDUCE ( temp , avgIxy , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = ixy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgY , X , Y , PsiA )
+               CALL MPI_REDUCE ( temp , avgIxyCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = iyz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , Y , Z , PsiA )
+               CALL MPI_REDUCE ( temp , avgIyz , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = iyz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgY , avgZ , Y , Z , PsiA )
+               CALL MPI_REDUCE ( temp , avgIyzCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = ixz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Z , PsiA )
+               CALL MPI_REDUCE ( temp , avgIxz , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = ixz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgZ , X , Z , PsiA )
+               CALL MPI_REDUCE ( temp , avgIxzCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+               temp = vex_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex , PsiA )
                CALL MPI_REDUCE ( temp , avgVex , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-               temp = vmf_3d_rect ( gS , PsiA )
+
+               temp = vmf_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , gS , PsiA )
                CALL MPI_REDUCE ( temp , avgVmf , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
 
                IF ( fdOrder == 2 ) THEN ! use 2nd-order CD 
 
-                  temp = px_3d_rect_cd2  ( PsiA )
+                  temp = px_3d_rect_cd2  ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , PsiA )
                   CALL MPI_REDUCE ( temp , avgPx , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = px2_3d_rect_cd2 ( PsiA )
+
+                  temp = px2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , PsiA )
                   CALL MPI_REDUCE ( temp , avgPx2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = py_3d_rect_cd2  ( PsiA )
+
+                  temp = py_3d_rect_cd2  ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , PsiA )
                   CALL MPI_REDUCE ( temp , avgPy , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = py2_3d_rect_cd2 ( PsiA )
+
+                  temp = py2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , PsiA )
                   CALL MPI_REDUCE ( temp , avgPy2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = pz_3d_rect_cd2  ( PsiA )
+
+                  temp = pz_3d_rect_cd2  ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , PsiA )
                   CALL MPI_REDUCE ( temp , avgPz , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = pz2_3d_rect_cd2 ( PsiA )
+
+                  temp = pz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , PsiA )
                   CALL MPI_REDUCE ( temp , avgPz2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = lx_3d_rect_cd2 ( Y , Z , PsiA )
+
+                  temp = lx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , Y , Z , PsiA )
                   CALL MPI_REDUCE ( temp , avgLx , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = lx2_3d_rect_cd2 ( Y , Z , PsiA )
+
+                  temp = lx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgY , avgZ , Y , Z , PsiA )
+                  CALL MPI_REDUCE ( temp , avgLxCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = lx2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , Y , Z , PsiA )
                   CALL MPI_REDUCE ( temp , avgLx2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = ly_3d_rect_cd2 ( X , Z , PsiA )
+
+                  temp = lx2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgY , avgZ , Y , Z , PsiA )
+                  CALL MPI_REDUCE ( temp , avgLx2COM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = ly_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Z , PsiA )
                   CALL MPI_REDUCE ( temp , avgLy , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = ly2_3d_rect_cd2 ( X , Z , PsiA )
+
+                  temp = ly_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgZ , X , Z , PsiA )
+                  CALL MPI_REDUCE ( temp , avgLyCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = ly2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Z , PsiA )
                   CALL MPI_REDUCE ( temp , avgLy2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = lz_3d_rect_cd2 ( X , Y , PsiA )
+
+                  temp = ly2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgZ , X , Z , PsiA )
+                  CALL MPI_REDUCE ( temp , avgLy2COM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = lz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Y , PsiA )
                   CALL MPI_REDUCE ( temp , avgLz , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = lz2_3d_rect_cd2 ( X , Y , PsiA )
+
+                  temp = lz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgY , X , Y , PsiA )
+                  CALL MPI_REDUCE ( temp , avgLzCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = lz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 ,  X , Y , PsiA )
                   CALL MPI_REDUCE ( temp , avgLz2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = fx_3d_rect_cd2 ( Vex , PsiA )
+
+                  temp = lz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgY ,  X , Y , PsiA )
+                  CALL MPI_REDUCE ( temp , avgLz2COM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = fx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex , PsiA )
                   CALL MPI_REDUCE ( temp , avgFx , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = fy_3d_rect_cd2 ( Vex , PsiA )
+
+                  temp = fy_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex , PsiA )
                   CALL MPI_REDUCE ( temp , avgFy , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = fz_3d_rect_cd2 ( Vex , PsiA )
+
+                  temp = fz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex , PsiA )
                   CALL MPI_REDUCE ( temp , avgFz , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = taux_3d_rect_cd2 ( Y , Z , Vex , PsiA )
+
+                  temp = taux_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , Y , Z , Vex , PsiA )
                   CALL MPI_REDUCE ( temp , avgTauX, 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = tauy_3d_rect_cd2 ( X , Z , Vex , PsiA )
+
+                  temp = taux_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgY , avgZ , Y , Z , Vex , PsiA )
+                  CALL MPI_REDUCE ( temp , avgTauXCOM, 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = tauy_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Z , Vex , PsiA )
                   CALL MPI_REDUCE ( temp , avgTauY , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = tauz_3d_rect_cd2 ( X , Y , Vex , PsiA )
+
+                  temp = tauy_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgZ , X , Z , Vex , PsiA )
+                  CALL MPI_REDUCE ( temp , avgTauYCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = tauz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Y , Vex , PsiA )
                   CALL MPI_REDUCE ( temp , avgTauZ , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = tauz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgY , X , Y , Vex , PsiA )
+                  CALL MPI_REDUCE ( temp , avgTauZCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
 
                ELSE IF ( fdOrder == 4 ) THEN ! use 4th-order CD 
 
-                  temp = px_3d_rect_cd4 ( PsiA )
+                  temp = px_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , PsiA )
                   CALL MPI_REDUCE ( temp , avgPx , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = px2_3d_rect_cd4 ( PsiA )
+
+                  temp = px2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , PsiA )
                   CALL MPI_REDUCE ( temp , avgPx2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = py_3d_rect_cd4  ( PsiA )
+
+                  temp = py_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , PsiA )
                   CALL MPI_REDUCE ( temp , avgPy , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = py2_3d_rect_cd4 ( PsiA )
+
+                  temp = py2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , PsiA )
                   CALL MPI_REDUCE ( temp , avgPy2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = pz_3d_rect_cd4  ( PsiA )
+
+                  temp = pz_3d_rect_cd4  ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , PsiA )
                   CALL MPI_REDUCE ( temp , avgPz , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = pz2_3d_rect_cd4 ( PsiA )
+
+                  temp = pz2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , PsiA )
                   CALL MPI_REDUCE ( temp , avgPz2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = lx_3d_rect_cd4 ( Y , Z , PsiA )
+
+                  temp = lx_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , Y , Z , PsiA )
                   CALL MPI_REDUCE ( temp , avgLx , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = lx2_3d_rect_cd4 ( Y , Z , PsiA )
+
+                  temp = lx_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgY , avgZ , Y , Z , PsiA )
+                  CALL MPI_REDUCE ( temp , avgLxCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = lx2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , Y , Z , PsiA )
                   CALL MPI_REDUCE ( temp , avgLx2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = ly_3d_rect_cd4 ( X , Z , PsiA )
+
+                  temp = lx2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgY , avgZ , Y , Z , PsiA )
+                  CALL MPI_REDUCE ( temp , avgLx2COM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = ly_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Z , PsiA )
                   CALL MPI_REDUCE ( temp , avgLy , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = ly2_3d_rect_cd4 ( X , Z , PsiA )
+
+                  temp = ly_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgZ , X , Z , PsiA )
+                  CALL MPI_REDUCE ( temp , avgLyCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = ly2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Z , PsiA )
                   CALL MPI_REDUCE ( temp , avgLy2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = lz_3d_rect_cd4 ( X , Y , PsiA )
+
+                  temp = ly2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgZ , X , Z , PsiA )
+                  CALL MPI_REDUCE ( temp , avgLy2COM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = lz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Y , PsiA )
                   CALL MPI_REDUCE ( temp , avgLz , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = lz2_3d_rect_cd4 ( X , Y , PsiA )
+
+                  temp = lz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgY , X , Y , PsiA )
+                  CALL MPI_REDUCE ( temp , avgLzCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = lz2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Y , PsiA )
                   CALL MPI_REDUCE ( temp , avgLz2 , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = fx_3d_rect_cd4 ( Vex , PsiA )
+
+                  temp = lz2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgY , X , Y , PsiA )
+                  CALL MPI_REDUCE ( temp , avgLz2COM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = fx_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex , PsiA )
                   CALL MPI_REDUCE ( temp , avgFx , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = fy_3d_rect_cd4 ( Vex , PsiA )
+
+                  temp = fy_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex , PsiA )
                   CALL MPI_REDUCE ( temp , avgFy , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = fz_3d_rect_cd4 ( Vex , PsiA )
+
+                  temp = fz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex , PsiA )
                   CALL MPI_REDUCE ( temp , avgFz , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = taux_3d_rect_cd4 ( Y , Z , Vex , PsiA )
+
+                  temp = taux_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , Y , Z , Vex , PsiA )
                   CALL MPI_REDUCE ( temp , avgTauX, 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = tauy_3d_rect_cd4 ( X , Z , Vex , PsiA )
+
+                  temp = taux_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgY , avgZ , Y , Z , Vex , PsiA )
+                  CALL MPI_REDUCE ( temp , avgTauXCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = tauy_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Z , Vex , PsiA )
                   CALL MPI_REDUCE ( temp , avgTauY , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-                  temp = tauz_3d_rect_cd4 ( X , Y , Vex , PsiA )
+
+                  temp = tauy_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgZ , X , Z , Vex , PsiA )
+                  CALL MPI_REDUCE ( temp , avgTauYCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = tauz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , X , Y , Vex , PsiA )
                   CALL MPI_REDUCE ( temp , avgTauZ , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+
+                  temp = tauz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , avgX , avgY , X , Y , Vex , PsiA )
+                  CALL MPI_REDUCE ( temp , avgTauZCOM , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
 
                ELSE ! fdOrder not supported
 
@@ -578,25 +691,25 @@
 
 !              Chemical potential
 
-               mu =  avgTx + avgTy + avgTz + avgVex + 2.0 * avgVmf
+               avgMu =  avgTx + avgTy + avgTz + avgVex + 2.0 * avgVmf
 
 !              Write expectation values, uncertainties and uncertainty 
 !              relations to file from MPI_MASTER
 
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) &
-                  & tN , l2Norm , avgE   , avgL2  , mu , avgTx  , avgTy  , avgTz  , avgVex , avgVmf ,  &  
-                  &               avgX   , avgX2  , sigX   , avgPx  , avgPx2 , sigPx  , sigX * sigPx , &
-                  &               avgY   , avgY2  , sigY   , avgPy  , avgPy2 , sigPy  , sigY * sigPy , &
-                  &               avgZ   , avgZ2  , sigZ   , avgPz  , avgPz2 , sigPz  , sigZ * sigPz , &
-                  &               avgRxy ,                                                             &
-                  &               avgIxxCM , avgIyyCM , avgIzzCM , avgIxyCM , avgIyzCM , avgIxzCM ,    &
-                  &               avgIxxO  , avgIyyO  , avgIzzO  , avgIxyO  , avgIyzO  , avgIxzO  ,    &
-                  &               avgLx  , avgLx2 , sigLx  ,                                           &
-                  &               avgLy  , avgLy2 , sigLy  ,                                           & 
-                  &               avgLz  , avgLz2 , sigLz  ,                                           &
-                  &               sigLx * sigLy , sigLy * sigLz , sigLz * sigLx ,                      &
-                  &               avgFx  , avgFy , avgFz ,                                             &
-                  &               avgTauX , avgTauY , avgTauZ 
+                  & tN , l2Norm , avgE   , avgL2  , avgMu , avgTx  , avgTy  , avgTz  , avgVex , avgVmf ,          &  
+                  &               avgX   , avgX2  , avgX2COM , sigX   , avgPx  , avgPx2 , sigPx  , sigX * sigPx , &
+                  &               avgY   , avgY2  , avgY2COM , sigY   , avgPy  , avgPy2 , sigPy  , sigY * sigPy , &
+                  &               avgZ   , avgZ2  , avgZ2COM , sigZ   , avgPz  , avgPz2 , sigPz  , sigZ * sigPz , &
+                  &               avgRxy ,                                                                        &
+                  &               avgIxx  , avgIyy  , avgIzz  , avgIxy  , avgIyz  , avgIxz  ,                     &
+                  &               avgIxxCOM , avgIyyCOM , avgIzzCOM , avgIxyCOM , avgIyzCOM , avgIxzCOM ,         &
+                  &               avgLx  , avgLxCOM , avgLx2 , avgLx2COM , sigLx  ,                               &
+                  &               avgLy  , avgLyCOM , avgLy2 , avgLy2COM , sigLy  ,                               & 
+                  &               avgLz  , avgLzCOM , avgLz2 , avgLz2COM , sigLz  ,                               &
+                  &               sigLx * sigLy , sigLy * sigLz , sigLz * sigLx ,                                 &
+                  &               avgFx  , avgFy , avgFz ,                                                        &
+                  &               avgTauX , avgTauXCOM , avgTauY , avgTauYCOM , avgTauZ , avgTauZCOM  
                   
 
             END IF
@@ -754,7 +867,7 @@
 !        If using ITP, then also renormalize wave function each time step
          IF ( itpOn .EQV. .TRUE. ) THEN
 
-            temp = l2_norm_3d_rect ( PsiA )
+            temp = l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , PsiA )
             CALL MPI_REDUCE ( temp , l2Norm , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( l2Norm , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
             PsiA = PsiA / SQRT ( l2Norm )
