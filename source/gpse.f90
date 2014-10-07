@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Monday, October 6th, 2014
+!     Tuesday, October 7th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -55,8 +55,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.2.4'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Monday, October 6th, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.2.5'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Tuesday, October 7th, 2014'
 
       INTEGER, PARAMETER :: INT_DEFAULT_KIND   = KIND ( 0 ) 
       INTEGER, PARAMETER :: REAL_DEFAULT_KIND  = KIND ( 0.0 )
@@ -722,19 +722,20 @@
 
                   fileNumber = fileNumber + 1
 
-                  IF ( fmtIO == 1 ) THEN
+!                  IF ( fmtIO == 1 ) THEN
+!
+!                     CALL write_gpi ( 'gpse_psi_vex_' , fileNumber , Xm , Ym , Zm , VexM , PsiM )
+!
+!                  ELSE IF ( fmtIO == 2 ) THEN
 
-                     CALL write_gpi ( 'gpse_psi_vex_' , fileNumber , Xm , Ym , Zm , VexM , PsiM )
+!                    CALL write_vtk ( 'gpse_psi_vex_' , fileNumber , Xm , Ym , Zm , VexM , PsiM )
+                    CALL write_vtk ( 'gpse_psi_vex_' , fileNumber , nX , nY , nZ , Xm , Ym , Zm , VexM , PsiM )
 
-                  ELSE IF ( fmtIO == 2 ) THEN
-
-                     CALL write_vtk ( 'gpse_psi_vex_' , fileNumber , Xm , Ym , Zm , VexM , PsiM )
-
-                  ELSE
-
-                     ! fmt not supported yet
-
-                  END IF
+!                  ELSE
+!
+!                     ! fmt not supported yet
+!
+!                  END IF
 
                   CALL write_bin ( 'psilast' , 0 , PsiM ) ! checkpointing wave function in binary formatted file
 
