@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, October 7th, 2014
+!     Wednesday, October 8th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -55,7 +55,7 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.2.5'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.2.6'
       CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Tuesday, October 7th, 2014'
 
       INTEGER, PARAMETER :: INT_DEFAULT_KIND   = KIND ( 0 ) 
@@ -153,7 +153,7 @@
       CALL MPI_INIT_THREAD ( MPI_THREAD_SINGLE , mpiProvided , mpiError )
       IF ( mpiError /= MPI_SUCCESS ) THEN
 
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) 'gpse: ERROR - MPI_INIT_THREAD failed. Calling MPI_ABORT.'
+         WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse: ERROR - MPI_INIT_THREAD failed. Calling MPI_ABORT.'
          CALL MPI_ABORT ( MPI_COMM_WORLD , mpiErrorCode , mpiError )
 
       END IF
@@ -182,6 +182,7 @@
          CALL vex_read_inputs ( )
          CALL psi_read_inputs ( )
 
+!         OPEN  ( UNIT = OUTPUT_UNIT , FILE = 'gpse.out' , ACCESS = 'SEQUENTIAL' , ACTION = 'WRITE' , FORM = 'FORMATTED' , POSITION = 'APPEND' , STATUS = 'NEW' )
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# =========================================================================='
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     GPSE VERSION ', GPSE_VERSION_NUMBER
@@ -271,6 +272,7 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiPz     = ', psiPz
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     RANGE CHECKING INPUT PARAMETERS ... '
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     BROADCASTING INPUT PARAMETERS TO ALL MPI PROCESSES ... '
+         !CLOSE ( UNIT = OUTPUT_UNIT , STATUS = 'KEEP' )
 
       END IF
 
@@ -696,12 +698,12 @@
 !              Write expectation values, uncertainties and uncertainty 
 !              relations to file from MPI_MASTER
 
-               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) &
-                  & tN , l2Norm , avgE   , avgL2  , avgMu , avgTx  , avgTy  , avgTz  , avgVex , avgVmf ,          &  
+!               OPEN  ( UNIT = OUTPUT_UNIT , FILE = 'gpse.out' , ACCESS = 'SEQUENTIAL' , ACTION = 'WRITE' , FORM = 'FORMATTED' , POSITION = 'APPEND' , STATUS = 'UNKNOWN' )
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) tN , l2Norm , avgE   , avgL2  , avgMu , avgTx  , avgTy  , avgTz  , avgVex , avgVmf , &
                   &               avgX   , avgX2  , avgX2COM , sigX   , avgPx  , avgPx2 , sigPx  , sigX * sigPx , &
                   &               avgY   , avgY2  , avgY2COM , sigY   , avgPy  , avgPy2 , sigPy  , sigY * sigPy , &
                   &               avgZ   , avgZ2  , avgZ2COM , sigZ   , avgPz  , avgPz2 , sigPz  , sigZ * sigPz , &
-                  &               avgRxy ,                                                                        &
+                  &               avgRxy , &
                   &               avgIxx  , avgIyy  , avgIzz  , avgIxy  , avgIyz  , avgIxz  ,                     &
                   &               avgIxxCOM , avgIyyCOM , avgIzzCOM , avgIxyCOM , avgIyzCOM , avgIxzCOM ,         &
                   &               avgLx  , avgLxCOM , avgLx2 , avgLx2COM , sigLx  ,                               &
@@ -709,8 +711,9 @@
                   &               avgLz  , avgLzCOM , avgLz2 , avgLz2COM , sigLz  ,                               &
                   &               sigLx * sigLy , sigLy * sigLz , sigLz * sigLx ,                                 &
                   &               avgFx  , avgFy , avgFz ,                                                        &
-                  &               avgTauX , avgTauXCOM , avgTauY , avgTauYCOM , avgTauZ , avgTauZCOM  
-                  
+                  &               avgTauX , avgTauXCOM , avgTauY , avgTauYCOM , avgTauZ , avgTauZCOM
+!               CLOSE ( UNIT = OUTPUT_UNIT , STATUS = 'KEEP' )
+                 
 
             END IF
 
@@ -900,6 +903,8 @@
       DEALLOCATE ( MPIstatus )
 
 ! --- FORMAT STATEMENTS ---------------------------------------------------
+
+900   FORMAT(1X,35(F23.15))
 
       STOP
 

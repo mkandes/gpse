@@ -1,6 +1,6 @@
 &nmlGPSEin
    itpOn      = .FALSE.      ! Perform imaginary time propagation? .TRUE. = Yes ; .FALSE. = No
-   fullIO     = .TRUE.     ! Write external potential and wave function to file? .TRUE. = Yes ; .FALSE. = No
+   fullIO     = .FALSE.     ! Write external potential and wave function to file? .TRUE. = Yes ; .FALSE. = No
    fmtIO      = 2           ! File format of output external potential and wave function? 1 = GPI ; 2 = VTK ; 3 = VTK_XML   
    rk4Lambda  = 2           ! 1 = Tan-Chen Lambda-1 ; 2 = Classical 4th-Order Runge-Kutta ; 3 = Tan-Chen Lambda-3 ; 4 = England ; 5 = Tan-Chen Lambda-5
    fdOrder    = 2           ! 2 = 2nd-Order Central Differences ( CD ); 4 = 4th-Order CD ; 6 = 6th-Order CD; 8 = 8th-Order CD
