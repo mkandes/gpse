@@ -76,43 +76,37 @@
 
       CONTAINS
 
-         SUBROUTINE read_bin ( fileName , fileNumber , Psi )
+         SUBROUTINE read_bin ( fileName , Psi3 )
 
             IMPLICIT NONE
 
             CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
 
-            INTEGER, INTENT ( IN ) :: fileNumber
+            COMPLEX, DIMENSION ( : , : , : ), INTENT ( INOUT ) :: Psi3
 
-            COMPLEX, ALLOCATABLE, DIMENSION ( : ), INTENT ( INOUT ) :: Psi
+            OPEN  ( UNIT = 500 , FILE = trim(fileName//'.bin') , ACTION = 'READ' , FORM = 'UNFORMATTED' , STATUS = 'OLD' )
 
-            CHARACTER ( LEN = 4 ) :: fileNumberString
+               READ ( UNIT = 500 ) Psi3
 
-            WRITE ( UNIT = fileNumberString , FMT = '(I4.4)' ) fileNumber
-            OPEN  ( UNIT = fileNumber , FILE = trim(fileName//fileNumberString//'.bin') , ACTION = 'READ' , FORM = 'UNFORMATTED' , STATUS = 'OLD' )
-            READ ( UNIT = fileNumber ) Psi
-            CLOSE ( UNIT = fileNumber , STATUS = 'KEEP' )
+            CLOSE ( UNIT = 500 , STATUS = 'KEEP' )
 
             RETURN
 
          END SUBROUTINE
 
-         SUBROUTINE write_bin ( fileName , fileNumber , Psi )
+         SUBROUTINE write_bin ( fileName , Psi3 )
 
             IMPLICIT NONE
 
             CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
 
-            INTEGER, INTENT ( IN ) :: fileNumber
+            COMPLEX, DIMENSION ( : , : , : ), INTENT ( INOUT ) :: Psi3
 
-            COMPLEX, ALLOCATABLE, DIMENSION ( : ), INTENT ( IN ) :: Psi 
+            OPEN  ( UNIT = 600 , FILE = trim(fileName//'.bin') , ACTION = 'WRITE' , FORM = 'UNFORMATTED' , STATUS = 'UNKNOWN' )
 
-            CHARACTER ( LEN = 4 ) :: fileNumberString
+               WRITE ( UNIT = 600 ) Psi3
 
-            WRITE ( UNIT = fileNumberString , FMT = '(I4.4)' ) fileNumber
-            OPEN  ( UNIT = fileNumber , FILE = trim(fileName//fileNumberString//'.bin') , ACTION = 'WRITE' , FORM = 'UNFORMATTED' , STATUS = 'UNKNOWN' )
-            WRITE ( UNIT = fileNumber ) Psi
-            CLOSE ( UNIT = fileNumber , STATUS = 'KEEP' )
+            CLOSE ( UNIT = 600 , STATUS = 'KEEP' )
 
             RETURN
 
@@ -212,12 +206,12 @@
             INTEGER, INTENT ( IN ) :: nY
             INTEGER, INTENT ( IN ) :: nZ
 
-            REAL, DIMENSION ( :         ), INTENT ( IN ) :: X
-            REAL, DIMENSION ( :         ), INTENT ( IN ) :: Y
-            REAL, DIMENSION ( :         ), INTENT ( IN ) :: Z
-            REAL, DIMENSION ( : ), INTENT ( IN ) :: Vex3
+            REAL, DIMENSION ( : ), INTENT ( IN ) :: X
+            REAL, DIMENSION ( : ), INTENT ( IN ) :: Y
+            REAL, DIMENSION ( : ), INTENT ( IN ) :: Z
+            REAL, DIMENSION ( : , : , : ), INTENT ( IN ) :: Vex3
             
-            COMPLEX, DIMENSION ( : ), INTENT ( IN ) :: Psi3
+            COMPLEX, DIMENSION ( : , : , : ), INTENT ( IN ) :: Psi3
 
             CHARACTER ( LEN = 4 ) :: fileNumberString
 
@@ -258,7 +252,7 @@
 
                      DO j = 1 , nX
 
-                        WRITE ( UNIT = fileNumber , FMT = * ) Vex3 ( j + nX * ( ( k - 1 ) + nY * ( l - 1 ) ) ) 
+                        WRITE ( UNIT = fileNumber , FMT = * ) Vex3 ( j , k , l ) 
 
                      END DO
 
@@ -273,7 +267,7 @@
 
                      DO j = 1 , nX
 
-                        WRITE ( UNIT = fileNumber , FMT = * ) REAL ( Psi3 ( j + nX * ( ( k - 1 ) + nY * ( l - 1 ) ) ) )
+                        WRITE ( UNIT = fileNumber , FMT = * ) REAL ( Psi3 ( j , k , l ) )
 
                      END DO
 
@@ -288,7 +282,7 @@
 
                      DO j = 1 , nX
 
-                        WRITE ( UNIT = fileNumber , FMT = * ) AIMAG ( Psi3 ( j + nX * ( ( k - 1 ) + nY * ( l - 1 ) ) ) )
+                        WRITE ( UNIT = fileNumber , FMT = * ) AIMAG ( Psi3 ( j , k , l ) )
 
                      END DO
 
