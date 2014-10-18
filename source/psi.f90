@@ -31,81 +31,56 @@
 !
 ! LAST UPDATED
 !
-!     Friday, October 3rd, 2014
+!     Saturday, October 18th, 2014
 !
 ! -------------------------------------------------------------------------
 
       MODULE PSI
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
-      USE            :: GRID, ONLY: nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc
       USE            :: MATH
 
       IMPLICIT NONE
       PRIVATE
 
-      INTEGER, PARAMETER, PRIVATE :: unitPsiIn   = 502
-      INTEGER, PARAMETER, PRIVATE :: unitPsiInit = 999 
-
-      LOGICAL, PUBLIC :: readPsi = .FALSE. ! Read initial wave function from file ( init.psi ) ? .TRUE. = Yes ; .FALSE. = No
-      LOGICAL, PUBLIC :: writePsi    = .FALSE. ! Write wave function to file? .TRUE. = Yes ; .FALSE. = No
-
-      INTEGER, PUBLIC :: psiInit = -1 ! 0 = Isotropic 3D SHO ; 1 = Anisotropic 3D SHO ; 2 = Axially-Symmetric 3D SHO
-      INTEGER, PUBLIC :: psiNx   = 0  ! Degree of Hermite polynomial used to define anisotropic SHO wave function along x-axis
-      INTEGER, PUBLIC :: psiNy   = 0  ! Degree of Hermite polynomial used to define anisotropic SHO wave function along y-axis
-      INTEGER, PUBLIC :: psiNz   = 0  ! Degree of Hermite polynomial used to define both anisotropic and axially-symmetric SHO wave functions along z-axis
-      INTEGER, PUBLIC :: psiNr   = 0  ! Degree of (associated) Laguerre polynomials used to define radial components of isotropic and axi-symmetric SHO 
-      INTEGER, PUBLIC :: psiMl   = 0  ! Projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
-      INTEGER, PUBLIC :: fmtWritePsi = -1 ! File format for output wave functions? 0 = Binary ; 1 = GPI ; 2 = VTK ; 3 = VTK_XML
-
-      REAL, PUBLIC :: psiXo = 0.0 ! X-coordinate of origin used to define initial wave function
-      REAL, PUBLIC :: psiYo = 0.0 ! Y-coordinate of origin used to define initial wave function
-      REAL, PUBLIC :: psiZo = 0.0 ! Z-coordinate of origin used to define initial wave function
-      REAL, PUBLIC :: psiWx = 0.0 ! Angular frequency of SHO potential along x-axis used to define anisotropic SHO wave function
-      REAL, PUBLIC :: psiWy = 0.0 ! Angular frequency of SHO potential along y-axis used to define anisotropic SHO wave function
-      REAL, PUBLIC :: psiWz = 0.0 ! Angular frequency of SHO potential along z-axis used to define both anisotropic and axially-symmetric SHO wave functions
-      REAL, PUBLIC :: psiWr = 0.0 ! Angular frequency of isotropic (radially-symmetric) SHO potential used to define ...    
-      REAL, PUBLIC :: psiPx = 0.0 
-      REAL, PUBLIC :: psiPy = 0.0
-      REAL, PUBLIC :: psiPz = 0.0
-
-      PUBLIC :: psi_read_inputs
-      PUBLIC :: psi_read_init
-      PUBLIC :: psi_compute_init
+      PUBLIC :: psi_init
       PUBLIC :: psi_normalize
       PUBLIC :: psi_boost
+      PUBLIC :: psi_boost_superposition
 
       PRIVATE :: psi_3d_se_sho_ani
       PRIVATE :: psi_3d_se_sho_axi
       PRIVATE :: psi_3d_se_sho_iso
 
-      NAMELIST /nmlPsiIn/ readPsi , psiInit , psiNx , psiNy , psiNz , psiNr , psiMl , psiXo , psiYo , psiZo , psiWx , psiWy , psiWz , psiWr , psiPx , psiPy , psiPz
-
       CONTAINS
 
-         SUBROUTINE psi_read_inputs ( )
+         SUBROUTINE psi_init ( initPsi , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nX , nY , nZ , nR , mL , xO , yO , zO , wX , wY , wZ , wR , X , Y , Z , Psi3 )
 
             IMPLICIT NONE
 
-            OPEN ( UNIT = unitPsiIn, FILE = 'psi.in' , ACTION = 'READ' , FORM = 'FORMATTED' , STATUS = 'OLD' )
-               READ ( UNIT = unitPsiIn , NML = nmlPsiIn )
-            CLOSE ( UNIT = unitPsiIn , STATUS = 'KEEP' )
+            INTEGER, INTENT ( IN ) :: initPsi
+            INTEGER, INTENT ( IN ) :: nXa 
+            INTEGER, INTENT ( IN ) :: nXb 
+            INTEGER, INTENT ( IN ) :: nXbc
+            INTEGER, INTENT ( IN ) :: nYa 
+            INTEGER, INTENT ( IN ) :: nYb 
+            INTEGER, INTENT ( IN ) :: nYbc
+            INTEGER, INTENT ( IN ) :: nZa 
+            INTEGER, INTENT ( IN ) :: nZb 
+            INTEGER, INTENT ( IN ) :: nZbc
+            INTEGER, INTENT ( IN ) :: nX
+            INTEGER, INTENT ( IN ) :: nY
+            INTEGER, INTENT ( IN ) :: nZ
+            INTEGER, INTENT ( IN ) :: nR
+            INTEGER, INTENT ( IN ) :: mL
 
-            RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE psi_read_init ( )
-
-            IMPLICIT NONE
-
-            RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE psi_compute_init ( X , Y , Z , Psi3 )
-
-            IMPLICIT NONE
+            REAL, INTENT ( IN ) :: xO
+            REAL, INTENT ( IN ) :: yO
+            REAL, INTENT ( IN ) :: zO
+            REAL, INTENT ( IN ) :: wX
+            REAL, INTENT ( IN ) :: wY
+            REAL, INTENT ( IN ) :: wZ
+            REAL, INTENT ( IN ) :: wR 
 
             REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
             REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
@@ -113,21 +88,21 @@
 
             COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Psi3
 
-            IF ( psiInit == 0 ) THEN 
+            IF ( initPsi == 0 ) THEN
 
-               ! Error: Isotropic SHO not supported yet.
+               ! ?
 
-            ELSE IF ( psiInit == 1 ) THEN 
+            ELSE IF ( initPsi == 1 ) THEN 
 
-               CALL psi_3d_se_sho_ani ( X , Y , Z , Psi3 )
+               CALL psi_3d_se_sho_ani ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nX , nY , nZ , xO , yO , zO , wX , wY , wZ , X , Y , Z , Psi3 )
 
-            ELSE IF ( psiInit == 2 ) THEN 
+            ELSE IF ( initPsi == 2 ) THEN 
 
-               CALL psi_3d_se_sho_axi ( X , Y , Z , Psi3 )
+               CALL psi_3d_se_sho_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nR , mL , nZ , xO , yO , zO , wR , wZ , X , Y , Z , Psi3 )
 
             ELSE 
 
-               ! Error: psiInit not defined.
+               WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : psi : psi_init : ERROR - initPsi not supported.'
 
             END IF
 
@@ -135,9 +110,29 @@
 
          END SUBROUTINE
 
-         SUBROUTINE psi_3d_se_sho_ani ( X , Y , Z , Psi3 )
+         SUBROUTINE psi_3d_se_sho_ani ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nX , nY , nZ , xO , yO , zO , wX , wY , wZ , X , Y , Z , Psi3 )
  
             IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: nXa
+            INTEGER, INTENT ( IN ) :: nXb
+            INTEGER, INTENT ( IN ) :: nXbc
+            INTEGER, INTENT ( IN ) :: nYa
+            INTEGER, INTENT ( IN ) :: nYb
+            INTEGER, INTENT ( IN ) :: nYbc
+            INTEGER, INTENT ( IN ) :: nZa
+            INTEGER, INTENT ( IN ) :: nZb
+            INTEGER, INTENT ( IN ) :: nZbc
+            INTEGER, INTENT ( IN ) :: nX
+            INTEGER, INTENT ( IN ) :: nY
+            INTEGER, INTENT ( IN ) :: nZ
+
+            REAL, INTENT ( IN ) :: xO
+            REAL, INTENT ( IN ) :: yO
+            REAL, INTENT ( IN ) :: zO
+            REAL, INTENT ( IN ) :: wX
+            REAL, INTENT ( IN ) :: wY
+            REAL, INTENT ( IN ) :: wZ
 
             REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
             REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
@@ -156,12 +151,12 @@
                   DO j = nXa , nXb
 
                      Psi3 ( j , k , l )  = CMPLX ( & 
-                        & ( 1.0 / SQRT ( REAL ( 2**psiNx * factorial ( psiNx ) ) ) ) * SQRT ( SQRT ( psiWx / PI ) ) * & 
-                        & ( 1.0 / SQRT ( REAL ( 2**psiNy * factorial ( psiNy ) ) ) ) * SQRT ( SQRT ( psiWy / PI ) ) * & 
-                        & ( 1.0 / SQRT ( REAL ( 2**psiNz * factorial ( psiNz ) ) ) ) * SQRT ( SQRT ( psiWz / PI ) ) * & 
-                        & hermite ( psiNx , SQRT ( psiWx ) * ( X ( j ) - psiXo ) ) * EXP ( -0.5 * psiWx * ( X ( j ) - psiXo )**2 ) * & 
-                        & hermite ( psiNy , SQRT ( psiWy ) * ( Y ( k ) - psiYo ) ) * EXP ( -0.5 * psiWy * ( Y ( k ) - psiYo )**2 ) * & 
-                        & hermite ( psiNz , SQRT ( psiWz ) * ( Z ( l ) - psiZo ) ) * EXP ( -0.5 * psiWz * ( Z ( l ) - psiZo )**2 ) , 0.0 )
+                        & ( 1.0 / SQRT ( REAL ( 2**nX * factorial ( nX ) ) ) ) * SQRT ( SQRT ( wX / PI ) ) * & 
+                        & ( 1.0 / SQRT ( REAL ( 2**nY * factorial ( nY ) ) ) ) * SQRT ( SQRT ( wY / PI ) ) * & 
+                        & ( 1.0 / SQRT ( REAL ( 2**nZ * factorial ( nZ ) ) ) ) * SQRT ( SQRT ( wZ / PI ) ) * & 
+                        & hermite ( nX , SQRT ( wX ) * ( X ( j ) - xO ) ) * EXP ( -0.5 * wX * ( X ( j ) - xO )**2 ) * & 
+                        & hermite ( nY , SQRT ( wY ) * ( Y ( k ) - yO ) ) * EXP ( -0.5 * wY * ( Y ( k ) - yO )**2 ) * & 
+                        & hermite ( nZ , SQRT ( wZ ) * ( Z ( l ) - zO ) ) * EXP ( -0.5 * wZ * ( Z ( l ) - zO )**2 ) , 0.0 )
 
                   END DO
 
@@ -175,9 +170,28 @@
 
          END SUBROUTINE
 
-         SUBROUTINE psi_3d_se_sho_axi ( X , Y , Z , Psi3 )
+         SUBROUTINE psi_3d_se_sho_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nR , mL , nZ , xO , yO , zO , wR , wZ , X , Y , Z , Psi3 )
 
             IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: nXa
+            INTEGER, INTENT ( IN ) :: nXb
+            INTEGER, INTENT ( IN ) :: nXbc
+            INTEGER, INTENT ( IN ) :: nYa
+            INTEGER, INTENT ( IN ) :: nYb
+            INTEGER, INTENT ( IN ) :: nYbc
+            INTEGER, INTENT ( IN ) :: nZa
+            INTEGER, INTENT ( IN ) :: nZb
+            INTEGER, INTENT ( IN ) :: nZbc
+            INTEGER, INTENT ( IN ) :: nR
+            INTEGER, INTENT ( IN ) :: mL
+            INTEGER, INTENT ( IN ) :: nZ
+
+            REAL, INTENT ( IN ) :: xO
+            REAL, INTENT ( IN ) :: yO
+            REAL, INTENT ( IN ) :: zO
+            REAL, INTENT ( IN ) :: wR
+            REAL, INTENT ( IN ) :: wZ
 
             REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
             REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
@@ -196,14 +210,14 @@
                   DO j = nXa , nXb  
 
                      Psi3 ( j , k , l ) = CMPLX ( &
-                        & SQRT ( ( psiWr**( ABS ( psiMl ) + 1 ) * REAL ( factorial ( psiNr ) ) ) / & 
-                        & ( PI * REAL ( factorial ( psiNr + ABS ( psiMl ) ) ) ) ) * & 
-                        & ( 1.0 / SQRT ( REAL ( 2**psiNz * factorial ( psiNz ) ) ) ) * SQRT ( SQRT ( psiWz / PI ) ) * & 
-                        & SQRT ( ( X ( j ) - psiXo )**2 + ( Y ( k ) - psiYo )**2 )**ABS ( psiMl ) * & 
-                        & alaguerre ( psiNr , ABS ( psiMl ) , psiWr * ( ( X ( j ) - psiXo )**2 + ( Y ( k ) - psiYo )**2 ) ) * & 
-                        & EXP ( -0.5 * psiWr * ( ( X ( j ) - psiXo )**2 + ( Y ( k ) - psiYo )**2 ) ) * & 
-                        & hermite ( psiNz , SQRT ( psiWz ) * ( Z ( l ) - psiZo ) ) * EXP ( -0.5 * psiWz * ( Z ( l ) - psiZo )**2 ) , 0.0 ) * & 
-                        & EXP ( CMPLX ( 0.0 , REAL ( psiMl ) * ATAN2 ( Y ( k ) - psiYo , X ( j ) - psiXo ) ) ) 
+                        & SQRT ( ( wR**( ABS ( mL ) + 1 ) * REAL ( factorial ( nR ) ) ) / & 
+                        & ( PI * REAL ( factorial ( nR + ABS ( mL ) ) ) ) ) * & 
+                        & ( 1.0 / SQRT ( REAL ( 2**nZ * factorial ( nZ ) ) ) ) * SQRT ( SQRT ( wZ / PI ) ) * & 
+                        & SQRT ( ( X ( j ) - xO )**2 + ( Y ( k ) - yO )**2 )**ABS ( mL ) * & 
+                        & alaguerre ( nR , ABS ( mL ) , wR * ( ( X ( j ) - xO )**2 + ( Y ( k ) - yO )**2 ) ) * & 
+                        & EXP ( -0.5 * wR * ( ( X ( j ) - xO )**2 + ( Y ( k ) - yO )**2 ) ) * & 
+                        & hermite ( nZ , SQRT ( wZ ) * ( Z ( l ) - zO ) ) * EXP ( -0.5 * wZ * ( Z ( l ) - zO )**2 ) , 0.0 ) * & 
+                        & EXP ( CMPLX ( 0.0 , REAL ( mL ) * ATAN2 ( Y ( k ) - yO , X ( j ) - xO ) ) ) 
 
                   END DO
 
@@ -233,9 +247,26 @@
 
          END SUBROUTINE
 
-         SUBROUTINE psi_boost ( X , Y , Z , Psi3 )
+         SUBROUTINE psi_boost ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , pX , pY , pZ , X , Y , Z , Psi3 )
 
             IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: nXa
+            INTEGER, INTENT ( IN ) :: nXb
+            INTEGER, INTENT ( IN ) :: nXbc
+            INTEGER, INTENT ( IN ) :: nYa
+            INTEGER, INTENT ( IN ) :: nYb
+            INTEGER, INTENT ( IN ) :: nYbc
+            INTEGER, INTENT ( IN ) :: nZa
+            INTEGER, INTENT ( IN ) :: nZb
+            INTEGER, INTENT ( IN ) :: nZbc
+
+            REAL, INTENT ( IN ) :: xO
+            REAL, INTENT ( IN ) :: yO
+            REAL, INTENT ( IN ) :: zO
+            REAL, INTENT ( IN ) :: pX
+            REAL, INTENT ( IN ) :: pY
+            REAL, INTENT ( IN ) :: pZ
 
             REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
             REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
@@ -253,7 +284,58 @@
 
                   DO j = nXa , nXb
 
-                     Psi3 ( j , k , l ) = Psi3 ( j , k , l ) * EXP ( CMPLX ( 0.0 , psiPx * ( X ( j ) - psiXo ) + psiPy * ( Y ( k ) - psiYo ) + psiPz * ( Z ( l ) - psiZo ) ) )
+                     Psi3 ( j , k , l ) = Psi3 ( j , k , l ) * EXP ( CMPLX ( 0.0 , pX * ( X ( j ) - xO ) + pY * ( Y ( k ) - yO ) + pZ * ( Z ( l ) - zO ) ) )
+
+                  END DO
+
+               END DO
+
+            END DO
+!$OMP       END DO
+!$OMP       END PARALLEL
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE psi_boost_superposition ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , pX , pY , pZ , X , Y , Z , Psi3 )
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: nXa 
+            INTEGER, INTENT ( IN ) :: nXb 
+            INTEGER, INTENT ( IN ) :: nXbc
+            INTEGER, INTENT ( IN ) :: nYa 
+            INTEGER, INTENT ( IN ) :: nYb 
+            INTEGER, INTENT ( IN ) :: nYbc
+            INTEGER, INTENT ( IN ) :: nZa 
+            INTEGER, INTENT ( IN ) :: nZb 
+            INTEGER, INTENT ( IN ) :: nZbc
+
+            REAL, INTENT ( IN ) :: xO
+            REAL, INTENT ( IN ) :: yO
+            REAL, INTENT ( IN ) :: zO
+            REAL, INTENT ( IN ) :: pX
+            REAL, INTENT ( IN ) :: pY
+            REAL, INTENT ( IN ) :: pZ
+
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
+            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
+            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
+
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Psi3
+
+            INTEGER :: j , k , l 
+
+!$OMP       PARALLEL DEFAULT ( SHARED )
+!$OMP       DO SCHEDULE ( STATIC )
+            DO l = nZa , nZb 
+
+               DO k = nYa , nYb 
+
+                  DO j = nXa , nXb
+
+                     Psi3 ( j , k , l ) = Psi3 ( j , k , l ) * EXP ( CMPLX ( 0.0 , pX * ( X ( j ) - xO ) + pY * ( Y ( k ) - yO ) + pZ * ( Z ( l ) - zO ) ) ) + Psi3 ( j , k , l ) * EXP ( CMPLX ( 0.0 , -pX * ( X ( j ) - xO ) - pY * ( Y ( k ) - yO ) - pZ * ( Z ( l ) - zO ) ) )
 
                   END DO
 

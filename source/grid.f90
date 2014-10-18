@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Wednesday, July 16th, 2014
+!     Thursday, October 16th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -42,54 +42,20 @@
       IMPLICIT NONE
       PRIVATE
 
-      INTEGER, PARAMETER, PRIVATE :: unitGridIn = 501
-
-      INTEGER, PUBLIC :: nX   = 0 
-      INTEGER, PUBLIC :: nXa  = 0 
-      INTEGER, PUBLIC :: nXb  = 0 
-      INTEGER, PUBLIC :: nXbc = 0 
-      INTEGER, PUBLIC :: nY   = 0
-      INTEGER, PUBLIC :: nYa  = 0 
-      INTEGER, PUBLIC :: nYb  = 0 
-      INTEGER, PUBLIC :: nYbc = 0 
-      INTEGER, PUBLIC :: nZ   = 0 
-      INTEGER, PUBLIC :: nZa  = 0 
-      INTEGER, PUBLIC :: nZb  = 0 
-      INTEGER, PUBLIC :: nZbc = 0
-
-      REAL, PUBLIC :: xO = 0.0
-      REAL, PUBLIC :: yO = 0.0
-      REAL, PUBLIC :: zO = 0.0
-      REAL, PUBLIC :: dX = 0.0
-      REAL, PUBLIC :: dY = 0.0
-      REAL, PUBLIC :: dZ = 0.0 
-
-      PUBLIC :: grid_read_inputs
       PUBLIC :: grid_bound_cond_size
       PUBLIC :: grid_regular
       PUBLIC :: grid_regular_axis
 
-      NAMELIST /nmlGridIn/ nX , nY , nZ , xO , yO , zO , dX , dY , dZ
-
       CONTAINS
 
-         SUBROUTINE grid_read_inputs ( )
+         SUBROUTINE grid_bound_cond_size ( fdOrder , nXbc , nYbc , nZbc )
 
             IMPLICIT NONE
 
-            OPEN ( UNIT = unitGridIn, FILE = 'grid.in' , ACTION = 'READ' , FORM = 'FORMATTED' , STATUS = 'OLD' )
-               READ ( UNIT = unitGridIn , NML = nmlGridIn )
-            CLOSE ( UNIT = unitGridIn , STATUS = 'KEEP' )
-
-            RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE grid_bound_cond_size ( fdOrder )
-
-            IMPLICIT NONE
-
-            INTEGER, INTENT ( IN ) :: fdOrder
+            INTEGER, INTENT ( IN    ) :: fdOrder
+            INTEGER, INTENT ( INOUT ) :: nXbc 
+            INTEGER, INTENT ( INOUT ) :: nYbc 
+            INTEGER, INTENT ( INOUT ) :: nZbc 
 
             IF ( fdOrder == 2 ) THEN
 
@@ -117,7 +83,7 @@
 
             ELSE
 
-               ! Error: fdOrder not supported.
+               WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : grid : grid_bound_cond_size : ERROR - fdOrder not supported.'
 
             END IF
 
@@ -125,9 +91,29 @@
 
          END SUBROUTINE         
 
-         SUBROUTINE grid_regular ( X , Y , Z )
+         SUBROUTINE grid_regular ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , xO , yO , zO , dX , dY , dZ , X , Y , Z )
 
             IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: nX
+            INTEGER, INTENT ( IN ) :: nXa
+            INTEGER, INTENT ( IN ) :: nXb
+            INTEGER, INTENT ( IN ) :: nXbc
+            INTEGER, INTENT ( IN ) :: nY
+            INTEGER, INTENT ( IN ) :: nYa
+            INTEGER, INTENT ( IN ) :: nYb
+            INTEGER, INTENT ( IN ) :: nYbc
+            INTEGER, INTENT ( IN ) :: nZ
+            INTEGER, INTENT ( IN ) :: nZa
+            INTEGER, INTENT ( IN ) :: nZb
+            INTEGER, INTENT ( IN ) :: nZbc 
+
+            REAL, INTENT ( IN ) :: xO
+            REAL, INTENT ( IN ) :: yO
+            REAL, INTENT ( IN ) :: zO
+            REAL, INTENT ( IN ) :: dX
+            REAL, INTENT ( IN ) :: dY
+            REAL, INTENT ( IN ) :: dZ
 
             REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( INOUT ) :: X
             REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( INOUT ) :: Y
@@ -152,7 +138,7 @@
 
             REAL, INTENT ( IN ) :: qO
             REAL, INTENT ( IN ) :: dQ
- 
+
             REAL, DIMENSION ( nQa - nQbc : nQb + nQbc ), INTENT ( INOUT ) :: Q
 
             INTEGER :: j
