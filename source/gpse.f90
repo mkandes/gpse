@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, October 18th, 2014
+!     Monday, October 27th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -55,13 +55,12 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.2.8'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, October 18th, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.2.9'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Monday, October 27th, 2014'
 
       INTEGER, PARAMETER :: INT_DEFAULT_KIND   = KIND ( 0 ) 
       INTEGER, PARAMETER :: REAL_DEFAULT_KIND  = KIND ( 0.0 )
       INTEGER, PARAMETER :: CMPLX_DEFAULT_KIND = KIND ( CMPLX ( 0.0 , 0.0 ) )
-      INTEGER, PARAMETER :: MAX_LEN_FILENAME   = 255
       INTEGER, PARAMETER :: MPI_MASTER         = 0
 
 ! --- PARAMETER DEFINITIONS -----------------------------------------------
@@ -185,30 +184,12 @@
       INTEGER :: OMP_GET_NUM_THREADS
       INTEGER :: OMP_GET_THREAD_NUM
 
-! --- TEMPORARY VARIABLE AND ARRAY DEFINITIONS ----------------------------
-
-      LOGICAL :: sagnacRun
-
-      INTEGER :: nRho 
-      INTEGER :: nPhi
-
-      REAL :: dRho
-      REAL :: dPhi
-      REAL :: xOpol
-      REAL :: yOpol
-
-      REAL, ALLOCATABLE, DIMENSION ( : ) :: Rho
-      REAL, ALLOCATABLE, DIMENSION ( : ) :: Phi
-      REAL, ALLOCATABLE, DIMENSION ( : , : ) :: Psi2Cart
-      REAL, ALLOCATABLE, DIMENSION ( : , : ) :: Psi2Pol
-      REAL, ALLOCATABLE, DIMENSION ( : ) :: Psi2Phi
-
 ! --- NAMELIST DECLARATIONS -----------------------------------------------
 
       NAMELIST /gpseIn/ itpOn , fullIO , readPsi , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , t0 , xO , yO , zO , &
          & dT , dX , dY , dZ , wX , wY , wZ , gS , initPsi , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , & 
          & wXpsi , wYpsi , wZpsi , wRpsi , pXpsi , pYpsi , pZpsi , initVex , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , &
-         & fZvex , wXvex , wYvex , wZvex , wRvex , sagnacRun , nRho , nPhi , dRho , dPhi , xOpol , yOpol
+         & fZvex , wXvex , wYvex , wZvex , wRvex
 
 ! --- NAMELIST DEFINITIONS ------------------------------------------------
 
@@ -387,21 +368,6 @@
 
       END IF
 
-      IF ( ( mpiRANK == MPI_MASTER ) .AND. ( sagnacRun .EQV. .TRUE. ) ) THEN ! temporary for sagnac phase shift tests ...
-
-         ALLOCATE ( Xf ( nX ) )
-         ALLOCATE ( Yf ( nY ) )
-         ALLOCATE ( Zf ( nZ ) )
-         ALLOCATE ( Rho ( nRho ) )
-         ALLOCATE ( Phi ( nPhi ) )
-         ALLOCATE ( Psi2Cart ( nX , nY ) )
-         ALLOCATE ( Psi2Pol ( nRho , nPhi ) )
-         ALLOCATE ( Psi2Phi ( nPhi ) )
-         ALLOCATE ( Vex3f ( nX , nY , nZ ) )
-         ALLOCATE ( Psi3f ( nX , nY , nZ ) )
-
-      END IF
-
       Xp = 0.0
       Yp = 0.0
       Zp = 0.0
@@ -423,21 +389,6 @@
 
       END IF
 
-      IF ( ( mpiRank == MPI_MASTER ) .AND. ( sagnacRun .EQV. .TRUE. ) ) THEN ! temporary for sagnac phase shift tests ...
-
-         Xf = 0.0
-         Yf = 0.0
-         Zf = 0.0
-         Rho = 0.0
-         Phi = 0.0
-         Psi2Cart = 0.0
-         Psi2Pol = 0.0
-         Psi2Phi = 0.0
-         Vex3f = 0.0
-         Psi3f = CMPLX ( 0.0 , 0.0 )
-
-      END IF
-
       CALL grid_regular_axis ( nX , nXa , nXb , nXbc , xO , dX , Xp ) 
       CALL grid_regular_axis ( nY , nYa , nYb , nYbc , yO , dY , Yp ) 
       CALL grid_regular_axis ( nZ , nZa , nZb , nZbc , zO , dZ , Zp ) 
@@ -447,15 +398,6 @@
          CALL grid_regular_axis ( nX , 1 , nX , 0 , xO , dX , Xf )
          CALL grid_regular_axis ( nY , 1 , nY , 0 , yO , dY , Yf )
          CALL grid_regular_axis ( nZ , 1 , nZ , 0 , zO , dZ , Zf )
-
-      END IF
-
-      IF ( ( mpiRank == MPI_MASTER ) .AND. ( sagnacRun .EQV. .TRUE. ) ) THEN ! temporary for sagnac ...
-
-         CALL grid_regular_axis ( nX , 1 , nX , 0 , xO , dX , Xf )
-         CALL grid_regular_axis ( nY , 1 , nY , 0 , yO , dY , Yf )
-         CALL grid_regular_axis ( nZ , 1 , nZ , 0 , zO , dZ , Zf )
-         CALL grid_polar ( nRho , nPhi , dRho , dPhi , Rho , Phi )
 
       END IF
 
@@ -832,22 +774,6 @@
 
 !                  END IF
                   CALL io_write_bin ( 'psi' , Psi3f ) ! checkpointing wave function in binary formatted file
-
-               END IF
-
-            END IF
-
-            IF ( sagnacRun .EQV. .TRUE. ) THEN ! temporary for saganc ... 
-
-               CALL mpi_gather_custom ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f , Psi3a , Psi3f )
-
-               IF ( mpiRank == MPI_MASTER ) THEN
-
-                  CALL integrated_density_z ( nX , nY , nZ , dZ , Psi2Cart , Psi3f )
-                  CALL cart_to_pol ( nX , nY , nRho , nPhi , xOpol , yOpol , Xf , Yf , Rho , Phi , Psi2Cart , Psi2Pol )
-                  CALL integrated_density_r ( nRho , nPhi , dRho , Rho , Psi2Pol , Psi2Phi )
-                  fileNumber = fileNumber + 1
-                  CALL write_psi2phi ( 'psi2phi-' , fileNumber , nPhi , Psi2Phi )
 
                END IF
 
@@ -1721,195 +1647,6 @@
             RETURN
 
          END SUBROUTINE
-
-! ------------------------------------------------------------------------
-!
-!        Temporary functions and subroutines for checking Sagnac phase shifts ...
-
-         SUBROUTINE cart_to_pol ( nX , nY , nRho , nPhi , xOpol , yOpol , X , Y , Rho , Phi , Psi2Cart , Psi2Pol )
-
-            IMPLICIT NONE
-
-            INTEGER, INTENT ( IN ) :: nX
-            INTEGER, INTENT ( IN ) :: nY
-            INTEGER, INTENT ( IN ) :: nRho
-            INTEGER, INTENT ( IN ) :: nPhi
-
-            REAL, INTENT ( IN ) :: xOpol
-            REAl, INTENT ( IN ) :: yOpol
-   
-            REAL, DIMENSION ( : ), INTENT ( IN ) :: X
-            REAL, DIMENSION ( : ), INTENT ( IN ) :: Y
-            REAL, DIMENSION ( : ), INTENT ( IN ) :: Rho
-            REAL, DIMENSION ( : ), INTENT ( IN ) :: Phi
-            REAL, DIMENSION ( : , : ), INTENT ( IN ) :: Psi2Cart
-            REAL, DIMENSION ( : , : ), INTENT ( INOUT ) :: Psi2Pol
-
-            INTEGER :: j , k , l , m
-   
-            REAL :: xPol , yPol
-
-            DO m = 1 , nPhi
-
-               DO l = 1 , nRho
-
-                  xPol = xOpol + Rho ( l ) * COS ( Phi ( m ) )
-                  yPol = yOpol + Rho ( l ) * SIN ( Phi ( m ) )
-
-                  DO k = 1 , nY - 1
-
-                     IF ( ( yPol >= Y ( k ) ) .AND. ( yPol < Y ( k + 1 ) ) ) THEN
-
-                        DO j = 1 , nX - 1
-
-                           IF ( ( xPol >= X ( j ) ) .AND. ( xPol < X ( j + 1 ) ) ) THEN
-
-                              Psi2Pol ( l , m ) = 0.25 * ( Psi2Cart ( j , k ) + Psi2Cart ( j + 1 , k ) + Psi2Cart ( j , k + 1 ) + Psi2Cart ( j + 1 , k + 1 ) ) 
-
-                           END IF
-
-                        END DO
-
-                     END IF
-
-                  END DO
-
-               END DO
-
-            END DO
-
-            RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE grid_polar ( nRho , nPhi , dRho , dPhi , Rho , Phi )
-
-            IMPLICIT NONE
-
-            INTEGER, INTENT ( IN ) :: nRho
-            INTEGER, INTENT ( IN ) :: nPhi
-
-            REAL, INTENT ( IN ) :: dRho
-            REAL, INTENT ( IN ) :: dPhi
-
-            REAL, DIMENSION ( : ), INTENT ( INOUT ) :: Rho 
-            REAL, DIMENSION ( : ), INTENT ( INOUT ) :: Phi 
-
-            INTEGER :: j , k 
-
-            DO j = 1 , nRho
-
-               Rho ( j ) = REAL ( j ) * dRho
-
-            END DO
-
-            DO k = 1 , nPhi
-
-               Phi ( k ) = REAL ( k - 1 ) * dPhi
-
-            END DO
-
-            RETURN
-
-         END SUBROUTINE 
-
-         SUBROUTINE integrated_density_z ( nX , nY , nZ , dZ , Psi2Cart , Psi3f )
-
-            IMPLICIT NONE
-
-            INTEGER, INTENT ( IN ) :: nX
-            INTEGER, INTENT ( IN ) :: nY
-            INTEGER, INTENT ( IN ) :: nZ
-
-            REAL, INTENT ( IN ) :: dZ
-
-            REAL, DIMENSION ( : , : ), INTENT ( INOUT ) :: Psi2Cart
-
-            COMPLEX, DIMENSION ( : , : , : ), INTENT ( IN ) :: Psi3f
-
-            INTEGER :: j , k 
-
-            Psi2Cart = 0.0
-
-            DO k = 1 , nY
-
-               DO j = 1 , nX
-
-                  DO l = 1 , nZ
-
-                     Psi2Cart ( j , k ) = Psi2Cart ( j , k ) + ABS ( Psi3f ( j , k , l ) )**2
-
-                   END DO
-
-               END DO
-
-            END DO
-
-            Psi2Cart = Psi2Cart * dZ
-
-            RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE integrated_density_r ( nRho , nPhi , dRho , Rho , Psi2Pol , Psi2Phi )
-
-            IMPLICIT NONE
-
-            INTEGER, INTENT ( IN ) :: nRho
-            INTEGER, INTENT ( IN ) :: nPhi
-
-            REAL, INTENT ( IN ) :: dRho
-
-            REAL, DIMENSION ( : ), INTENT ( IN ) :: Rho 
-            REAL, DIMENSION ( : , : ), INTENT ( IN ) :: Psi2Pol
-            REAL, DIMENSION ( : ), INTENT ( INOUT ) :: Psi2Phi
-
-            INTEGER :: j , k
-
-            Psi2Phi = 0.0
-
-            DO k = 1 , nPhi
-
-               DO j = 1 , nRho
-
-                  Psi2Phi ( k ) = Psi2Phi ( k ) + Psi2Pol ( j , k ) * Rho ( j ) * dRho
-
-               END DO
-
-            END DO
-
-            RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE write_psi2phi ( fileName , fileNumber , nPhi , Psi2Phi )
-
-            IMPLICIT NONE
-
-            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
-
-            INTEGER, INTENT ( IN ) :: fileNumber
-            INTEGER, INTENT ( IN ) :: nPhi
-
-            REAL, DIMENSION ( : ), INTENT ( IN ) :: Psi2Phi
-
-            CHARACTER ( LEN = 4 ) :: fileNumberString
-            INTEGER :: k
-
-            WRITE ( UNIT = fileNumberString , FMT = '(I4.4)' ) fileNumber
-            OPEN  ( UNIT = fileNumber , FILE = trim(fileName//fileNumberString//'.1d') , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
-
-               DO k = 1 , nPhi
-
-                  WRITE ( UNIT = fileNumber , FMT = * ) Psi2Phi ( k ) 
-
-               END DO
-
-            CLOSE ( UNIT = fileNumber , STATUS = 'KEEP' )
-
-            RETURN
-
-         END SUBROUTINE 
 
       END PROGRAM
 

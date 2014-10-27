@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Thursday, May 29th, 2014
+!     Monday, October 27th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -50,6 +50,11 @@
       PUBLIC :: alaguerre
       PUBLIC :: hermite
       PUBLIC :: laguerre
+      PUBLIC :: legendre
+      PUBLIC :: lambert
+      PUBLIC :: bessel
+      PUBLIC :: hankel
+      PUBLIC :: chebyshev
 
       CONTAINS
 
@@ -215,6 +220,56 @@
             RETURN
 
          END FUNCTION
+
+         REAL FUNCTION legendre ( ) RESULT ( legendreN )
+
+            IMPLICIT NONE
+
+            legendreN = 0.0
+
+            RETURN
+
+         END FUNCTION
+
+         REAL FUNCTION lambert ( ) RESULT ( lambertW )
+
+            IMPLICIT NONE
+
+            lambertW = 0.0
+
+            RETURN
+
+         END FUNCTION
+
+         REAL FUNCTION bessel ( ) RESULT ( besselJ ) 
+
+            IMPLICIT NONE
+
+            besselJ = 0.0
+
+            RETURN
+
+         END FUNCTION
+
+         REAL FUNCTION hankel ( ) RESULT ( hankelN )
+
+            IMPLICIT NONE
+
+            hankelN = 0.0
+
+            RETURN
+
+         END FUNCTION
+
+         REAL FUNCTION chebyshev ( ) RESULT ( cheb )
+
+            IMPLICIT NONE
+
+            cheb = 0.0
+
+            RETURN 
+
+         END FUNCTION 
 
       END MODULE
 
