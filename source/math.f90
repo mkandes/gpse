@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Monday, October 27th, 2014
+!     Saturday, November 22nd, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -41,6 +41,18 @@
 
       IMPLICIT NONE
       PRIVATE
+
+      INTEGER                            , PARAMETER, PUBLIC :: INT_DEFAULT_KIND   = KIND ( 0 ) 
+      INTEGER ( KIND = INT_DEFAULT_KIND ), PARAMETER, PUBLIC :: INT_8              = SELECTED_INT_KIND ( 2 ) 
+      INTEGER ( KIND = INT_DEFAULT_KIND ), PARAMETER, PUBLIC :: INT_16             = SELECTED_INT_KIND ( 4 ) 
+      INTEGER ( KIND = INT_DEFAULT_KIND ), PARAMETER, PUBLIC :: INT_32             = SELECTED_INT_KIND ( 9 ) 
+      INTEGER ( KIND = INT_DEFAULT_KIND ), PARAMETER, PUBLIC :: INT_64             = SELECTED_INT_KIND ( 18 ) 
+      INTEGER ( KIND = INT_DEFAULT_KIND ), PARAMETER, PUBLIC :: INT_128            = SELECTED_INT_KIND ( 38 ) 
+      INTEGER ( KIND = INT_DEFAULT_KIND ), PARAMETER, PUBLIC :: REAL_DEFAULT_KIND  = KIND ( 0.0 )
+      INTEGER ( KIND = INT_DEFAULT_KIND ), PARAMETER, PUBLIC :: REAL_32            = SELECTED_REAL_KIND ( 6  , 37   )    
+      INTEGER ( KIND = INT_DEFAULT_KIND ), PARAMETER, PUBLIC :: REAL_64            = SELECTED_REAL_KIND ( 15 , 307  )
+      INTEGER ( KIND = INT_DEFAULT_KIND ), PARAMETER, PUBLIC :: REAL_128           = SELECTED_REAL_KIND ( 33 , 4931 )
+      INTEGER ( KIND = INT_DEFAULT_KIND ), PARAMETER, PUBLIC :: CMPLX_DEFAULT_KIND = KIND ( CMPLX ( 0.0 , 0.0 ) ) 
 
       REAL, PARAMETER, PUBLIC :: PI = 3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534
 
@@ -66,7 +78,7 @@
 
             nFactorial = 0
 
-            IF ( KIND ( n ) == INT32 ) THEN
+            IF ( KIND ( n ) == INT_32 ) THEN
 
                IF ( n == 0 ) THEN
 
@@ -84,7 +96,7 @@
 
                END IF
 
-            ELSE IF ( KIND ( n ) == INT64 ) THEN
+            ELSE IF ( KIND ( n ) == INT_64 ) THEN
 
                IF ( n == 0 ) THEN
 

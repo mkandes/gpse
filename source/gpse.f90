@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Monday, October 27th, 2014
+!     Saturday, November 22nd, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -55,13 +55,10 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.2.9'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Monday, October 27th, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.0'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, November 22nd, 2014'
 
-      INTEGER, PARAMETER :: INT_DEFAULT_KIND   = KIND ( 0 ) 
-      INTEGER, PARAMETER :: REAL_DEFAULT_KIND  = KIND ( 0.0 )
-      INTEGER, PARAMETER :: CMPLX_DEFAULT_KIND = KIND ( CMPLX ( 0.0 , 0.0 ) )
-      INTEGER, PARAMETER :: MPI_MASTER         = 0
+      INTEGER, PARAMETER :: MPI_MASTER = 0
 
 ! --- PARAMETER DEFINITIONS -----------------------------------------------
 ! --- VARIABLE DECLARATIONS -----------------------------------------------
@@ -413,13 +410,9 @@
       ELSE ! compute initial wave function across all MPI processes
 
          CALL psi_init ( initPsi , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , wXpsi , wYpsi , wZpsi , wRpsi , Xp , Yp , Zp , Psi3a )
-         CALL psi_boost_superposition ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOpsi , yOpsi , zOpsi , pXpsi , pYpsi , pZpsi , Xp , Yp , Zp , Psi3a )
+         CALL psi_boost ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOpsi , yOpsi , zOpsi , pXpsi , pYpsi , pZpsi , Xp , Yp , Zp , Psi3a )
 
       END IF
-            temp = l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ ,Psi3a ) ! normalize wave function ...
-            CALL MPI_REDUCE ( temp , l2Norm , 1 , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( l2Norm , 1 , mpiReal , MPI_MASTER , MPI_COMM_WORLD , mpiError )
-            Psi3a = Psi3a / SQRT ( l2Norm )
       CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3a )
 
       CALL vex_init ( initVex , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex , Xp , Yp , Zp , Vex3p ) ! compute initial external potential
@@ -949,19 +942,19 @@
 
             SELECT CASE ( INT_DEFAULT_KIND )
 
-               CASE ( INT8 )
+               CASE ( INT_8 )
 
                   mpiInt = MPI_INTEGER1
 
-               CASE ( INT16 )
+               CASE ( INT_16 )
 
                   mpiInt = MPI_INTEGER2
 
-               CASE ( INT32 )
+               CASE ( INT_32 )
 
                   mpiInt = MPI_INTEGER
 
-               CASE ( INT64 )
+               CASE ( INT_64 )
 
                   mpiInt = MPI_INTEGER8
 
@@ -973,15 +966,15 @@
 
             SELECT CASE ( REAL_DEFAULT_KIND )
 
-               CASE ( REAL32 )
+               CASE ( REAL_32 )
 
                   mpiReal = MPI_REAL
 
-               CASE ( REAL64 )
+               CASE ( REAL_64 )
 
                   mpiReal= MPI_DOUBLE_PRECISION
 
-               CASE ( REAL128 )
+               CASE ( REAL_128 )
 
                   mpiReal = MPI_REAL16
 
@@ -993,15 +986,15 @@
 
             SELECT CASE ( CMPLX_DEFAULT_KIND )
 
-               CASE ( REAL32 )
+               CASE ( REAL_32 )
 
                   mpiCmplx = MPI_COMPLEX
 
-               CASE ( REAL64 )
+               CASE ( REAL_64 )
 
                   mpiCmplx = MPI_DOUBLE_COMPLEX
 
-               CASE ( REAL128 )
+               CASE ( REAL_128 )
 
                   mpiCmplx = MPI_COMPLEX32
 

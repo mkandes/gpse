@@ -33,7 +33,7 @@
 #
 # LAST UPDATED
 #
-#     Tuesday, October 7th, 2014
+#     Wednesday, October 29th, 2014
 #
 # -------------------------------------------------------------------------
 
@@ -171,40 +171,28 @@ endif
 all : gpse.x
 
 gpse.x : gpse.o evua.o grid.o io.o math.o psi.o vex.o 
-#lib_vtk_io.o lib_base64.o ir_precision.o
 	$(MPIF90) $(FFLAGS) -o $@ $^
 
 gpse.o : gpse.f90 evua.mod grid.mod io.mod math.mod psi.mod vex.mod 
-#lib_vtk_io.mod lib_base64.mod ir_precision.mod
-	$(MPIF90) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c $<
 
 evua.o evua.mod : evua.f90 grid.mod math.mod
-	$(MPIF90) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c $<
 
 grid.o grid.mod : grid.f90
-	$(MPIF90) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c $<
 
 io.o io.mod : io.f90 grid.mod 
-#lib_vtk_io.mod
-	$(MPIF90) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c $<
 
 math.o math.mod : math.f90
-	$(MPIF90) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c $<
 
 psi.o psi.mod : psi.f90 grid.mod math.mod
-	$(MPIF90) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c $<
 
 vex.o vex.mod : vex.f90
-	$(MPIF90) $(FFLAGS) -c -cpp $<
-
-#lib_vtk_io.o lib_vtk_io.mod : lib_vtk_io.f90 lib_base64.mod ir_precision.mod
-#	$(MPIF90) $(FFLAGS) -c -cpp $<
-#
-#lib_base64.o lib_base64.mod : lib_base64.f90 ir_precision.mod
-#	$(MPIF90) $(FFLAGS) -c -cpp $<
-#
-#ir_precision.o ir_precision.mod : ir_precision.f90
-#	$(MPIF90) $(FFLAGS) -c -cpp $<
+	$(MPIF90) $(FFLAGS) -c $<
 
 .PHONY : printfflags
 .NOTPARALLEL : printfflags

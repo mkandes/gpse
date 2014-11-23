@@ -6,9 +6,9 @@
    fdOrder   = 2         ! 2 = 2nd-Order Central Differences ( CD ); 4 = 4th-Order CD ; 6 = 6th-Order CD; 8 = 8th-Order CD
    nTsteps   = 25600      ! Total number of time steps in simulation
    nTwrite   = 2560       ! Period of IO writes to disk; i.e., number of time steps between writes to disk
-   nX        = 256       ! Number of grid points along the x-axis
-   nY        = 256       ! Number of grid points along the y-axis
-   nZ        = 256       ! Number of grid points along the z-axis
+   nX        = 128       ! Number of grid points along the x-axis
+   nY        = 128       ! Number of grid points along the y-axis
+   nZ        = 128       ! Number of grid points along the z-axis
    t0        = 0.0       ! Time at the beginning of the simulation
    xO        = 0.0       ! X-coordinate of the centre of the grid
    yO        = 0.0       ! Y-coordinate of the centre of the grid
@@ -19,26 +19,26 @@
    dZ        = 0.125      ! Distance between grid points along the z-axis
    wX        = 0.0       ! X-component of the rotating reference frame's angular velocity vector
    wY        = 0.0       ! Y-component of the rotating reference frame's angular velocity vector
-   wZ        = 0.001     ! Z-component of the rotating reference frame's angular velocity vector
-   gS        = 0.0    ! Nonlinear atom-atom interaction coupling constant
-   initPsi   = 1         ! 0 = Isotropic 3D SHO ; 1 = Anisotropic 3D SHO ; 2 = Axially-Symmetric 3D SHO
+   wZ        = 0.0       ! Z-component of the rotating reference frame's angular velocity vector
+   gS        = 0.0       ! Nonlinear atom-atom interaction coupling constant
+   initPsi   = 2         ! 0 = Isotropic 3D SHO ; 1 = Anisotropic 3D SHO ; 2 = Axially-Symmetric 3D SHO
    nXpsi     = 0         ! Degree of Hermite polynomial used to define anisotropic SHO wave function along x-axis
    nYpsi     = 0         ! Degree of Hermite polynomial used to define anisotropic SHO wave function along y-axis
    nZpsi     = 0         ! Degree of Hermite polynomial used to define both anisotropic and axially-symmetric SHO wave functions along z-axis
    nRpsi     = 0         ! Degree of (associated) Laguerre polynomials used to define radial components of isotropic and axially-symmetric SHO wave functions
    mLpsi     = 0         ! Projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
-   xOpsi     = 10.0       ! X-coordinate of origin used to define initial wave function
+   xOpsi     = 0.0       ! X-coordinate of origin used to define initial wave function
    yOpsi     = 0.0       ! Y-coordinate of origin used to define initial wave function
    zOpsi     = 0.0       ! Z-coordinate of origin used to define initial wave function
-   wXpsi     = 1.0       ! Angular frequency of SHO potential along x-axis used to define anisotropic SHO wave function
-   wYpsi     = 0.1       ! Angular frequency of SHO potential along y-axis used to define anisotropic SHO wave function
+   wXpsi     = 0.0       ! Angular frequency of SHO potential along x-axis used to define anisotropic SHO wave function
+   wYpsi     = 0.0       ! Angular frequency of SHO potential along y-axis used to define anisotropic SHO wave function
    wZpsi     = 1.0       ! Angular frequency of SHO potential along z-axis used to define both anisotropic and axially-symmetric SHO wave functions
    wRpsi     = 1.0       ! Angular frequency of isotropic (radially-symmetric) SHO potential used to define ...
    pXpsi     = 0.0       ! Initial linear momentum boost along x-axis
    pYpsi     = 0.0       ! Initial linear momentum boost along y-axis
    pZpsi     = 0.0       ! Initial linear momentum boost along z-axis
    initVex   = 1         ! 0 =  Linear ; 1 = SHO ; 2 = SHOR
-   xOvex     = 10.0       !
+   xOvex     = 0.0       !
    yOvex     = 0.0       !
    zOvex     = 0.0       !
    rOvex     = 0.0       !
@@ -46,7 +46,7 @@
    fYvex     = 0.0       !
    fZvex     = 0.0       !
    wXvex     = 1.0       !
-   wYvex     = 0.1       !
+   wYvex     = 1.0       !
    wZvex     = 1.0       !
-   wRvex     = 1.0       !
+   wRvex     = 0.0       !
 /

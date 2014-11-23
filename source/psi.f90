@@ -46,7 +46,6 @@
       PUBLIC :: psi_init
       PUBLIC :: psi_normalize
       PUBLIC :: psi_boost
-      PUBLIC :: psi_boost_superposition
 
       PRIVATE :: psi_3d_se_sho_ani
       PRIVATE :: psi_3d_se_sho_axi
@@ -285,57 +284,6 @@
                   DO j = nXa , nXb
 
                      Psi3 ( j , k , l ) = Psi3 ( j , k , l ) * EXP ( CMPLX ( 0.0 , pX * ( X ( j ) - xO ) + pY * ( Y ( k ) - yO ) + pZ * ( Z ( l ) - zO ) ) )
-
-                  END DO
-
-               END DO
-
-            END DO
-!$OMP       END DO
-!$OMP       END PARALLEL
-
-            RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE psi_boost_superposition ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , pX , pY , pZ , X , Y , Z , Psi3 )
-
-            IMPLICIT NONE
-
-            INTEGER, INTENT ( IN ) :: nXa 
-            INTEGER, INTENT ( IN ) :: nXb 
-            INTEGER, INTENT ( IN ) :: nXbc
-            INTEGER, INTENT ( IN ) :: nYa 
-            INTEGER, INTENT ( IN ) :: nYb 
-            INTEGER, INTENT ( IN ) :: nYbc
-            INTEGER, INTENT ( IN ) :: nZa 
-            INTEGER, INTENT ( IN ) :: nZb 
-            INTEGER, INTENT ( IN ) :: nZbc
-
-            REAL, INTENT ( IN ) :: xO
-            REAL, INTENT ( IN ) :: yO
-            REAL, INTENT ( IN ) :: zO
-            REAL, INTENT ( IN ) :: pX
-            REAL, INTENT ( IN ) :: pY
-            REAL, INTENT ( IN ) :: pZ
-
-            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
-            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
-            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
-
-            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Psi3
-
-            INTEGER :: j , k , l 
-
-!$OMP       PARALLEL DEFAULT ( SHARED )
-!$OMP       DO SCHEDULE ( STATIC )
-            DO l = nZa , nZb 
-
-               DO k = nYa , nYb 
-
-                  DO j = nXa , nXb
-
-                     Psi3 ( j , k , l ) = Psi3 ( j , k , l ) * EXP ( CMPLX ( 0.0 , pX * ( X ( j ) - xO ) + pY * ( Y ( k ) - yO ) + pZ * ( Z ( l ) - zO ) ) ) + Psi3 ( j , k , l ) * EXP ( CMPLX ( 0.0 , -pX * ( X ( j ) - xO ) - pY * ( Y ( k ) - yO ) - pZ * ( Z ( l ) - zO ) ) )
 
                   END DO
 
