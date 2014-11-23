@@ -55,7 +55,7 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.0'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.1'
       CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, November 22nd, 2014'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
@@ -722,11 +722,11 @@
 
 !              Energy expectation value
 
-               avgE = avgTx + avgTy + avgTz + avgVex + avgVmf
+               avgE = avgTx + avgTy + avgTz + avgVex + avgVmf - wX * avgLx - wY * avgLy - wZ * avgLz
 
 !              Chemical potential
 
-               avgMu =  avgTx + avgTy + avgTz + avgVex + 2.0 * avgVmf
+               avgMu =  avgTx + avgTy + avgTz + avgVex + 2.0 * avgVmf - wX * avgLx - wY * avgLy - wZ * avgLz
 
 !              Write expectation values, uncertainties and uncertainty 
 !              relations to file from MPI_MASTER
