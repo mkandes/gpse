@@ -8,7 +8,7 @@
    nTwrite   = 256       ! Period of IO writes to disk; i.e., number of time steps between writes to disk
    nX        = 128       ! Number of grid points along the x-axis
    nY        = 128       ! Number of grid points along the y-axis
-   nZ        = 128       ! Number of grid points along the z-axis
+   nZ        = 128        ! Number of grid points along the z-axis
    t0        = 0.0       ! Time at the beginning of the simulation
    xO        = 0.0       ! X-coordinate of the centre of the grid
    yO        = 0.0       ! Y-coordinate of the centre of the grid
@@ -19,14 +19,14 @@
    dZ        = 0.125      ! Distance between grid points along the z-axis
    wX        = 0.0       ! X-component of the rotating reference frame's angular velocity vector
    wY        = 0.0       ! Y-component of the rotating reference frame's angular velocity vector
-   wZ        = 0.95       ! Z-component of the rotating reference frame's angular velocity vector
+   wZ        = 0.0       ! Z-component of the rotating reference frame's angular velocity vector
    gS        = 0.0       ! Nonlinear atom-atom interaction coupling constant
    initPsi   = 2         ! 0 = Isotropic 3D SHO ; 1 = Anisotropic 3D SHO ; 2 = Axially-Symmetric 3D SHO
    nXpsi     = 0         ! Degree of Hermite polynomial used to define anisotropic SHO wave function along x-axis
    nYpsi     = 0         ! Degree of Hermite polynomial used to define anisotropic SHO wave function along y-axis
    nZpsi     = 0         ! Degree of Hermite polynomial used to define both anisotropic and axially-symmetric SHO wave functions along z-axis
    nRpsi     = 0         ! Degree of (associated) Laguerre polynomials used to define radial components of isotropic and axially-symmetric SHO wave functions
-   mLpsi     = 1         ! Projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
+   mLpsi     = 0         ! Projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
    xOpsi     = 0.0       ! X-coordinate of origin used to define initial wave function
    yOpsi     = 0.0       ! Y-coordinate of origin used to define initial wave function
    zOpsi     = 0.0       ! Z-coordinate of origin used to define initial wave function

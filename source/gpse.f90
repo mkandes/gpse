@@ -55,7 +55,7 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.1'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.2'
       CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, November 22nd, 2014'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
@@ -107,7 +107,7 @@
       INTEGER :: mpiProvided   = -1 
       INTEGER :: mpiRank       = -1
       INTEGER :: mpiReal       = -1 
-      INTEGER :: ompThreads    = -1 ! Number of threads in OpenMP parallel regions 
+      INTEGER :: ompThreads    = -1 ! Number of threads in OpenMP PARALLEL regions 
       INTEGER :: ompThreadID   = -1 
       INTEGER :: fileNumber    = -1
       INTEGER :: j , k , l , m , n  ! Reserved loop counters
@@ -783,10 +783,10 @@
 !        Compute the intermediate wave function for the 2nd stage of the GRK4L method: y_n + 0.5 * dT * k_1
 !        Note that the intermediate wave function is only computed on the interior grid points assigned to each MPI process.
 
-!$OMP    PARALLEL DEFAULT ( SHARED )
-!$OMP    DO SCHEDULE ( STATIC )
+!$OMP    PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
          DO l = nZa , nZb
 
+!$OMP       PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) 
             DO k = nYa , nYb
 
                DO j = nXa , nXb
@@ -796,10 +796,10 @@
                END DO
 
             END DO
+!$OMP       END PARALLEL DO
 
          END DO
-!$OMP    END DO
-!$OMP    END PARALLEL
+!$OMP    END PARALLEL DO
 
 !        Exchange boundary condition information among nearest neighbor processes
 
@@ -815,10 +815,10 @@
 
 !        Compute intermediate wave function for 3rd stage of GRK4L: y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( 1 / lambda ) * dT * k_2
 
-!$OMP    PARALLEL DEFAULT ( SHARED )
-!$OMP    DO SCHEDULE ( STATIC )
+!$OMP    PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
          DO l = nZa , nZb
 
+!$OMP       PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
             DO k = nYa , nYb
 
                DO j = nXa , nXb
@@ -828,10 +828,10 @@
                END DO
 
             END DO
+!$OMP       END PARALLEL DO
 
          END DO
-!$OMP    END DO
-!$OMP    END PARALLEL
+!$OMP    END PARALLEL DO
 
          CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
 
@@ -841,10 +841,10 @@
 
 !        Compute intermediate wave function for 4th stage of GRK4L: y_n + ( 1 - lambda / 2 ) * dT * k_2 + ( lambda / 2 ) * dT * k_3
 
-!$OMP    PARALLEL DEFAULT ( SHARED )
-!$OMP    DO SCHEDULE ( STATIC )
+!$OMP    PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
          DO l = nZa , nZb
 
+!$OMP       PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
             DO k = nYa , nYb
 
                DO j = nXa , nXb
@@ -854,10 +854,10 @@
                END DO
 
             END DO
+!$OMP       END PARALLEL DO
 
          END DO
-!$OMP    END DO
-!$OMP    END PARALLEL
+!$OMP    END PARALLEL DO
 
          CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
 
@@ -871,10 +871,10 @@
 
 !        Compute wave function at nth+1 time step ... y_{ n + 1 } = y_n + ( dT / 6 ) * [ k_1 + ( 4 - lambda ) * k_2 + lambda * k_3 + k_4 ]
 
-!$OMP    PARALLEL DEFAULT ( SHARED )
-!$OMP    DO SCHEDULE ( STATIC )
+!$OMP    PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
          DO l = nZa , nZb
 
+!$OMP       PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
             DO k = nYa , nYb
 
                DO j = nXa , nXb
@@ -884,10 +884,10 @@
                END DO
 
             END DO
+!$OMP       END PARALLEL DO
 
          END DO
-!$OMP    END DO
-!$OMP    END PARALLEL
+!$OMP    END PARALLEL DO
 
          CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
 
@@ -1109,10 +1109,10 @@
 
             IF ( mpiRank == MPI_MASTER ) THEN ! receive external potential and wave function data from all MPI processes
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1122,11 +1122,11 @@
 
                      END DO 
 
-                  END DO 
+                  END DO
+!$OMP             END PARALLEL DO
 
                END DO 
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                DO mpiSource = 1 , mpiProcesses - 1
 
@@ -1206,10 +1206,10 @@
 
             IF ( mpiRank == MPI_MASTER ) THEN ! send wave function to all MPI processes
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1218,11 +1218,11 @@
 
                      END DO 
 
-                  END DO 
+                  END DO
+!$OMP             END PARALLEL DO 
 
                END DO 
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                DO mpiDest = 1 , mpiProcesses - 1
 
@@ -1342,10 +1342,10 @@
 
             INTEGER :: j , k , l
 
-!$OMP       PARALLEL DEFAULT ( SHARED )
-!$OMP       DO SCHEDULE ( STATIC )
+!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
             DO l = nZa , nZb  
 
+!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
                DO k = nYa , nYb  
 
                   DO j = nXa , nXb  
@@ -1362,10 +1362,10 @@
                   END DO
 
                END DO
+!$OMP          END PARALLEL DO
 
             END DO
-!$OMP       END DO
-!$OMP       END PARALLEL
+!$OMP       END PARALLEL DO 
 
             RETURN
 
@@ -1395,10 +1395,10 @@
 
             INTEGER :: j , k , l
 
-!$OMP       PARALLEL DEFAULT ( SHARED )
-!$OMP       DO SCHEDULE ( STATIC )
+!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
             DO l = nZa , nZb
 
+!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
                DO k = nYa , nYb
 
                   DO j = nXa , nXb
@@ -1422,10 +1422,10 @@
                   END DO
 
                END DO
+!$OMP          END PARALLEL DO
 
             END DO
-!$OMP       END DO
-!$OMP       END PARALLEL
+!$OMP       END PARALLEL DO
 
             RETURN
 
@@ -1455,10 +1455,10 @@
 
             INTEGER :: j , k , l
 
-!$OMP       PARALLEL DEFAULT ( SHARED )
-!$OMP       DO SCHEDULE ( STATIC )
+!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
             DO l = nZa , nZb
 
+!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
                DO k = nYa , nYb
 
                   DO j = nXa , nXb
@@ -1487,10 +1487,10 @@
                   END DO
 
                END DO
+!$OMP          END PARALLEL DO
 
             END DO
-!$OMP       END DO
-!$OMP       END PARALLEL
+!$OMP       END PARALLEL DO
 
             RETURN
 
@@ -1520,10 +1520,10 @@
 
             INTEGER :: j , k , l
 
-!$OMP       PARALLEL DEFAULT ( SHARED )
-!$OMP       DO SCHEDULE ( STATIC )
+!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
             DO l = nZa , nZb
 
+!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
                DO k = nYa , nYb
 
                   DO j = nXa , nXb
@@ -1558,10 +1558,10 @@
                   END DO
 
                END DO
+!$OMP          END PARALLEL DO
 
             END DO
-!$OMP       END DO
-!$OMP       END PARALLEL
+!$OMP       END PARALLEL DO
 
             RETURN
 

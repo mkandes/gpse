@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, October 28th, 2014
+!     Tuesday, November 25th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -203,10 +203,10 @@
 
                l2_norm_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : l2_norm_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : l2_norm_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : l2_norm_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -216,10 +216,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                l2_norm_3d_rect = l2_norm_3d_rect * dX * dY * dZ
 
@@ -254,10 +254,10 @@
 
                x_3d_rect = 0.0 
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : x_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : x_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : x_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb  
@@ -267,10 +267,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                x_3d_rect = x_3d_rect * dX * dY * dZ 
 
@@ -305,10 +305,10 @@
 
                y_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : y_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : y_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : y_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -318,10 +318,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                y_3d_rect = y_3d_rect * dX * dY * dZ
 
@@ -356,10 +356,10 @@
 
                z_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : z_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : z_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : z_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -369,10 +369,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                z_3d_rect = z_3d_rect * dX * dY * dZ
 
@@ -409,10 +409,10 @@
 
                r_xy_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : r_xy_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : r_xy_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : r_xy_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -422,10 +422,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                r_xy_3d_rect = r_xy_3d_rect * dX * dY * dZ
 
@@ -464,10 +464,10 @@
 
                r_xyz_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : r_xyz_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : r_xyz_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : r_xyz_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -477,10 +477,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                r_xyz_3d_rect = r_xyz_3d_rect * dX * dY * dZ 
 
@@ -515,10 +515,10 @@
 
                x2_3d_rect = 0.0 
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : x2_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : x2_3d_rect )
                DO l = nZa , nZb 
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : x2_3d_rect )
                   DO k = nYa , nYb 
 
                      DO j = nXa , nXb  
@@ -528,10 +528,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                x2_3d_rect = x2_3d_rect * dX * dY * dZ
 
@@ -566,10 +566,10 @@
 
                y2_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : y2_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : y2_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : y2_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -579,10 +579,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                y2_3d_rect = y2_3d_rect * dX * dY * dZ
 
@@ -617,10 +617,10 @@
 
                z2_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : z2_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : z2_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : z2_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -630,10 +630,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                z2_3d_rect = z2_3d_rect * dX * dY * dZ
 
@@ -670,10 +670,10 @@
 
                r2_xy_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : r2_xy_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : r2_xy_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : r2_xy_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -683,10 +683,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                r2_xy_3d_rect = r2_xy_3d_rect * dX * dY * dZ
 
@@ -725,10 +725,10 @@
 
                r2_xyz_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : r2_xyz_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : r2_xyz_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : r2_xyz_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -738,10 +738,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                r2_xyz_3d_rect = r2_xyz_3d_rect * dX * dY * dZ
 
@@ -772,10 +772,10 @@
 
                px_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : px_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : px_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : px_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -785,10 +785,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                px_3d_rect_cd2 = -0.5 * px_3d_rect_cd2 * dY * dZ
 
@@ -819,10 +819,10 @@
 
                px_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : px_3d_rect_cd4 ) 
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : px_3d_rect_cd4 ) 
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : px_3d_rect_cd4 ) 
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -832,10 +832,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                px_3d_rect_cd4 = -0.08333333333333333 * px_3d_rect_cd4 * dY * dZ
 
@@ -866,10 +866,10 @@
 
                py_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : py_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : py_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : py_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -879,10 +879,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                py_3d_rect_cd2 = -0.5 * py_3d_rect_cd2 * dX * dZ
 
@@ -913,10 +913,10 @@
 
                py_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : py_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : py_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : py_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -926,10 +926,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                py_3d_rect_cd4 = -0.08333333333333333 * py_3d_rect_cd4 * dX * dZ
 
@@ -960,10 +960,10 @@
 
                pz_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : pz_3d_rect_cd2 ) 
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : pz_3d_rect_cd2 ) 
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : pz_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -973,10 +973,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                pz_3d_rect_cd2 = -0.5 * pz_3d_rect_cd2 * dX * dY
 
@@ -1007,10 +1007,10 @@
 
                pz_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : pz_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : pz_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : pz_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1020,10 +1020,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                pz_3d_rect_cd4 = -0.08333333333333333 * pz_3d_rect_cd4 * dX * dY
 
@@ -1055,10 +1055,10 @@
 
                px2_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : px2_3d_rect_cd2 ) 
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : px2_3d_rect_cd2 ) 
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : px2_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1068,10 +1068,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                px2_3d_rect_cd2 = -px2_3d_rect_cd2 * dY * dZ / dX
 
@@ -1103,10 +1103,10 @@
 
                px2_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : px2_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : px2_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : px2_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1116,10 +1116,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                px2_3d_rect_cd4 = -0.08333333333333333 * px2_3d_rect_cd4 * dY * dZ / dX
 
@@ -1151,10 +1151,10 @@
 
                py2_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : py2_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : py2_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : py2_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1164,10 +1164,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                py2_3d_rect_cd2 = -py2_3d_rect_cd2 * dX * dZ / dY
 
@@ -1199,10 +1199,10 @@
 
                py2_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : py2_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : py2_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : py2_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1212,10 +1212,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                py2_3d_rect_cd4 = -0.08333333333333333 * py2_3d_rect_cd4 * dX * dZ / dY
 
@@ -1247,10 +1247,10 @@
 
                pz2_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : pz2_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : pz2_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : pz2_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1260,10 +1260,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL 
+!$OMP          END PARALLEL DO
 
                pz2_3d_rect_cd2 = -pz2_3d_rect_cd2 * dX * dY / dZ
 
@@ -1295,10 +1295,10 @@
 
                pz2_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : pz2_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : pz2_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : pz2_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1308,10 +1308,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                pz2_3d_rect_cd4 = -0.08333333333333333 * pz2_3d_rect_cd4 * dX * dY / dZ
 
@@ -1348,10 +1348,10 @@
 
                lx_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : lx_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lx_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lx_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1361,10 +1361,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                lx_3d_rect_cd2 = -0.5 * lx_3d_rect_cd2 * dX * dY * dZ
 
@@ -1401,10 +1401,10 @@
 
                lx_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : lx_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lx_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lx_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1414,10 +1414,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                lx_3d_rect_cd4 = -0.08333333333333333 * lx_3d_rect_cd4 * dX * dY * dZ
 
@@ -1454,10 +1454,10 @@
 
                ly_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : ly_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : ly_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : ly_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1467,10 +1467,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                ly_3d_rect_cd2 = -0.5 * ly_3d_rect_cd2 * dX * dY * dZ
 
@@ -1507,10 +1507,10 @@
 
                ly_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : ly_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : ly_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : ly_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1520,10 +1520,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                ly_3d_rect_cd4 = -0.08333333333333333 * ly_3d_rect_cd4 * dX * dY * dZ
 
@@ -1560,10 +1560,10 @@
 
                lz_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : lz_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lz_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lz_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1573,10 +1573,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                lz_3d_rect_cd2 = -0.5 * lz_3d_rect_cd2 * dX * dY * dZ
 
@@ -1613,10 +1613,10 @@
 
                lz_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : lz_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lz_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lz_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1626,10 +1626,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                lz_3d_rect_cd4 = -0.08333333333333333 * lz_3d_rect_cd4 * dX * dY * dZ
 
@@ -1666,10 +1666,10 @@
 
                lx2_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : lx2_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lx2_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lx2_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1691,10 +1691,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                lx2_3d_rect_cd2 = -lx2_3d_rect_cd2 * dX * dY * dZ
 
@@ -1731,10 +1731,10 @@
 
                lx2_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : lx2_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lx2_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lx2_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1766,10 +1766,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                lx2_3d_rect_cd4 = -0.08333333333 * lx2_3d_rect_cd4 * dX * dY * dZ
 
@@ -1806,10 +1806,10 @@
 
                ly2_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : ly2_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : ly2_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : ly2_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1831,10 +1831,10 @@
                      END DO
        
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                ly2_3d_rect_cd2 = -ly2_3d_rect_cd2 * dX * dY * dZ
 
@@ -1871,10 +1871,10 @@
 
                ly2_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : ly2_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : ly2_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : ly2_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1906,10 +1906,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                ly2_3d_rect_cd4 = -0.08333333333 * ly2_3d_rect_cd4 * dX * dY * dZ
 
@@ -1946,10 +1946,10 @@
 
                lz2_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : lz2_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lz2_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lz2_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -1971,10 +1971,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                lz2_3d_rect_cd2 = -lz2_3d_rect_cd2 * dX * dY * dZ
 
@@ -2011,10 +2011,10 @@
 
                lz2_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : lz2_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lz2_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : lz2_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2046,10 +2046,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                lz2_3d_rect_cd4 = -0.08333333333 * lz2_3d_rect_cd4 * dX * dY * dZ
 
@@ -2082,10 +2082,10 @@
 
                fx_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : fx_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : fx_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : fx_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2095,10 +2095,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                fx_3d_rect_cd2 = 0.5 * fx_3d_rect_cd2 * dY * dZ
 
@@ -2131,10 +2131,10 @@
 
                fx_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : fx_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : fx_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : fx_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2144,10 +2144,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                fx_3d_rect_cd4 = 0.08333333333333333 * fx_3d_rect_cd4 * dY * dZ
 
@@ -2180,10 +2180,10 @@
 
                fy_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : fy_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : fy_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : fy_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2193,10 +2193,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                fy_3d_rect_cd2 = 0.5 * fy_3d_rect_cd2 * dX * dZ
 
@@ -2229,10 +2229,10 @@
 
                fy_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : fy_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : fy_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : fy_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2242,10 +2242,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                fy_3d_rect_cd4 = 0.08333333333333333 * fy_3d_rect_cd4 * dX * dZ
 
@@ -2278,10 +2278,10 @@
 
                fz_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : fz_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : fz_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : fz_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2291,10 +2291,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                fz_3d_rect_cd2 = 0.5 * fz_3d_rect_cd2 * dX * dY
 
@@ -2327,10 +2327,10 @@
 
                fz_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : fz_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : fz_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : fz_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2340,10 +2340,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                fz_3d_rect_cd4 = 0.08333333333333333 * fz_3d_rect_cd4 * dX * dY
 
@@ -2381,10 +2381,10 @@
 
                taux_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : taux_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : taux_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : taux_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2394,10 +2394,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                taux_3d_rect_cd2 = 0.5 * taux_3d_rect_cd2 * dX * dY * dZ
 
@@ -2435,10 +2435,10 @@
 
                taux_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : taux_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : taux_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : taux_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2448,10 +2448,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                taux_3d_rect_cd4 = 0.08333333333333333 * taux_3d_rect_cd4 * dX * dY * dZ 
 
@@ -2489,10 +2489,10 @@
 
                tauy_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : tauy_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : tauy_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : tauy_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2502,10 +2502,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                tauy_3d_rect_cd2 = 0.5 * tauy_3d_rect_cd2 * dX * dY * dZ
 
@@ -2541,10 +2541,10 @@
 
                tauy_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : tauy_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : tauy_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : tauy_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2554,10 +2554,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                tauy_3d_rect_cd4 = 0.08333333333333333 * tauy_3d_rect_cd4 * dX * dY * dZ
 
@@ -2595,10 +2595,10 @@
 
                tauz_3d_rect_cd2 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : tauz_3d_rect_cd2 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : tauz_3d_rect_cd2 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : tauz_3d_rect_cd2 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2608,10 +2608,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                tauz_3d_rect_cd2 = 0.5 * tauz_3d_rect_cd2 * dX * dY * dZ
 
@@ -2649,10 +2649,10 @@
 
                tauz_3d_rect_cd4 = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : tauz_3d_rect_cd4 )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : tauz_3d_rect_cd4 )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : tauz_3d_rect_cd4 )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2662,10 +2662,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                tauz_3d_rect_cd4 = 0.08333333333333333 * tauz_3d_rect_cd4 * dX * dY * dZ
 
@@ -2702,10 +2702,10 @@
 
                ixx_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : ixx_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : ixx_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : ixx_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2715,10 +2715,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                ixx_3d_rect = ixx_3d_rect * dX * dY * dZ
 
@@ -2755,10 +2755,10 @@
 
                iyy_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : iyy_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : iyy_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : iyy_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2768,10 +2768,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                iyy_3d_rect = iyy_3d_rect * dX * dY * dZ
 
@@ -2808,10 +2808,10 @@
 
                izz_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : izz_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : izz_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : izz_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2821,10 +2821,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                izz_3d_rect = izz_3d_rect * dX * dY * dZ
 
@@ -2861,10 +2861,10 @@
 
                ixy_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : ixy_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : ixy_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : ixy_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2874,10 +2874,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                ixy_3d_rect = -ixy_3d_rect * dX * dY * dZ
 
@@ -2914,10 +2914,10 @@
 
                iyz_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : iyz_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : iyz_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : iyz_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2927,10 +2927,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                iyz_3d_rect = -iyz_3d_rect * dX * dY * dZ
 
@@ -2967,10 +2967,10 @@
 
                ixz_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : ixz_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : ixz_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : ixz_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -2980,10 +2980,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                ixz_3d_rect = -ixz_3d_rect * dX * dY * dZ
 
@@ -3017,10 +3017,10 @@
 
                vex_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : vex_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : vex_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : vex_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -3030,10 +3030,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                vex_3d_rect = vex_3d_rect * dX * dY * dZ
 
@@ -3066,10 +3066,10 @@
 
                vmf_3d_rect = 0.0
 
-!$OMP          PARALLEL DEFAULT ( SHARED )
-!$OMP          DO SCHEDULE ( STATIC ) REDUCTION ( + : vmf_3d_rect )
+!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : vmf_3d_rect )
                DO l = nZa , nZb
 
+!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC ) REDUCTION ( + : vmf_3d_rect )
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
@@ -3079,10 +3079,10 @@
                      END DO
 
                   END DO
+!$OMP             END PARALLEL DO
 
                END DO
-!$OMP          END DO
-!$OMP          END PARALLEL
+!$OMP          END PARALLEL DO
 
                vmf_3d_rect = 0.5 * gS * vmf_3d_rect * dX * dY * dZ
 

@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, October 14th, 2014
+!     Saturday, November 22nd, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -132,10 +132,10 @@
 
             INTEGER :: j , k , l
 
-!$OMP       PARALLEL DEFAULT ( SHARED )
-!$OMP       DO SCHEDULE ( STATIC )
+!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
             DO l = nZa , nZb
 
+!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
                DO k = nYa , nYb
 
                   DO j = nXa , nXb
@@ -145,10 +145,10 @@
                   END DO
 
                END DO
+!$OMP          END PARALLEL DO
 
             END DO
-!$OMP       END DO
-!$OMP       END PARALLEL
+!$OMP       END PARALLEL DO
 
             RETURN
 
@@ -182,10 +182,10 @@
 
             INTEGER :: j , k , l
 
-!$OMP       PARALLEL DEFAULT ( SHARED )
-!$OMP       DO SCHEDULE ( STATIC )
+!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
             DO l = nZa , nZb
 
+!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
                DO k = nYa , nYb
 
                   DO j = nXa , nXb
@@ -195,10 +195,10 @@
                   END DO
 
                END DO
+!$OMP          END PARALLEL DO
 
             END DO
-!$OMP       END DO
-!$OMP       END PARALLEL
+!$OMP       END PARALLEL DO
 
             RETURN
 
@@ -232,10 +232,10 @@
 
             INTEGER :: j , k , l 
 
-!$OMP       PARALLEL DEFAULT ( SHARED )
-!$OMP       DO SCHEDULE ( STATIC )
+!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
             DO l = nZa , nZb 
 
+!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
                DO k = nYa , nYb 
 
                   DO j = nXa , nXb
@@ -245,10 +245,10 @@
                   END DO
                  
                END DO
+!$OMP          END PARALLEL DO
 
             END DO
-!$OMP       END DO
-!$OMP       END PARALLEL
+!$OMP       END PARALLEL DO
 
             RETURN
 
