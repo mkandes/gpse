@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, November 22nd, 2014
+!     Wednesday, November 26th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -55,8 +55,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.2'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, November 22nd, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.3'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Wednesday, November 26th, 2014'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -74,6 +74,7 @@
       CHARACTER ( LEN = 10 ) :: stopTime  = 'NONE'
       CHARACTER ( LEN = 5  ) :: stopZone  = 'NONE'
 
+      INTEGER :: fmtIO         = -1
       INTEGER :: rk4Lambda     = -1 ! 1 = Tan-Chen Lambda-1 ; 2 = Classical 4th-Order Runge-Kutta ; 3 = Tan-Chen Lambda-3 ; 4 = England ; 5 = Tan-Chen Lambda-5
       INTEGER :: fdOrder       = -1 ! 2 = 2nd-Order Central Differences ( CD ); 4 = 4th-Order CD ; 6 = 6th-Order CD; 8 = 8th-Order CD
       INTEGER :: quadRule      = 1  ! 1 = Rectangle Rule ( only quadrature rule currently implemented ) 
@@ -165,6 +166,8 @@
       REAL, ALLOCATABLE, DIMENSION ( :         ) :: Zf
       REAL, ALLOCATABLE, DIMENSION ( : , : , : ) :: Vex3p
       REAL, ALLOCATABLE, DIMENSION ( : , : , : ) :: Vex3f
+      REAL, ALLOCATABLE, DIMENSION ( : , : , : ) :: RePsi3f
+      REAL, ALLOCATABLE, DIMENSION ( : , : , : ) :: ImPsi3f
 
       COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: K1
       COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: K2
@@ -183,7 +186,7 @@
 
 ! --- NAMELIST DECLARATIONS -----------------------------------------------
 
-      NAMELIST /gpseIn/ itpOn , fullIO , readPsi , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , t0 , xO , yO , zO , &
+      NAMELIST /gpseIn/ itpOn , fullIO , readPsi , fmtIO , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , t0 , xO , yO , zO , &
          & dT , dX , dY , dZ , wX , wY , wZ , gS , initPsi , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , & 
          & wXpsi , wYpsi , wZpsi , wRpsi , pXpsi , pYpsi , pZpsi , initVex , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , &
          & fZvex , wXvex , wYvex , wZvex , wRvex
@@ -361,6 +364,8 @@
          ALLOCATE ( Yf ( nY ) )
          ALLOCATE ( Zf ( nZ ) )
          ALLOCATE ( Vex3f ( nX , nY , nZ ) )
+         ALLOCATE ( RePsi3f ( nX , nY , nZ ) )
+         ALLOCATE ( ImPsi3f ( nX , nY , nZ ) )
          ALLOCATE ( Psi3f ( nX , nY , nZ ) )
 
       END IF
@@ -382,6 +387,8 @@
          Yf = 0.0
          Zf = 0.0
          Vex3f = 0.0
+         RePsi3f = 0.0
+         ImPsi3f = 0.0
          Psi3f = CMPLX ( 0.0 , 0.0 )
 
       END IF
@@ -400,9 +407,21 @@
 
       IF ( readPsi .EQV. .TRUE. ) THEN ! read initial wave function from file on MPI_MASTER and scatter to MPI processes
 
-         IF ( mpiRank == MPI_MASTER ) THEN
+         IF ( mpiRank == MPI_MASTER ) THEN 
 
-            CALL io_read_bin ( 'psi' , Psi3f )
+            IF ( fmtIO == 0 ) THEN
+
+               CALL io_read_bin ( 'psi' , Psi3f )
+
+            ELSE IF ( fmtIO == 1 ) THEN
+
+               CALL io_read_vtk ( 'psivex-' , 9999 , nX , nY , nZ , Xf , Yf , Zf , Vex3f , RePsi3f , ImPsi3f , Psi3f )
+
+            ELSE
+
+               ! fmt not supported
+
+            END IF
 
          END IF
          CALL mpi_scatter_custom ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f , Psi3a , Psi3f )

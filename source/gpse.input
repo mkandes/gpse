@@ -1,7 +1,8 @@
  &gpseIn
    itpOn     = .FALSE. ! Perform imaginary time propagation? .TRUE. = Yes ; .FALSE. = No
-   fullIO    = .FALSE. ! Write external potential and wave function to file? .TRUE. = Yes ; .FALSE. = No
-   readPsi   = .FALSE. ! Read initial wave function from file ( psichkpt.bin ) ? .TRUE. = Yes ; .FALSE. = No ; If .FALSE., then compute_psi_init ( ).
+   fullIO    = .TRUE. ! Write external potential and wave function to file? .TRUE. = Yes ; .FALSE. = No
+   readPsi   = .TRUE. ! Read initial wave function from file ( psichkpt.bin ) ? .TRUE. = Yes ; .FALSE. = No ; If .FALSE., then compute_psi_init ( ).
+   fmtIO     = 1       !
    rk4Lambda = 2         ! 1 = Tan-Chen-1 ; 2 = Classical 4th-Order Runge-Kutta ; 3 = Tan-Chen Lambda-3 ; 4 = England ; 5 = Tan-Chen-5
    fdOrder   = 2         ! 2 = 2nd-Order Central Differences ( CD ); 4 = 4th-Order CD ; 6 = 6th-Order CD; 8 = 8th-Order CD
    nTsteps   = 25600      ! Total number of time steps in simulation
@@ -20,7 +21,7 @@
    wX        = 0.0       ! X-component of the rotating reference frame's angular velocity vector
    wY        = 0.0       ! Y-component of the rotating reference frame's angular velocity vector
    wZ        = 0.0       ! Z-component of the rotating reference frame's angular velocity vector
-   gS        = 0.0       ! Nonlinear atom-atom interaction coupling constant
+   gS        = 100.0       ! Nonlinear atom-atom interaction coupling constant
    initPsi   = 2         ! 0 = Isotropic 3D SHO ; 1 = Anisotropic 3D SHO ; 2 = Axially-Symmetric 3D SHO
    nXpsi     = 0         ! Degree of Hermite polynomial used to define anisotropic SHO wave function along x-axis
    nYpsi     = 0         ! Degree of Hermite polynomial used to define anisotropic SHO wave function along y-axis

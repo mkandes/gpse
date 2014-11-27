@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, October 14th, 2014
+!     Wednesday, November 26th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -44,6 +44,7 @@
 
       PUBLIC :: io_read_bin
       PUBLIC :: io_write_bin
+      PUBLIC :: io_read_vtk
       PUBLIC :: io_write_vtk
 
       CONTAINS
@@ -79,6 +80,122 @@
                WRITE ( UNIT = 600 ) Psi3
 
             CLOSE ( UNIT = 600 , STATUS = 'KEEP' )
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE io_read_vtk ( fileName , fileNumber , nX , nY , nZ , X , Y , Z , Vex3 , RePsi3 , ImPsi3 , Psi3 )
+
+            IMPLICIT NONE
+
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
+
+            INTEGER, INTENT ( IN ) :: fileNumber
+            INTEGER, INTENT ( IN ) :: nX
+            INTEGER, INTENT ( IN ) :: nY
+            INTEGER, INTENT ( IN ) :: nZ
+
+            REAL, DIMENSION ( : ), INTENT ( INOUT ) :: X
+            REAL, DIMENSION ( : ), INTENT ( INOUT ) :: Y
+            REAL, DIMENSION ( : ), INTENT ( INOUT ) :: Z
+            REAL, DIMENSION ( : , : , : ), INTENT ( INOUT ) :: Vex3
+            REAL, DIMENSION ( : , : , : ), INTENT ( INOUT ) :: RePsi3
+            REAL, DIMENSION ( : , : , : ), INTENT ( INOUT ) :: ImPsi3
+
+            COMPLEX, DIMENSION ( : , : , : ), INTENT ( INOUT ) :: Psi3
+
+            CHARACTER ( LEN = 4 ) :: fileNumberString
+
+            INTEGER :: j , k , l
+
+            WRITE ( UNIT = fileNumberString , FMT = '(I4.4)' ) fileNumber
+            OPEN  ( UNIT = fileNumber , FILE = trim(fileName//fileNumberString//'.vtk') , ACTION = 'READ' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
+
+               READ ( UNIT = fileNumber , FMT = * ) 
+               READ ( UNIT = fileNumber , FMT = * )
+               READ ( UNIT = fileNumber , FMT = * )
+               READ ( UNIT = fileNumber , FMT = * )
+               READ ( UNIT = fileNumber , FMT = * )
+               READ ( UNIT = fileNumber , FMT = * )
+               DO j = 1 , nX
+
+                  READ ( UNIT = fileNumber , FMT = * ) X ( j )
+
+               END DO
+               READ ( UNIT = fileNumber , FMT = * )
+               DO k = 1 , nY
+
+                  READ ( UNIT = fileNumber , FMT = * ) Y ( k )
+
+               END DO
+               READ ( UNIT = fileNumber , FMT = * )
+               DO l = 1 , nZ
+
+                  READ ( UNIT = fileNumber , FMT = * ) Z ( l )
+
+               END DO
+               READ ( UNIT = fileNumber , FMT = * )
+               READ ( UNIT = fileNumber , FMT = * )
+               READ ( UNIT = fileNumber , FMT = * )
+               DO l = 1 , nZ
+
+                  DO k = 1 , nY
+
+                     DO j = 1 , nX
+
+                        READ ( UNIT = fileNumber , FMT = * ) Vex3 ( j , k , l )
+
+                     END DO
+
+                  END DO
+
+               END DO
+               READ ( UNIT = fileNumber , FMT = * )
+               READ ( UNIT = fileNumber , FMT = * )
+               DO l = 1 , nZ
+
+                  DO k = 1 , nY
+
+                     DO j = 1 , nX
+
+                        READ ( UNIT = fileNumber , FMT = * ) RePsi3 ( j , k , l )
+
+                     END DO
+
+                  END DO
+
+               END DO
+               READ ( UNIT = fileNumber , FMT = * )
+               READ ( UNIT = fileNumber , FMT = * )
+               DO l = 1 , nZ
+
+                  DO k = 1 , nY
+
+                     DO j = 1 , nX
+
+                        READ ( UNIT = fileNumber , FMT = * ) ImPsi3 ( j , k , l )
+
+                     END DO
+
+                  END DO
+
+               END DO
+               DO l = 1 , nZ
+
+                  DO k = 1 , nY
+
+                     DO j = 1 , nX
+
+                        Psi3 ( j , k , l ) = CMPLX ( RePsi3 ( j , k , l ) , ImPsi3 ( j , k , l ) )
+
+                     END DO
+
+                  END DO
+
+               END DO
+
+            CLOSE ( UNIT = fileNUmber , STATUS = 'KEEP' )
 
             RETURN
 
