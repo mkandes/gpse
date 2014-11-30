@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Wednesday, November 26th, 2014
+!     Saturday, November 29th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -55,8 +55,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.3'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Wednesday, November 26th, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.4'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, November 29th, 2014'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -64,8 +64,6 @@
 ! --- VARIABLE DECLARATIONS -----------------------------------------------
 
       LOGICAL :: itpOn   = .FALSE. ! Perform imaginary time propagation? .TRUE. = Yes ; .FALSE. = No
-      LOGICAL :: fullIO  = .FALSE. ! Write external potential and wave function to file? .TRUE. = Yes ; .FALSE. = No
-      LOGICAL :: readPsi = .FALSE. ! Read initial wave function from file ( psichkpt.bin ) ? .TRUE. = Yes ; .FALSE. = No ; If .FALSE., then compute_psi_init ( ).
 
       CHARACTER ( LEN = 8  ) :: startDate = 'NONE'
       CHARACTER ( LEN = 10 ) :: startTime = 'NONE'
@@ -74,7 +72,6 @@
       CHARACTER ( LEN = 10 ) :: stopTime  = 'NONE'
       CHARACTER ( LEN = 5  ) :: stopZone  = 'NONE'
 
-      INTEGER :: fmtIO         = -1
       INTEGER :: rk4Lambda     = -1 ! 1 = Tan-Chen Lambda-1 ; 2 = Classical 4th-Order Runge-Kutta ; 3 = Tan-Chen Lambda-3 ; 4 = England ; 5 = Tan-Chen Lambda-5
       INTEGER :: fdOrder       = -1 ! 2 = 2nd-Order Central Differences ( CD ); 4 = 4th-Order CD ; 6 = 6th-Order CD; 8 = 8th-Order CD
       INTEGER :: quadRule      = 1  ! 1 = Rectangle Rule ( only quadrature rule currently implemented ) 
@@ -92,13 +89,11 @@
       INTEGER :: nZa           = -1 !
       INTEGER :: nZb           = -1 !
       INTEGER :: nZbc          = -1 !
-      INTEGER :: initPsi       = -1 ! 0 = Isotropic 3D SHO ; 1 = Anisotropic 3D SHO ; 2 = Axially-Symmetric 3D SHO
       INTEGER :: nXpsi         = -1 ! Degree of Hermite polynomial used to define anisotropic SHO wave function along x-axis
       INTEGER :: nYpsi         = -1 ! Degree of Hermite polynomial used to define anisotropic SHO wave function along y-axis
       INTEGER :: nZpsi         = -1 ! Degree of Hermite polynomial used to define both anisotropic and axially-symmetric SHO wave functions along z-axis
       INTEGER :: nRpsi         = -1 ! Degree of Laguerre polynomials used to define radial components of isotropic and axially-symmetric SHO wave functions
       INTEGER :: mLpsi         = 0  ! Projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
-      INTEGER :: initVex       = -1 !
       INTEGER :: mpiCmplx      = -1 
       INTEGER :: mpiError      = -1 
       INTEGER :: mpiErrorCode  = -1 
@@ -166,8 +161,6 @@
       REAL, ALLOCATABLE, DIMENSION ( :         ) :: Zf
       REAL, ALLOCATABLE, DIMENSION ( : , : , : ) :: Vex3p
       REAL, ALLOCATABLE, DIMENSION ( : , : , : ) :: Vex3f
-      REAL, ALLOCATABLE, DIMENSION ( : , : , : ) :: RePsi3f
-      REAL, ALLOCATABLE, DIMENSION ( : , : , : ) :: ImPsi3f
 
       COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: K1
       COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: K2
@@ -186,9 +179,9 @@
 
 ! --- NAMELIST DECLARATIONS -----------------------------------------------
 
-      NAMELIST /gpseIn/ itpOn , fullIO , readPsi , fmtIO , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , t0 , xO , yO , zO , &
-         & dT , dX , dY , dZ , wX , wY , wZ , gS , initPsi , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , & 
-         & wXpsi , wYpsi , wZpsi , wRpsi , pXpsi , pYpsi , pZpsi , initVex , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , &
+      NAMELIST /gpseIn/ itpOn , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , t0 , xO , yO , zO , &
+         & dT , dX , dY , dZ , wX , wY , wZ , gS , psiInput , psiOutput , psiFileNo , psiInit , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , & 
+         & wXpsi , wYpsi , wZpsi , wRpsi , pXpsi , pYpsi , pZpsi , vexInput , vexOutput , vexFileNo , vexInit , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , &
          & fZvex , wXvex , wYvex , wZvex , wRvex
 
 ! --- NAMELIST DEFINITIONS ------------------------------------------------
@@ -264,8 +257,6 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        DEFAULT COMPLEX KIND ...    ', CMPLX_DEFAULT_KIND
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     INPUT PARAMETERS ... '
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        itpOn     = ', itpOn
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        fullIO    = ', fullIO
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        readPsi   = ', readPsi
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        rk4Lambda = ', rk4Lambda
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        fdOrder   = ', fdOrder
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nTsteps   = ', nTsteps
@@ -285,7 +276,6 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wY        = ', wY
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wZ        = ', wZ
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        gS        = ', gS
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        initPsi   = ', initPsi
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nXpsi     = ', nXpsi
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nYpsi     = ', nYpsi
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nZpsi     = ', nZpsi
@@ -301,7 +291,6 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        pXpsi     = ', pXpsi
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        pYpsi     = ', pYpsi
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        pZpsi     = ', pZpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        initVex   = ', initVex
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        xOvex     = ', xOvex
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        yOvex     = ', yOvex
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        zOvex     = ', zOvex
@@ -358,15 +347,27 @@
       ALLOCATE ( Psi3a ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
       ALLOCATE ( Psi3b ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
 
-      IF ( ( mpiRank == MPI_MASTER ) .AND. ( fullIO .EQV. .TRUE. ) ) THEN
+      IF ( ( mpiRank == MPI_MASTER ) .AND. ( ( ( psiInput > 0 ) .OR. ( psiOutput > 0 ) ) .AND. ( ( vexInput > 0 ) .OR. ( vexOutput > 0 ) ) ) ) THEN
 
          ALLOCATE ( Xf ( nX ) )
          ALLOCATE ( Yf ( nY ) )
          ALLOCATE ( Zf ( nZ ) )
          ALLOCATE ( Vex3f ( nX , nY , nZ ) )
-         ALLOCATE ( RePsi3f ( nX , nY , nZ ) )
-         ALLOCATE ( ImPsi3f ( nX , nY , nZ ) )
          ALLOCATE ( Psi3f ( nX , nY , nZ ) )
+
+      ELSE IF ( ( mpiRank == MPI_MASTER ) .AND. ( ( psiInput > 0 ) .OR. ( psiOutput > 0 ) ) ) THEN
+
+         ALLOCATE ( Xf ( nX ) )
+         ALLOCATE ( Yf ( nY ) )
+         ALLOCATE ( Zf ( nZ ) )
+         ALLOCATE ( Psi3f ( nX , nY , nZ ) )
+
+      ELSE IF ( ( mpiRank == MPI_MASTER ) .AND. ( ( vexInput > 0 ) .OR. ( vexOutput > 0 ) ) ) THEN
+
+         ALLOCATE ( Xf ( nX ) )
+         ALLOCATE ( Yf ( nY ) )
+         ALLOCATE ( Zf ( nZ ) )
+         ALLOCATE ( Vex3f ( nX , nY , nZ ) )
 
       END IF
 
@@ -380,24 +381,36 @@
       K4 = CMPLX ( 0.0 , 0.0 )
       Psi3a = CMPLX ( 0.0 , 0.0 )
       Psi3b = CMPLX ( 0.0 , 0.0 )
-      
-      IF ( ( mpiRank == MPI_MASTER ) .AND. ( fullIO .EQV. .TRUE. ) ) THEN 
+
+      IF ( ( mpiRank == MPI_MASTER ) .AND. ( ( ( psiInput > 0 ) .OR. ( psiOutput > 0 ) ) .AND. ( ( vexInput > 0 ) .OR. ( vexOutput > 0 ) ) ) ) THEN
 
          Xf = 0.0
          Yf = 0.0
          Zf = 0.0
          Vex3f = 0.0
-         RePsi3f = 0.0
-         ImPsi3f = 0.0
          Psi3f = CMPLX ( 0.0 , 0.0 )
 
-      END IF
+      ELSE IF ( ( mpiRank == MPI_MASTER ) .AND. ( ( psiInput > 0 ) .OR. ( psiOutput > 0 ) ) ) THEN 
 
+         Xf = 0.0 
+         Yf = 0.0 
+         Zf = 0.0 
+         Psi3f = CMPLX ( 0.0 , 0.0 ) 
+
+      ELSE IF ( ( mpiRank == MPI_MASTER ) .AND. ( ( vexInput > 0 ) .OR. ( vexOutput > 0 ) ) ) THEN 
+
+         Xf = 0.0
+         Yf = 0.0
+         Zf = 0.0
+         Vex3f = 0.0
+
+      END IF
+      
       CALL grid_regular_axis ( nX , nXa , nXb , nXbc , xO , dX , Xp ) 
       CALL grid_regular_axis ( nY , nYa , nYb , nYbc , yO , dY , Yp ) 
       CALL grid_regular_axis ( nZ , nZa , nZb , nZbc , zO , dZ , Zp ) 
 
-      IF ( ( mpiRank == MPI_MASTER ) .AND. ( fullIO .EQV. .TRUE. ) ) THEN
+      IF ( ( mpiRank == MPI_MASTER ) .AND. ( ( psiInput > 0 ) .OR. ( psiOutput > 0 ) .OR. ( vexInput > 0 ) .OR. ( vexOutput > 0 ) ) ) THEN
 
          CALL grid_regular_axis ( nX , 1 , nX , 0 , xO , dX , Xf )
          CALL grid_regular_axis ( nY , 1 , nY , 0 , yO , dY , Yf )
@@ -405,36 +418,39 @@
 
       END IF
 
-      IF ( readPsi .EQV. .TRUE. ) THEN ! read initial wave function from file on MPI_MASTER and scatter to MPI processes
+!      IF ( readPsi .EQV. .TRUE. ) THEN ! read initial wave function from file on MPI_MASTER and scatter to MPI processes
+!
+!         IF ( mpiRank == MPI_MASTER ) THEN 
+!
+!            IF ( fmtIO == 0 ) THEN
+!
+!               CALL io_read_bin ( 'psi' , Psi3f )
+!
+!            ELSE IF ( fmtIO == 1 ) THEN
+!
+!               CALL io_read_vtk ( 'psivex-' , 9999 , nX , nY , nZ , Xf , Yf , Zf , Vex3f , RePsi3f , ImPsi3f , Psi3f )
+!
+!            ELSE
+!
+!               ! fmt not supported
+!
+!            END IF
+!
+!         END IF
+!         CALL mpi_scatter_custom ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f , Psi3a , Psi3f )
+!
+!      ELSE ! compute initial wave function across all MPI processes
 
-         IF ( mpiRank == MPI_MASTER ) THEN 
-
-            IF ( fmtIO == 0 ) THEN
-
-               CALL io_read_bin ( 'psi' , Psi3f )
-
-            ELSE IF ( fmtIO == 1 ) THEN
-
-               CALL io_read_vtk ( 'psivex-' , 9999 , nX , nY , nZ , Xf , Yf , Zf , Vex3f , RePsi3f , ImPsi3f , Psi3f )
-
-            ELSE
-
-               ! fmt not supported
-
-            END IF
-
-         END IF
-         CALL mpi_scatter_custom ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f , Psi3a , Psi3f )
-
-      ELSE ! compute initial wave function across all MPI processes
-
-         CALL psi_init ( initPsi , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , wXpsi , wYpsi , wZpsi , wRpsi , Xp , Yp , Zp , Psi3a )
+         CALL psi_init ( psiInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , wXpsi , wYpsi , wZpsi , wRpsi , Xp , Yp , Zp , Psi3a )
          CALL psi_boost ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOpsi , yOpsi , zOpsi , pXpsi , pYpsi , pZpsi , Xp , Yp , Zp , Psi3a )
 
-      END IF
+!      END IF
       CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3a )
 
-      CALL vex_init ( initVex , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex , Xp , Yp , Zp , Vex3p ) ! compute initial external potential
+      CALL vex_init ( vexInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex , Xp , Yp , Zp , Vex3p ) ! compute initial external potential
+
+      psiFileNo = 1000
+      vexFileNo = 1000
 
 ! --- BEGIN MAIN TIME PROPAGATION LOOP ------------------------------------
 
@@ -750,7 +766,6 @@
 !              Write expectation values, uncertainties and uncertainty 
 !              relations to file from MPI_MASTER
 
-!               OPEN  ( UNIT = OUTPUT_UNIT , FILE = 'gpse.out' , ACCESS = 'SEQUENTIAL' , ACTION = 'WRITE' , FORM = 'FORMATTED' , POSITION = 'APPEND' , STATUS = 'UNKNOWN' )
                WRITE ( UNIT = OUTPUT_UNIT , FMT = 900 ) tN , l2Norm , avgE   , avgL2  , avgMu , avgTx  , avgTy  , avgTz  , avgVex , avgVmf , &
                   &               avgX   , avgX2  , avgX2COM , sigX   , avgPx  , avgPx2 , sigPx  , sigX * sigPx , &
                   &               avgY   , avgY2  , avgY2COM , sigY   , avgPy  , avgPy2 , sigPy  , sigY * sigPy , &
@@ -764,32 +779,70 @@
                   &               sigLx * sigLy , sigLy * sigLz , sigLz * sigLx ,                                 &
                   &               avgFx  , avgFy , avgFz ,                                                        &
                   &               avgTauX , avgTauXCOM , avgTauY , avgTauYCOM , avgTauZ , avgTauZCOM
-!               CLOSE ( UNIT = OUTPUT_UNIT , STATUS = 'KEEP' )
-                 
 
             END IF
 
-            IF ( fullIO .EQV. .TRUE. ) THEN ! gather external potential and wave function from all MPI processes to MPI_MASTER
+            IF ( psiOutput > 0 ) THEN
 
-               CALL mpi_gather_custom ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f , Psi3a , Psi3f )
+               CALL mpi_gather_cmplx3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3a , Psi3f )
+               IF ( mpiRank == MPI_MASTER ) THEN
 
-               IF ( mpiRank == MPI_MASTER ) THEN ! write external potential and wave function to file from MPI_MASTER
+                  IF ( psiOutput == 1 ) THEN
 
-                  fileNumber = fileNumber + 1
-!                  IF ( fmtIO == 1 ) THEN
+                     CALL io_write_bin_cmplx3 ( 'psi' , psiFileNo , Psi3f ) ! chkpting the wave function
 
-                    CALL io_write_vtk ( 'psivex-' , fileNumber , nX , nY , nZ , Xf , Yf , Zf , Vex3f , Psi3f )
+                  ELSE IF ( psiOutput == 2 ) THEN
 
-!                  ELSE
+                     CALL io_write_vtk_cmplx3 ( 'psi' , psiFileNo , nX , nY , nZ , Xf , Yf , Zf , Psi3f )
 
-                     ! fmt not supported yet
-
-!                  END IF
-                  CALL io_write_bin ( 'psi' , Psi3f ) ! checkpointing wave function in binary formatted file
+                  END IF
 
                END IF
+               psiFileNo = psiFileNo + 1
 
             END IF
+
+            IF ( vexOutput > 0 ) THEN
+
+               CALL mpi_gather_real3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f )
+               IF ( mpiRank == MPI_MASTER ) THEN
+
+                  IF ( vexOutput == 1 ) THEN
+
+                     CALL io_write_bin_real3 ( 'vex' , vexFileNo , Vex3f ) ! chkpting the external potential
+
+                  ELSE IF ( vexOutput == 2 ) THEN
+
+                     CALL io_write_vtk_real3 ( 'vex' , vexFileNo , nX , nY , nZ , Xf , Yf , Zf , Vex3f )
+
+                  END IF 
+
+               END IF
+               vexFileNo = vexFileNo + 1
+
+            END IF
+
+!            IF ( fullIO .EQV. .TRUE. ) THEN ! gather external potential and wave function from all MPI processes to MPI_MASTER
+!
+!               CALL mpi_gather_custom ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f , Psi3a , Psi3f )
+!
+!               IF ( mpiRank == MPI_MASTER ) THEN ! write external potential and wave function to file from MPI_MASTER
+!
+!                  fileNumber = fileNumber + 1
+!                  IF ( fmtIO == 1 ) THEN
+!
+!                    CALL io_write_vtk ( 'psivex-' , fileNumber , nX , nY , nZ , Xf , Yf , Zf , Vex3f , Psi3f )
+!
+!                  ELSE
+!
+!                     ! fmt not supported yet
+!
+!                  END IF
+!                  CALL io_write_bin ( 'psi' , Psi3f ) ! checkpointing wave function in binary formatted file
+!
+!               END IF
+!
+!           END IF
 
          END IF
 
@@ -1038,8 +1091,6 @@
             INTEGER, INTENT ( INOUT ) :: mpiError
 
             CALL MPI_BCAST ( itpOn     , 1 , MPI_LOGICAL , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( fullIO    , 1 , MPI_LOGICAL , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( readPsi   , 1 , MPI_LOGICAL , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( rk4Lambda , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( fdOrder   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( quadRule  , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
@@ -1064,7 +1115,10 @@
             CALL MPI_BCAST ( wZ        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( gS        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
 
-            CALL MPI_BCAST ( initPsi   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiInput  , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiOutput , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiFileNo , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( psiInit   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( nXpsi     , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( nYpsi     , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( nZpsi     , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
@@ -1081,7 +1135,10 @@
             CALL MPI_BCAST ( pYpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( pZpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
 
-            CALL MPI_BCAST ( initVex   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( vexInput  , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( vexOutput , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( vexFileNo , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( vexInit   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( xOvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( yOvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( zOvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
@@ -1095,6 +1152,185 @@
             CALL MPI_BCAST ( wRvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
 
             RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE mpi_gather_real3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Real3p , Real3f )
+
+         IMPLICIT NONE
+
+         INTEGER, INTENT ( IN ) :: nX
+         INTEGER, INTENT ( IN ) :: nXa
+         INTEGER, INTENT ( IN ) :: nXb
+         INTEGER, INTENT ( IN ) :: nXbc 
+         INTEGER, INTENT ( IN ) :: nY 
+         INTEGER, INTENT ( IN ) :: nYa
+         INTEGER, INTENT ( IN ) :: nYb
+         INTEGER, INTENT ( IN ) :: nYbc 
+         INTEGER, INTENT ( IN ) :: nZ 
+         INTEGER, INTENT ( IN ) :: nZa
+         INTEGER, INTENT ( IN ) :: nZb
+         INTEGER, INTENT ( IN ) :: nZbc
+
+         REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Real3p
+         REAL, DIMENSION ( 1 : nX , 1 : nY , 1 : nZ ), INTENT ( INOUT ) :: Real3f
+
+         INTEGER :: mpiSource
+         INTEGER :: nZaSource
+         INTEGER :: nZbSource
+         INTEGER :: j , k , l
+
+         IF ( mpiRank == MPI_MASTER ) THEN ! receive external potential and wave function data from all MPI processes
+
+!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
+            DO l = nZa , nZb
+
+!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
+               DO k = nYa , nYb
+
+                  DO j = nXa , nXb
+
+                     Real3f ( j , k , l ) = Real3p ( j , k , l )
+
+                  END DO
+
+               END DO
+!$OMP          END PARALLEL DO
+
+            END DO
+!$OMP       END PARALLEL DO
+
+            DO mpiSource = 1 , mpiProcesses - 1
+
+               CALL MPI_RECV ( nZaSource , 1 , mpiInt , mpiSource , 0 , MPI_COMM_WORLD , MPIStatus , mpiError )
+               CALL MPI_RECV ( nZbSource , 1 , mpiInt , mpiSource , 1 , MPI_COMM_WORLD , MPIStatus , mpiError )
+               DO l = nZaSource , nZbSource
+
+                  DO k = 1 , nY
+
+                     DO j = 1 , nX
+
+                        CALL MPI_RECV ( Real3f ( j , k , l ) , 1 , mpiReal , mpiSource , 2 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+                     END DO
+
+                  END DO
+
+               END DO
+
+            END DO
+
+         ELSE ! send real-valued, three-dimensional array data to MPI_MASTER
+
+            CALL MPI_SSEND ( nZa , 1 , mpiInt , MPI_MASTER , 0 , MPI_COMM_WORLD , mpiError )
+            CALL MPI_SSEND ( nZb , 1 , mpiInt , MPI_MASTER , 1 , MPI_COMM_WORLD , mpiError )
+            DO l = nZa , nZb
+
+               DO k = 1 , nY
+
+                  DO j = 1 , nY
+
+                     CALL MPI_SSEND ( Real3p ( j , k , l ) , 1 , mpiReal , MPI_MASTER , 2 , MPI_COMM_WORLD , mpiError )
+
+                  END DO
+
+               END DO
+
+            END DO
+
+         END IF
+
+         RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE mpi_gather_cmplx3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Cmplx3p , Cmplx3f )
+
+         IMPLICIT NONE
+
+         INTEGER, INTENT ( IN ) :: nX
+         INTEGER, INTENT ( IN ) :: nXa
+         INTEGER, INTENT ( IN ) :: nXb
+         INTEGER, INTENT ( IN ) :: nXbc
+         INTEGER, INTENT ( IN ) :: nY
+         INTEGER, INTENT ( IN ) :: nYa
+         INTEGER, INTENT ( IN ) :: nYb
+         INTEGER, INTENT ( IN ) :: nYbc
+         INTEGER, INTENT ( IN ) :: nZ
+         INTEGER, INTENT ( IN ) :: nZa
+         INTEGER, INTENT ( IN ) :: nZb
+         INTEGER, INTENT ( IN ) :: nZbc
+
+         COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Cmplx3p
+         COMPLEX, DIMENSION ( 1 : nX , 1 : nY , 1 : nZ ), INTENT ( INOUT ) :: Cmplx3f
+
+         INTEGER :: mpiSource
+         INTEGER :: nZaSource
+         INTEGER :: nZbSource
+         INTEGER :: j , k , l
+
+         IF ( mpiRank == MPI_MASTER ) THEN ! receive complex-valued, three-dimensional array data from all MPI processes
+
+!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
+            DO l = nZa , nZb
+
+!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
+               DO k = nYa , nYb
+
+                  DO j = nXa , nXb
+
+                     Cmplx3f ( j , k , l ) = Cmplx3p ( j , k , l )
+
+                  END DO
+
+               END DO
+!$OMP          END PARALLEL DO
+
+            END DO
+!$OMP       END PARALLEL DO
+            DO mpiSource = 1 , mpiProcesses - 1
+
+               CALL MPI_RECV ( nZaSource , 1 , mpiInt , mpiSource , 0 , MPI_COMM_WORLD , MPIStatus , mpiError )
+               CALL MPI_RECV ( nZbSource , 1 , mpiInt , mpiSource , 1 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+               DO l = nZaSource , nZbSource
+
+                  DO k = 1 , nY
+
+                     DO j = 1 , nX
+
+                        CALL MPI_RECV ( Cmplx3f ( j , k , l ) , 1 , mpiCmplx , mpiSource , 2 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+                     END DO
+
+                  END DO
+
+               END DO
+
+            END DO
+
+         ELSE ! send complex-valued, three-dimensional array data to MPI_MASTER
+
+            CALL MPI_SSEND ( nZa , 1 , mpiInt , MPI_MASTER , 0 , MPI_COMM_WORLD , mpiError )
+            CALL MPI_SSEND ( nZb , 1 , mpiInt , MPI_MASTER , 1 , MPI_COMM_WORLD , mpiError )
+
+            DO l = nZa , nZb
+
+               DO k = 1 , nY
+
+                  DO j = 1 , nY
+
+                     CALL MPI_SSEND ( Cmplx3p ( j , k , l ) , 1 , mpiCmplx , MPI_MASTER , 2 , MPI_COMM_WORLD , mpiError )
+
+                  END DO
+
+               END DO
+
+            END DO
+
+         END IF
+
+         RETURN
 
          END SUBROUTINE
 
@@ -1192,6 +1428,184 @@
             END IF 
 
             RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE mpi_scatter_real3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Real3p , Real3f )
+
+         IMPLICIT NONE
+
+         INTEGER, INTENT ( IN ) :: nX
+         INTEGER, INTENT ( IN ) :: nXa
+         INTEGER, INTENT ( IN ) :: nXb
+         INTEGER, INTENT ( IN ) :: nXbc
+         INTEGER, INTENT ( IN ) :: nY
+         INTEGER, INTENT ( IN ) :: nYa
+         INTEGER, INTENT ( IN ) :: nYb
+         INTEGER, INTENT ( IN ) :: nYbc
+         INTEGER, INTENT ( IN ) :: nZ
+         INTEGER, INTENT ( IN ) :: nZa
+         INTEGER, INTENT ( IN ) :: nZb
+         INTEGER, INTENT ( IN ) :: nZbc
+
+         REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Real3p
+         REAL, DIMENSION ( 1 : nX , 1 : nY , 1 : nZ ), INTENT ( IN ) :: Real3f
+
+         INTEGER :: mpiDest
+         INTEGER :: nZaDest
+         INTEGER :: nZbDest
+         INTEGER :: j , k , l
+
+         IF ( mpiRank == MPI_MASTER ) THEN ! send real-valued, three-dimensional array data to all MPI processes
+
+!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
+            DO l = nZa , nZb
+
+!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
+               DO k = nYa , nYb
+
+                  DO j = nXa , nXb
+
+                     Real3p ( j , k , l ) = Real3f ( j , k , l )
+
+                  END DO
+
+               END DO
+!$OMP          END PARALLEL DO 
+
+            END DO
+!$OMP       END PARALLEL DO
+            DO mpiDest = 1 , mpiProcesses - 1
+
+               CALL MPI_RECV ( nZaDest , 1 , mpiInt , mpiDest , 0 , MPI_COMM_WORLD , MPIStatus , mpiError )
+               CALL MPI_RECV ( nZbDest , 1 , mpiInt , mpiDest , 1 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+               DO l = nZaDest , nZbDest
+
+                  DO k = 1 , nY
+
+                     DO j = 1 , nX
+
+                        CALL MPI_SSEND ( Real3f ( j , k , l ) , 1 , mpiReal , mpiDest , 2 , MPI_COMM_WORLD , mpiError )
+
+                     END DO
+
+                  END DO
+
+               END DO
+
+            END DO
+
+         ELSE ! receive real-valued, three-dimensional array data from MPI_MASTER
+
+            CALL MPI_SSEND ( nZa , 1 , mpiInt , MPI_MASTER , 0 , MPI_COMM_WORLD , mpiError )
+            CALL MPI_SSEND ( nZb , 1 , mpiInt , MPI_MASTER , 1 , MPI_COMM_WORLD , mpiError )
+            DO l = nZa , nZb
+
+               DO k = 1 , nY
+
+                  DO j = 1 , nY
+
+                     CALL MPI_RECV ( Real3p ( j , k , l ) , 1 , mpiReal , MPI_MASTER , 2 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+                  END DO
+
+               END DO
+
+            END DO
+
+         END IF
+
+         RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE mpi_scatter_cmplx3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Cmplx3p , Cmplx3f )
+
+         IMPLICIT NONE
+
+         INTEGER, INTENT ( IN ) :: nX
+         INTEGER, INTENT ( IN ) :: nXa
+         INTEGER, INTENT ( IN ) :: nXb
+         INTEGER, INTENT ( IN ) :: nXbc
+         INTEGER, INTENT ( IN ) :: nY
+         INTEGER, INTENT ( IN ) :: nYa
+         INTEGER, INTENT ( IN ) :: nYb
+         INTEGER, INTENT ( IN ) :: nYbc
+         INTEGER, INTENT ( IN ) :: nZ
+         INTEGER, INTENT ( IN ) :: nZa
+         INTEGER, INTENT ( IN ) :: nZb
+         INTEGER, INTENT ( IN ) :: nZbc
+
+         COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Cmplx3p
+         COMPLEX, DIMENSION ( 1 : nX , 1 : nY , 1 : nZ ), INTENT ( IN ) :: Cmplx3f
+
+         INTEGER :: mpiDest
+         INTEGER :: nZaDest
+         INTEGER :: nZbDest
+         INTEGER :: j , k , l
+
+         IF ( mpiRank == MPI_MASTER ) THEN ! send complex-valued, three-dimensional array data to all MPI processes
+
+!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
+            DO l = nZa , nZb
+
+!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
+               DO k = nYa , nYb
+
+                  DO j = nXa , nXb
+
+                     Cmplx3p ( j , k , l ) = Cmplx3f ( j , k , l )
+
+                  END DO
+
+               END DO
+!$OMP          END PARALLEL DO 
+
+            END DO
+!$OMP       END PARALLEL DO
+            DO mpiDest = 1 , mpiProcesses - 1
+
+               CALL MPI_RECV ( nZaDest , 1 , mpiInt , mpiDest , 0 , MPI_COMM_WORLD , MPIStatus , mpiError )
+               CALL MPI_RECV ( nZbDest , 1 , mpiInt , mpiDest , 1 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+               DO l = nZaDest , nZbDest
+
+                  DO k = 1 , nY
+
+                     DO j = 1 , nX
+
+                        CALL MPI_SSEND ( Cmplx3f ( j , k , l ) , 1 , mpiCmplx , mpiDest , 2 , MPI_COMM_WORLD , mpiError )
+
+                     END DO
+
+                  END DO
+
+               END DO
+
+            END DO
+
+         ELSE ! receive complex-valued, three-dimensional array data from MPI_MASTER
+
+            CALL MPI_SSEND ( nZa , 1 , mpiInt , MPI_MASTER , 0 , MPI_COMM_WORLD , mpiError )
+            CALL MPI_SSEND ( nZb , 1 , mpiInt , MPI_MASTER , 1 , MPI_COMM_WORLD , mpiError )
+            DO l = nZa , nZb
+
+               DO k = 1 , nY
+
+                  DO j = 1 , nY
+
+                     CALL MPI_RECV ( Cmplx3p ( j , k , l ) , 1 , mpiCmplx , MPI_MASTER , 2 , MPI_COMM_WORLD , MPIStatus , mpiError )
+
+                  END DO
+
+               END DO
+
+            END DO
+
+         END IF
+
+         RETURN
 
          END SUBROUTINE
 

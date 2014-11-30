@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, November 22nd, 2014
+!     Saturday, November 29th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -42,6 +42,11 @@
       IMPLICIT NONE
       PRIVATE
 
+      INTEGER, PUBLIC :: vexInput  = -1
+      INTEGER, PUBLIC :: vexOutput = -1
+      INTEGER, PUBLIC :: vexFileNo = -1
+      INTEGER, PUBLIC :: vexInit = -1
+
       PUBLIC :: vex_init
 
       PUBLIC :: vex_3d_lin
@@ -50,11 +55,11 @@
 
       CONTAINS
 
-         SUBROUTINE vex_init ( initVex , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , rO , fX , fY , fZ , wX , wY , wZ , wR , X , Y , Z , Vex3 )
+         SUBROUTINE vex_init ( vexInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , rO , fX , fY , fZ , wX , wY , wZ , wR , X , Y , Z , Vex3 )
 
             IMPLICIT NONE
 
-            INTEGER, INTENT ( IN ) :: initVex
+            INTEGER, INTENT ( IN ) :: vexInit
             INTEGER, INTENT ( IN ) :: nXa 
             INTEGER, INTENT ( IN ) :: nXb 
             INTEGER, INTENT ( IN ) :: nXbc
@@ -82,21 +87,21 @@
             REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
             REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Vex3
 
-            IF ( initVex == 0 ) THEN 
+            IF ( vexInit == 0 ) THEN 
 
                CALL vex_3d_lin ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , fX , fY , fZ , X , Y , Z , Vex3 )
 
-            ELSE IF ( initVex == 1 ) THEN 
+            ELSE IF ( vexInit == 1 ) THEN 
 
                CALL vex_3d_sho ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , wX , wY , wZ , X , Y , Z , Vex3 )
 
-            ELSE IF ( initVex == 2 ) THEN 
+            ELSE IF ( vexInit == 2 ) THEN 
 
                CALL vex_3d_shor ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , rO , wR , wZ , X , Y , Z , Vex3 )
 
             ELSE 
 
-               WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : vex : vex_init : ERROR - initVex not supported.'
+               WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : vex : vex_init : ERROR - vexInit not supported.'
 
             END IF
 

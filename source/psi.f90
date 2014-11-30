@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, November 22nd, 2014
+!     Saturday, November 29th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -43,6 +43,25 @@
       IMPLICIT NONE
       PRIVATE
 
+      INTEGER, PUBLIC :: psiInput  = -1
+      INTEGER, PUBLIC :: psiOutput = -1
+      INTEGER, PUBLIC :: psiFileNo = -1
+      INTEGER, PUBLIC :: psiInit   = -1
+!      INTEGER, PRIVATE :: nX        = -1
+!      INTEGER, PRIVATE :: nY        = -1
+!      INTEGER, PRIVATE :: nZ        = -1
+!      INTEGER, PRIVATE :: nR        = -1
+!      INTEGER, PRIVATE :: mL        = -1
+!
+!      REAL, PRIVATE :: xO = 0.0
+!      REAL, PRIVATE :: yO = 0.0
+!      REAL, PRIVATE :: zO = 0.0
+!      REAL, PRIVATE :: rO = 0.0
+!      REAL, PRIVATE :: wX = 0.0
+!      REAL, PRIVATE :: wY = 0.0
+!      REAL, PRIVATE :: wZ = 0.0
+!      REAL, PRIVATE :: wR = 0.0
+
       PUBLIC :: psi_init
       PUBLIC :: psi_normalize
       PUBLIC :: psi_boost
@@ -53,11 +72,11 @@
 
       CONTAINS
 
-         SUBROUTINE psi_init ( initPsi , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nX , nY , nZ , nR , mL , xO , yO , zO , wX , wY , wZ , wR , X , Y , Z , Psi3 )
+         SUBROUTINE psi_init ( psiInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nX , nY , nZ , nR , mL , xO , yO , zO , wX , wY , wZ , wR , X , Y , Z , Psi3 )
 
             IMPLICIT NONE
 
-            INTEGER, INTENT ( IN ) :: initPsi
+            INTEGER, INTENT ( IN ) :: psiInit
             INTEGER, INTENT ( IN ) :: nXa 
             INTEGER, INTENT ( IN ) :: nXb 
             INTEGER, INTENT ( IN ) :: nXbc
@@ -87,21 +106,22 @@
 
             COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Psi3
 
-            IF ( initPsi == 0 ) THEN
+            IF ( psiInit == 0 ) THEN
 
                ! ?
 
-            ELSE IF ( initPsi == 1 ) THEN 
+            ELSE IF ( psiInit == 1 ) THEN 
 
                CALL psi_3d_se_sho_ani ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nX , nY , nZ , xO , yO , zO , wX , wY , wZ , X , Y , Z , Psi3 )
 
-            ELSE IF ( initPsi == 2 ) THEN 
+            ELSE IF ( psiInit == 2 ) THEN 
 
                CALL psi_3d_se_sho_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nR , mL , nZ , xO , yO , zO , wR , wZ , X , Y , Z , Psi3 )
 
             ELSE 
 
-               WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : psi : psi_init : ERROR - initPsi not supported.'
+               WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : psi : psi_init : ERROR - psiInit not supported.'
+               STOP
 
             END IF
 
