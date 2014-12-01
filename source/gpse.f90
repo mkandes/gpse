@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, November 29th, 2014
+!     Sunday, November 30th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -55,8 +55,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.4'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, November 29th, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.5'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Sunday, November 30th, 2014'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -418,36 +418,73 @@
 
       END IF
 
-!      IF ( readPsi .EQV. .TRUE. ) THEN ! read initial wave function from file on MPI_MASTER and scatter to MPI processes
-!
-!         IF ( mpiRank == MPI_MASTER ) THEN 
-!
-!            IF ( fmtIO == 0 ) THEN
-!
-!               CALL io_read_bin ( 'psi' , Psi3f )
-!
-!            ELSE IF ( fmtIO == 1 ) THEN
-!
-!               CALL io_read_vtk ( 'psivex-' , 9999 , nX , nY , nZ , Xf , Yf , Zf , Vex3f , RePsi3f , ImPsi3f , Psi3f )
-!
-!            ELSE
-!
-!               ! fmt not supported
-!
-!            END IF
-!
-!         END IF
-!         CALL mpi_scatter_custom ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f , Psi3a , Psi3f )
-!
-!      ELSE ! compute initial wave function across all MPI processes
+      IF ( psiInput == 0 ) THEN
 
          CALL psi_init ( psiInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , wXpsi , wYpsi , wZpsi , wRpsi , Xp , Yp , Zp , Psi3a )
-         CALL psi_boost ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOpsi , yOpsi , zOpsi , pXpsi , pYpsi , pZpsi , Xp , Yp , Zp , Psi3a )
 
-!      END IF
+      ELSE IF ( psiInput == 1 ) THEN
+
+         IF ( mpiRank == MPI_MASTER ) THEN
+
+            CALL io_read_bin_cmplx3 ( 'psi' , psiFileNo , Psi3f )
+
+         END IF
+         CALL mpi_scatter_cmplx3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3a , Psi3f )
+
+      ELSE IF ( psiInput == 2 ) THEN
+
+         IF ( mpiRank == MPI_MASTER ) THEN
+
+            CALL io_read_vtk_cmplx3 ( 'psi' , psiFileNo , nX , nY , nZ , Xf , Yf , Zf , Psi3f ) ! need mpi_scatter_real1
+
+         END IF
+         CALL mpi_scatter_cmplx3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3a , Psi3f )
+
+      ELSE
+
+         IF ( mpiRank == MPI_MASTER ) THEN
+
+            WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : ERROR - psiInput not reognized.'
+            STOP
+
+         END IF
+
+      END IF
       CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3a )
+      CALL psi_boost ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOpsi , yOpsi , zOpsi , pXpsi , pYpsi , pZpsi , Xp , Yp , Zp , Psi3a )
 
-      CALL vex_init ( vexInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex , Xp , Yp , Zp , Vex3p ) ! compute initial external potential
+      IF ( vexInput == 0 ) THEN
+
+         CALL vex_init ( vexInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex , Xp , Yp , Zp , Vex3p ) ! compute initial external potential
+
+      ELSE IF ( vexInput == 1 ) THEN
+
+         IF ( mpiRank == MPI_MASTER ) THEN 
+
+            CALL io_read_bin_real3 ( 'vex' , vexFileNo , Vex3f )
+
+         END IF
+         CALL mpi_scatter_real3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f )
+
+      ELSE IF ( vexInput == 2 ) THEN
+
+         IF ( mpiRank == MPI_MASTER ) THEN
+
+            CALL io_read_vtk_real3 ( 'vex' , vexFileNo , nX , nY , nZ , Xf , Yf , Zf , Vex3f )
+
+         END IF
+         CALL mpi_scatter_real3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f )
+
+      ELSE
+
+         IF ( mpiRank == MPI_MASTER ) THEN
+
+            WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : ERROR - vexInput not recognized.'
+            STOP
+
+         END IF 
+
+      END IF
 
       psiFileNo = 1000
       vexFileNo = 1000
@@ -821,28 +858,6 @@
                vexFileNo = vexFileNo + 1
 
             END IF
-
-!            IF ( fullIO .EQV. .TRUE. ) THEN ! gather external potential and wave function from all MPI processes to MPI_MASTER
-!
-!               CALL mpi_gather_custom ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f , Psi3a , Psi3f )
-!
-!               IF ( mpiRank == MPI_MASTER ) THEN ! write external potential and wave function to file from MPI_MASTER
-!
-!                  fileNumber = fileNumber + 1
-!                  IF ( fmtIO == 1 ) THEN
-!
-!                    CALL io_write_vtk ( 'psivex-' , fileNumber , nX , nY , nZ , Xf , Yf , Zf , Vex3f , Psi3f )
-!
-!                  ELSE
-!
-!                     ! fmt not supported yet
-!
-!                  END IF
-!                  CALL io_write_bin ( 'psi' , Psi3f ) ! checkpointing wave function in binary formatted file
-!
-!               END IF
-!
-!           END IF
 
          END IF
 
@@ -1334,103 +1349,6 @@
 
          END SUBROUTINE
 
-         SUBROUTINE mpi_gather_custom ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f , Psi3p , Psi3f )
-
-            IMPLICIT NONE
-
-            INTEGER, INTENT ( IN ) :: nX
-            INTEGER, INTENT ( IN ) :: nXa
-            INTEGER, INTENT ( IN ) :: nXb
-            INTEGER, INTENT ( IN ) :: nXbc
-            INTEGER, INTENT ( IN ) :: nY 
-            INTEGER, INTENT ( IN ) :: nYa
-            INTEGER, INTENT ( IN ) :: nYb
-            INTEGER, INTENT ( IN ) :: nYbc
-            INTEGER, INTENT ( IN ) :: nZ 
-            INTEGER, INTENT ( IN ) :: nZa
-            INTEGER, INTENT ( IN ) :: nZb
-            INTEGER, INTENT ( IN ) :: nZbc 
-
-            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex3p
-            REAL, DIMENSION ( 1 : nX , 1 : nY , 1 : nZ ), INTENT ( INOUT ) :: Vex3f
-
-            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3p
-            COMPLEX, DIMENSION ( 1 : nX , 1 : nY , 1 : nZ ), INTENT ( INOUT ) :: Psi3f
-
-            INTEGER :: mpiSource
-            INTEGER :: nZaSource
-            INTEGER :: nZbSource
-            INTEGER :: j , k , l
-
-            IF ( mpiRank == MPI_MASTER ) THEN ! receive external potential and wave function data from all MPI processes
-
-!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-               DO l = nZa , nZb
-
-!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-                  DO k = nYa , nYb
-
-                     DO j = nXa , nXb
-
-                        Vex3f ( j , k , l ) = Vex3p ( j , k , l )
-                        Psi3f ( j , k , l ) = Psi3p ( j , k , l ) 
-
-                     END DO 
-
-                  END DO
-!$OMP             END PARALLEL DO
-
-               END DO 
-!$OMP          END PARALLEL DO
-
-               DO mpiSource = 1 , mpiProcesses - 1
-
-                  CALL MPI_RECV ( nZaSource , 1 , mpiInt , mpiSource , 0 , MPI_COMM_WORLD , MPIStatus , mpiError )
-                  CALL MPI_RECV ( nZbSource , 1 , mpiInt , mpiSource , 1 , MPI_COMM_WORLD , MPIStatus , mpiError )
-                  
-                  DO l = nZaSource , nZbSource
-
-                     DO k = 1 , nY
-
-                        DO j = 1 , nX
-
-                           CALL MPI_RECV ( Vex3f ( j , k , l ) , 1 , mpiCmplx , mpiSource , 2 , MPI_COMM_WORLD , MPIStatus , mpiError )
-                           CALL MPI_RECV ( Psi3f ( j , k , l ) , 1 , mpiCmplx , mpiSource , 3 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-                        END DO
-
-                     END DO
-
-                  END DO
-
-               END DO
-
-            ELSE ! send external potential and wave function data to MPI_MASTER
-
-               CALL MPI_SSEND ( nZa , 1 , mpiInt , MPI_MASTER , 0 , MPI_COMM_WORLD , mpiError )
-               CALL MPI_SSEND ( nZb , 1 , mpiInt , MPI_MASTER , 1 , MPI_COMM_WORLD , mpiError )
-
-               DO l = nZa , nZb
-
-                  DO k = 1 , nY
-
-                     DO j = 1 , nY
-   
-                        CALL MPI_SSEND ( Vex3p ( j , k , l ) , 1 , mpiCmplx , MPI_MASTER , 2 , MPI_COMM_WORLD , mpiError )
-                        CALL MPI_SSEND ( Psi3p ( j , k , l ) , 1 , mpiCmplx , MPI_MASTER , 3 , MPI_COMM_WORLD , mpiError )
-
-                     END DO
-
-                  END DO
-
-               END DO
-
-            END IF 
-
-            RETURN
-
-         END SUBROUTINE
-
          SUBROUTINE mpi_scatter_real3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Real3p , Real3f )
 
          IMPLICIT NONE
@@ -1606,100 +1524,6 @@
          END IF
 
          RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE mpi_scatter_custom ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f , Psi3p , Psi3f )
-
-            IMPLICIT NONE
-
-            INTEGER, INTENT ( IN ) :: nX
-            INTEGER, INTENT ( IN ) :: nXa
-            INTEGER, INTENT ( IN ) :: nXb
-            INTEGER, INTENT ( IN ) :: nXbc
-            INTEGER, INTENT ( IN ) :: nY
-            INTEGER, INTENT ( IN ) :: nYa
-            INTEGER, INTENT ( IN ) :: nYb
-            INTEGER, INTENT ( IN ) :: nYbc
-            INTEGER, INTENT ( IN ) :: nZ
-            INTEGER, INTENT ( IN ) :: nZa
-            INTEGER, INTENT ( IN ) :: nZb
-            INTEGER, INTENT ( IN ) :: nZbc
-
-            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Vex3p
-            REAL, DIMENSION ( 1 : nX , 1 : nY , 1 : nZ ), INTENT ( IN ) :: Vex3f
-
-            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Psi3p
-            COMPLEX, DIMENSION ( 1 : nX , 1 : nY , 1 : nZ ), INTENT ( IN ) :: Psi3f
-
-            INTEGER :: mpiDest
-            INTEGER :: nZaDest
-            INTEGER :: nZbDest
-            INTEGER :: j , k , l
-
-            IF ( mpiRank == MPI_MASTER ) THEN ! send wave function to all MPI processes
-
-!$OMP          PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-               DO l = nZa , nZb
-
-!$OMP             PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-                  DO k = nYa , nYb
-
-                     DO j = nXa , nXb
-
-                        Psi3p ( j , k , l ) = Psi3f ( j , k , l )
-
-                     END DO 
-
-                  END DO
-!$OMP             END PARALLEL DO 
-
-               END DO 
-!$OMP          END PARALLEL DO
-
-               DO mpiDest = 1 , mpiProcesses - 1
-
-                  CALL MPI_RECV ( nZaDest , 1 , mpiInt , mpiDest , 0 , MPI_COMM_WORLD , MPIStatus , mpiError )
-                  CALL MPI_RECV ( nZbDest , 1 , mpiInt , mpiDest , 1 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-                  DO l = nZaDest , nZbDest
-
-                     DO k = 1 , nY
-
-                        DO j = 1 , nX
-
-                           CALL MPI_SSEND ( Psi3f ( j , k , l ) , 1 , mpiCmplx , mpiDest , 2 , MPI_COMM_WORLD , mpiError )
-
-                        END DO
-
-                     END DO
-
-                  END DO
-
-               END DO
-
-            ELSE ! receive wave function from MPI_MASTER
-
-               CALL MPI_SSEND ( nZa , 1 , mpiInt , MPI_MASTER , 0 , MPI_COMM_WORLD , mpiError )
-               CALL MPI_SSEND ( nZb , 1 , mpiInt , MPI_MASTER , 1 , MPI_COMM_WORLD , mpiError )
-
-               DO l = nZa , nZb
-
-                  DO k = 1 , nY
-
-                     DO j = 1 , nY
-
-                        CALL MPI_RECV ( Psi3p ( j , k , l ) , 1 , mpiCmplx , MPI_MASTER , 2 , MPI_COMM_WORLD , MPIStatus , mpiError )
-
-                     END DO
-
-                  END DO
-
-               END DO
-
-            END IF
-
-            RETURN
 
          END SUBROUTINE
 
