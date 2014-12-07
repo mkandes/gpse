@@ -46,6 +46,7 @@
       INTEGER, PUBLIC :: psiInput  = -1
       INTEGER, PUBLIC :: psiOutput = -1
       INTEGER, PUBLIC :: psiFileNo = -1
+      INTEGER, PUBLIC :: psiFilePos = -1
       INTEGER, PUBLIC :: psiInit   = -1
 !      INTEGER, PRIVATE :: nX        = -1
 !      INTEGER, PRIVATE :: nY        = -1

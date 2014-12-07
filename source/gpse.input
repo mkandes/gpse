@@ -7,7 +7,7 @@
    nX        = 128       ! Number of grid points along the x-axis
    nY        = 128       ! Number of grid points along the y-axis
    nZ        = 128        ! Number of grid points along the z-axis
-   t0        = 10.0       ! Time at the beginning of the simulation
+   t0        = 0.0       ! Time at the beginning of the simulation
    xO        = 0.0       ! X-coordinate of the centre of the grid
    yO        = 0.0       ! Y-coordinate of the centre of the grid
    zO        = 0.0       ! Z-coordinate of the centre of the grid
@@ -17,17 +17,17 @@
    dZ        = 0.125      ! Distance between grid points along the z-axis
    wX        = 0.0       ! X-component of the rotating reference frame's angular velocity vector
    wY        = 0.0       ! Y-component of the rotating reference frame's angular velocity vector
-   wZ        = 0.0       ! Z-component of the rotating reference frame's angular velocity vector
-   gS        = 100.0       ! Nonlinear atom-atom interaction coupling constant
-   psiInput  = 1         ! 0 = No input wave function; 1 = Read wave function from .bin file; 2 = Read wave function from .vtk file
-   psiOutput = 2         ! 0 = No output wave function; 1 = Checkpoint wave function to .bin file; 2 = Write wave function to .vtk file
+   wZ        = 0.1       ! Z-component of the rotating reference frame's angular velocity vector
+   gS        = 0.0       ! Nonlinear atom-atom interaction coupling constant
+   psiInput  = 3         ! 0 = No input wave function; 1 = Read wave function from .bin file; 2 = Read wave function from .vtk file
+   psiOutput = -1         ! 0 = No output wave function; 1 = Checkpoint wave function to .bin file; 2 = Write wave function to .vtk file
    psiFileNo = 500       ! Set psiFileNo to input wave function file number 
-   psiInit   = -2         ! 0 = Isotropic 3D SHO ; 1 = Anisotropic 3D SHO ; 2 = Axisymmetric 3D SHO
+   psiInit   = 2         ! 0 = Isotropic 3D SHO ; 1 = Anisotropic 3D SHO ; 2 = Axisymmetric 3D SHO
    nXpsi     = 0         ! Degree of Hermite polynomial used to define anisotropic SHO wave function along x-axis
    nYpsi     = 0         ! Degree of Hermite polynomial used to define anisotropic SHO wave function along y-axis
    nZpsi     = 0         ! Degree of Hermite polynomial used to define both anisotropic and axially-symmetric SHO wave functions along z-axis
    nRpsi     = 0         ! Degree of (associated) Laguerre polynomials used to define radial components of isotropic and axially-symmetric SHO wave functions
-   mLpsi     = 1         ! Projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
+   mLpsi     = 0         ! Projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
    xOpsi     = 0.0       ! X-coordinate of origin used to define initial wave function
    yOpsi     = 0.0       ! Y-coordinate of origin used to define initial wave function
    zOpsi     = 0.0       ! Z-coordinate of origin used to define initial wave function
@@ -38,10 +38,10 @@
    pXpsi     = 0.0       ! Initial linear momentum boost along x-axis
    pYpsi     = 0.0       ! Initial linear momentum boost along y-axis
    pZpsi     = 0.0       ! Initial linear momentum boost along z-axis
-   vexInput  = 1         !
-   vexOutput = 2         !
+   vexInput  = 0         !
+   vexOutput = 0         !
    vexFileNo = 501         !
-   vexInit   = -1         ! 0 =  Linear ; 1 = SHO ; 2 = SHOR
+   vexInit   = 1         ! 0 =  Linear ; 1 = SHO ; 2 = SHOR
    xOvex     = 0.0       !
    yOvex     = 0.0       !
    zOvex     = 0.0       !

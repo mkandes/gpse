@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, November 29th, 2014
+!     Saturday, December 6th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -42,6 +42,18 @@
       IMPLICIT NONE
       PRIVATE
 
+      INTEGER, PUBLIC :: ioByteSizeInt   = -1 
+      INTEGER, PUBLIC :: ioByteSizeReal  = -1
+      INTEGER, PUBLIC :: ioByteSizeCmplx = -1
+
+      PUBLIC :: io_get_byte_sizes
+
+      PUBLIC :: io_read_real3
+      PUBLIC :: io_read_cmplx3
+      PUBLIC :: io_write_real3
+      PUBLIC :: io_write_cmplx3
+      PUBLIC :: io_write_psi3
+
       PUBLIC :: io_read_bin_real3
       PUBLIC :: io_write_bin_real3
       PUBLIC :: io_read_bin_cmplx3
@@ -50,8 +62,166 @@
       PUBLIC :: io_write_vtk_real3
       PUBLIC :: io_read_vtk_cmplx3
       PUBLIC :: io_write_vtk_cmplx3
-
+                   
       CONTAINS
+
+         SUBROUTINE io_get_byte_sizes ( ioByteSizeInt, ioByteSizeReal , ioByteSizeCmplx )
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( INOUT ) :: ioByteSizeInt
+            INTEGER, INTENT ( INOUT ) :: ioByteSizeReal
+            INTEGER, INTENT ( INOUT ) :: ioByteSizeCmplx
+
+            ioByteSizeInt   = SIZEOF ( 0 )
+            ioByteSizeReal  = SIZEOF ( 0.0 )
+            ioByteSizeCmplx = SIZEOF ( CMPLX ( 0.0 , 0.0 ) )
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE io_read_real3 ( filePrefix , fileUnit , filePos , Real3 )
+
+            IMPLICIT NONE
+
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: filePrefix
+
+            INTEGER, INTENT ( IN    ) :: fileUnit
+            INTEGER, INTENT ( INOUT ) :: filePos
+
+            REAL, DIMENSION ( : , : , : ), INTENT ( INOUT ) :: Real3
+
+            CHARACTER ( LEN = 4 ) :: fileUnitChar
+
+            WRITE ( UNIT = fileUnitChar , FMT = '(I4.4)' ) fileUnit
+
+            OPEN ( UNIT = fileUnit , FILE = TRIM ( filePrefix//'-'//fileUnitChar//'.bin' ) , ACCESS = 'STREAM' , ACTION = 'READ' ,FORM = 'UNFORMATTED' , STATUS = 'UNKNOWN' )
+            READ ( UNIT = fileUnit , POS = filePos ) Real3
+            INQUIRE ( UNIT = fileUnit , POS = filePos )
+            CLOSE ( UNIT = fileUnit , STATUS = 'KEEP' )
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE io_read_cmplx3 ( filePrefix , fileUnit , filePos , Cmplx3 ) 
+
+            IMPLICIT NONE
+
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: filePrefix
+
+            INTEGER, INTENT ( IN    ) :: fileUnit
+            INTEGER, INTENT ( INOUT ) :: filePos
+
+            COMPLEX, DIMENSION ( : , : , : ), INTENT ( INOUT ) :: Cmplx3
+
+            CHARACTER ( LEN = 4 ) :: fileUnitChar
+
+            WRITE ( UNIT = fileUnitChar , FMT = '(I4.4)' ) fileUnit
+
+            OPEN ( UNIT = fileUnit , FILE = TRIM ( filePrefix//'-'//fileUnitChar//'.bin' ) , ACCESS = 'STREAM' , ACTION = 'READ' ,FORM = 'UNFORMATTED' , STATUS = 'UNKNOWN' )
+            READ ( UNIT = fileUnit , POS = filePos ) Cmplx3
+            INQUIRE ( UNIT = fileUnit , POS = filePos )
+            CLOSE ( UNIT = fileUnit , STATUS = 'KEEP' )
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE io_write_real3 ( filePrefix , fileUnit , filePos , Real3 ) 
+
+            IMPLICIT NONE
+
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: filePrefix
+
+            INTEGER, INTENT ( IN    ) :: fileUnit
+            INTEGER, INTENT ( INOUT ) :: filePos
+
+            REAL, DIMENSION ( : , : , : ), INTENT ( IN ) :: Real3
+
+            CHARACTER ( LEN = 4 ) :: fileUnitChar
+
+            WRITE ( UNIT = fileUnitChar , FMT = '(I4.4)' ) fileUnit
+
+            OPEN ( UNIT = fileUnit , FILE = TRIM ( filePrefix//'-'//fileUnitChar//'.bin' ) , ACCESS = 'STREAM' , ACTION = 'WRITE' ,FORM = 'UNFORMATTED' , STATUS = 'UNKNOWN' )
+            WRITE ( UNIT = fileUnit , POS = filePos ) Real3
+            INQUIRE ( UNIT = fileUnit , POS = filePos ) 
+            CLOSE ( UNIT = fileUnit , STATUS = 'KEEP' )
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE io_write_cmplx3 ( filePrefix , fileUnit , filePos , Cmplx3 ) 
+
+            IMPLICIT NONE
+
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: filePrefix
+
+            INTEGER, INTENT ( IN    ) :: fileUnit
+            INTEGER, INTENT ( INOUT ) :: filePos
+
+            COMPLEX, DIMENSION ( : , : , : ), INTENT ( IN ) :: Cmplx3
+
+            CHARACTER ( LEN = 4 ) :: fileUnitChar
+
+            WRITE ( UNIT = fileUnitChar , FMT = '(I4.4)' ) fileUnit
+
+            OPEN ( UNIT = fileUnit , FILE = TRIM ( filePrefix//'-'//fileUnitChar//'.bin' ) , ACCESS = 'STREAM' , ACTION = 'WRITE' ,FORM = 'UNFORMATTED' , STATUS = 'UNKNOWN' )
+            WRITE ( UNIT = fileUnit , POS = filePos ) Cmplx3
+            INQUIRE ( UNIT = fileUnit , POS = filePos ) 
+            CLOSE ( UNIT = fileUnit , STATUS = 'KEEP' )
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE io_write_psi3 ( fileUnit , filePosition , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN    ) :: fileUnit
+            INTEGER, INTENT ( INOUT ) :: filePosition
+            INTEGER, INTENT ( IN    ) :: nXa
+            INTEGER, INTENT ( IN    ) :: nXb
+            INTEGER, INTENT ( IN    ) :: nXbc 
+            INTEGER, INTENT ( IN    ) :: nYa
+            INTEGER, INTENT ( IN    ) :: nYb
+            INTEGER, INTENT ( IN    ) :: nYbc 
+            INTEGER, INTENT ( IN    ) :: nZa
+            INTEGER, INTENT ( IN    ) :: nZb
+            INTEGER, INTENT ( IN    ) :: nZbc 
+
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
+
+            CHARACTER ( LEN = 4 ) :: fileUnitChar
+
+            INTEGER :: j , k , l
+
+            WRITE ( UNIT = fileUnitChar , FMT = '(I4.4)' ) fileUnit
+            OPEN ( UNIT = fileUnit , FILE = TRIM ( 'psi-'//fileUnitChar//'.bin' ) , ACCESS = 'STREAM' , ACTION = 'WRITE' ,FORM = 'UNFORMATTED' , STATUS = 'UNKNOWN' )
+            
+               DO l = nZa , nZb
+
+                  DO k = nYa , nYb
+
+                     DO j = nXa , nXb
+
+                        WRITE ( UNIT = fileUnit , POS = filePosition ) Psi3 ( j , k , l )
+                        INQUIRE ( UNIT = fileUnit , POS = filePosition )
+
+                     END DO
+
+                  END DO
+
+               END DO
+
+            CLOSE ( UNIT = fileUnit , STATUS = 'KEEP' )
+
+            RETURN
+
+         END SUBROUTINE 
 
          SUBROUTINE io_read_bin_real3 ( fileName , fileUnit , Real3 )
 

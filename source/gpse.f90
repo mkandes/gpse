@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Sunday, November 30th, 2014
+!     Saturday, December 6th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -55,8 +55,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.5'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Sunday, November 30th, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.6'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, December 6th, 2014'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -102,7 +102,10 @@
       INTEGER :: mpiProcesses  = -1 
       INTEGER :: mpiProvided   = -1 
       INTEGER :: mpiRank       = -1
+      INTEGER :: mpiSource     = -1
+      INTEGER :: mpiDestination = -1
       INTEGER :: mpiReal       = -1 
+      INTEGER :: mpiFile       = -1
       INTEGER :: ompThreads    = -1 ! Number of threads in OpenMP PARALLEL regions 
       INTEGER :: ompThreadID   = -1 
       INTEGER :: fileNumber    = -1
@@ -440,6 +443,17 @@
          END IF
          CALL mpi_scatter_cmplx3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3a , Psi3f )
 
+      ELSE IF ( psiInput == 3 ) THEN 
+
+         IF ( mpiRank == MPI_MASTER ) THEN 
+
+            m = 1
+            CALL io_read_cmplx3 ( 'psi' , psiFileNo , m , Psi3f ) ! need mpi_scatter_real1
+
+         END IF
+         CALL mpi_scatter_cmplx3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3a , Psi3f )
+
+
       ELSE
 
          IF ( mpiRank == MPI_MASTER ) THEN
@@ -471,6 +485,16 @@
          IF ( mpiRank == MPI_MASTER ) THEN
 
             CALL io_read_vtk_real3 ( 'vex' , vexFileNo , nX , nY , nZ , Xf , Yf , Zf , Vex3f )
+
+         END IF
+         CALL mpi_scatter_real3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f )
+
+      ELSE IF ( vexInput == 3 ) THEN
+
+         IF ( mpiRank == MPI_MASTER ) THEN
+
+            m = 1
+            CALL io_read_real3 ( 'vex' , vexFileNo , m , Vex3f )
 
          END IF
          CALL mpi_scatter_real3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Vex3p , Vex3f )
@@ -832,9 +856,32 @@
 
                      CALL io_write_vtk_cmplx3 ( 'psi' , psiFileNo , nX , nY , nZ , Xf , Yf , Zf , Psi3f )
 
+                  ELSE IF ( psiOutput == 3 ) THEN
+
+                     m = 1 
+                     CALL io_write_cmplx3 ( 'psi' , psiFileNo , m , Psi3f )
+                     CALL io_get_byte_sizes ( ioByteSizeInt, ioByteSizeReal , ioByteSizeCmplx )
+                     WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) ioByteSizeInt, ioByteSizeReal , ioByteSizeCmplx
+
                   END IF
 
                END IF
+               psiFileNo = psiFileNo + 1
+
+            ELSE IF ( psiOutput == -1 ) THEN
+
+               Psi3b = Psi3a
+               psiFilePos = 1
+               DO mpiSource = 0 , mpiProcesses - 1
+
+                  CALL mpi_copy_cmplx3 ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+                  IF ( mpiRank == MPI_MASTER ) THEN
+
+                     CALL io_write_psi3 ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+
+                  END IF
+
+               END DO
                psiFileNo = psiFileNo + 1
 
             END IF
@@ -851,6 +898,11 @@
                   ELSE IF ( vexOutput == 2 ) THEN
 
                      CALL io_write_vtk_real3 ( 'vex' , vexFileNo , nX , nY , nZ , Xf , Yf , Zf , Vex3f )
+
+                  ELSE IF ( vexOutput == 3 ) THEN
+
+                     m = 1
+                     CALL io_write_real3 ( 'vex' , vexFileNo , m , Vex3f )
 
                   END IF 
 
@@ -1170,6 +1222,128 @@
 
          END SUBROUTINE
 
+         SUBROUTINE mpi_copy_real3 ( mpiRank , mpiSource , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Real3 ) 
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: mpiRank
+            INTEGER, INTENT ( IN ) :: mpiSource
+            INTEGER, INTENT ( IN ) :: mpiDestination
+            INTEGER, INTENT ( IN ) :: nXa
+            INTEGER, INTENT ( IN ) :: nXb
+            INTEGER, INTENT ( IN ) :: nXbc 
+            INTEGER, INTENT ( IN ) :: nYa
+            INTEGER, INTENT ( IN ) :: nYb
+            INTEGER, INTENT ( IN ) :: nYbc 
+            INTEGER, INTENT ( IN ) :: nZa
+            INTEGER, INTENT ( IN ) :: nZb
+            INTEGER, INTENT ( IN ) :: nZbc 
+
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Real3
+
+            INTEGER :: j , k , l
+
+            IF ( ( mpiRank == mpiDestination ) .AND. ( mpiRank /= mpiSource ) ) THEN
+
+               DO l = nZa , nZb
+
+                  DO k = nYa , nYb
+
+                     DO j = nXa , nXb
+
+                        CALL MPI_RECV ( Real3 ( j , k , l ) , 1 , mpiReal , mpiSource , mpiSource , MPI_COMM_WORLD , MPIstatus , mpiError )
+
+                     END DO ! possible alternative: no loop over j; call MPI_RECV ( Real3b ( nXa , nYa , l ) , nXb - nXa + 1 , mpiReal ... )
+
+                  END DO
+
+               END DO
+
+            ELSE IF ( ( mpiRank == mpiSource ) .AND. ( mpiRank /= mpiDestination ) ) THEN
+
+               DO l = nZa , nZb
+
+                  DO k = nYa , nYb
+
+                     DO j = nXa , nXb
+
+                        CALL MPI_SSEND ( Real3 ( j , k , l ) , 1 , mpiReal , mpiDestination , mpiRank , MPI_COMM_WORLD , mpiError )
+
+                     END DO ! possible alternative: no loop over j; call MPI_SSEND ( Real3a ( nXa , nYa , l ) , nXb - nXa + 1 , mpiReal ... )
+
+                  END DO
+
+               END DO
+
+            END IF
+
+            CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+
+            RETURN
+ 
+         END SUBROUTINE
+
+         SUBROUTINE mpi_copy_cmplx3 ( mpiRank , mpiSource , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Cmplx3 )
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: mpiRank
+            INTEGER, INTENT ( IN ) :: mpiSource
+            INTEGER, INTENT ( IN ) :: mpiDestination
+            INTEGER, INTENT ( IN ) :: nXa
+            INTEGER, INTENT ( IN ) :: nXb
+            INTEGER, INTENT ( IN ) :: nXbc 
+            INTEGER, INTENT ( IN ) :: nYa
+            INTEGER, INTENT ( IN ) :: nYb
+            INTEGER, INTENT ( IN ) :: nYbc 
+            INTEGER, INTENT ( IN ) :: nZa
+            INTEGER, INTENT ( IN ) :: nZb
+            INTEGER, INTENT ( IN ) :: nZbc 
+
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Cmplx3
+
+            INTEGER :: j , k , l
+
+            IF ( ( mpiRank == mpiDestination ) .AND. ( mpiRank /= mpiSource ) ) THEN
+
+               DO l = nZa , nZb
+
+                  DO k = nYa , nYb
+
+                     DO j = nXa , nXb
+
+                        CALL MPI_RECV ( Cmplx3 ( j , k , l ) , 1 , mpiCmplx , mpiSource , mpiSource , MPI_COMM_WORLD , MPIstatus , mpiError )
+
+                     END DO ! possible alternative: no loop over j; call MPI_RECV ( Real3b ( nXa , nYa , l ) , nXb - nXa + 1 , mpiReal ... )
+
+                  END DO
+
+               END DO
+
+            ELSE IF ( ( mpiRank == mpiSource ) .AND. ( mpiRank /= mpiDestination ) ) THEN
+
+               DO l = nZa , nZb
+
+                  DO k = nYa , nYb
+
+                     DO j = nXa , nXb
+
+                        CALL MPI_SSEND ( Cmplx3 ( j , k , l ) , 1 , mpiCmplx , mpiDestination , mpiRank , MPI_COMM_WORLD , mpiError )
+
+                     END DO ! possible alternative: no loop over j; call MPI_SSEND ( Real3a ( nXa , nYa , l ) , nXb - nXa + 1 , mpiReal ... )
+
+                  END DO
+
+               END DO
+
+            END IF
+
+            CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+
+            RETURN
+
+         END SUBROUTINE
+
          SUBROUTINE mpi_gather_real3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Real3p , Real3f )
 
          IMPLICIT NONE
@@ -1243,7 +1417,7 @@
 
                DO k = 1 , nY
 
-                  DO j = 1 , nY
+                  DO j = 1 , nX
 
                      CALL MPI_SSEND ( Real3p ( j , k , l ) , 1 , mpiReal , MPI_MASTER , 2 , MPI_COMM_WORLD , mpiError )
 
@@ -1333,7 +1507,7 @@
 
                DO k = 1 , nY
 
-                  DO j = 1 , nY
+                  DO j = 1 , nX
 
                      CALL MPI_SSEND ( Cmplx3p ( j , k , l ) , 1 , mpiCmplx , MPI_MASTER , 2 , MPI_COMM_WORLD , mpiError )
 
