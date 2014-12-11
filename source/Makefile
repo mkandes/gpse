@@ -33,7 +33,7 @@
 #
 # LAST UPDATED
 #
-#     Wednesday, October 29th, 2014
+#     Saturday, December 6th, 2014
 #
 # -------------------------------------------------------------------------
 
@@ -67,14 +67,15 @@ OPENMP   := ON
 #     GNU Fortran (GCC) 4.8.2 ( ivymike )
 #     GNU Fortran (GCC) 4.1.2 20080704 (Red Hat 4.1.2-48) ( dugong.sdsu.edu )
 
-STD_GNU  := -fimplicit-none -ffree-form -ffree-line-length-none -fall-intrinsics
-INT_GNU  :=
+STD_GNU  := -fimplicit-none -fmodule-private -ffree-form -ffree-line-length-none -std=gnu
+INT_GNU  := # -fdefault-integer-8
 REAL_GNU := -fdefault-real-8
-OPT_GNU  := -O3 -ffast-math -funroll-loops
+RUNTIME_OPTIONS = -fconvert=native # Specify the representation of data for unformatted files.
+OPT_GNU  := -O2 -mtune=native
 OMP_GNU  := -fopenmp
 AUTO_GNU :=
 CHK_GNU  := -fcheck=all
-DBG_GNU  := -fmodule-private -ffpe-trap=invalid,overflow -fbacktrace -fdump-core -finit-real=nan
+DBG_GNU  := -ffpe-trap=invalid,overflow -fbacktrace -fdump-core -finit-real=nan
 WRN_GNU  := -Wall -fmax-errors=0 -Wno-array-temporaries -Warray-bounds -Wcharacter-truncation -Wline-truncation -Wconversion-extra -Wimplicit-interface -Wimplicit-procedure -Wunderflow -Wextra -Wuninitialized
 
 #     ifort (IFORT) 11.1 20100414 ( dugong.sdsu.edu )

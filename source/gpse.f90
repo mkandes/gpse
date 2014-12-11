@@ -1,4 +1,4 @@
-! ==========================================================================
+!  ==========================================================================
 ! NAME
 !
 !     gpse [ jip-see ] - 
@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, December 6th, 2014
+!     Wednesday, December 10th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -55,8 +55,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.6'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, December 6th, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.7'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Wednesday, December 10th, 2014'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -109,7 +109,13 @@
       INTEGER :: ompThreads    = -1 ! Number of threads in OpenMP PARALLEL regions 
       INTEGER :: ompThreadID   = -1 
       INTEGER :: fileNumber    = -1
+      INTEGER :: filePosX      = -1
+      INTEGER :: filePosY      = -1
+      INTEGER :: filePosZ      = -1
+      INTEGER :: filePosRePsi  = -1
+      INTEGER :: filePosImPsi  = -1
       INTEGER :: j , k , l , m , n  ! Reserved loop counters
+      
 
       REAL :: tN    = 0.0 ! Time at nth time step
       REAL :: t0    = 0.0 ! Time at the beginning of the simulation
@@ -156,6 +162,12 @@
       INTEGER, ALLOCATABLE, DIMENSION ( : ) :: StartValues
       INTEGER, ALLOCATABLE, DIMENSION ( : ) :: StopValues
 
+      REAL, ALLOCATABLE, DIMENSION ( : ) :: Xa
+      REAL, ALLOCATABLE, DIMENSION ( : ) :: Xb
+      REAL, ALLOCATABLE, DIMENSION ( : ) :: Ya
+      REAL, ALLOCATABLE, DIMENSION ( : ) :: Yb
+      REAL, ALLOCATABLE, DIMENSION ( : ) :: Za
+      REAL, ALLOCATABLE, DIMENSION ( : ) :: Zb
       REAL, ALLOCATABLE, DIMENSION ( :         ) :: Xp
       REAL, ALLOCATABLE, DIMENSION ( :         ) :: Yp
       REAL, ALLOCATABLE, DIMENSION ( :         ) :: Zp
@@ -339,6 +351,17 @@
 
       END IF
 
+      ALLOCATE ( Xa ( nXa - nXbc : nXb + nXbc ) )
+      ALLOCATE ( Ya ( nYa - nYbc : nYb + nYbc ) )
+      ALLOCATE ( Za ( nZa - nZbc : nZb + nZbc ) )
+
+      ALLOCATE ( Xb ( nXa - nXbc : nXb + nXbc ) )
+      ALLOCATE ( Yb ( nYa - nYbc : nYb + nYbc ) )
+      ALLOCATE ( Zb ( nZa - nZbc : nZb + nZbc ) )
+
+
+
+
       ALLOCATE ( Xp ( nXa - nXbc : nXb + nXbc ) )
       ALLOCATE ( Yp ( nYa - nYbc : nYb + nYbc ) )
       ALLOCATE ( Zp ( nZa - nZbc : nZb + nZbc ) )
@@ -452,7 +475,34 @@
 
          END IF
          CALL mpi_scatter_cmplx3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3a , Psi3f )
+      
+      ELSE IF ( psiInput == -1 ) THEN
 
+         psiFilePos = 1
+
+         mpiDestination = 0
+         IF ( mpiRank == MPI_MASTER ) THEN
+
+            CALL io_read_psi3 ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3a )
+
+         END IF
+
+         DO mpiDestination = 1 , mpiProcesses - 1
+
+            IF ( mpiRank == MPI_MASTER ) THEN 
+
+               CALL io_read_psi3 ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+
+            END IF
+            CALL mpi_copy_psi3 ( mpiRank , MPI_MASTER , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+
+         END DO
+
+         IF ( mpiRank /= MPI_MASTER ) THEN
+         
+            Psi3a = Psi3b
+
+         END IF
 
       ELSE
 
@@ -874,7 +924,7 @@
                psiFilePos = 1
                DO mpiSource = 0 , mpiProcesses - 1
 
-                  CALL mpi_copy_cmplx3 ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+                  CALL mpi_copy_psi3 ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
                   IF ( mpiRank == MPI_MASTER ) THEN
 
                      CALL io_write_psi3 ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
@@ -883,6 +933,80 @@
 
                END DO
                psiFileNo = psiFileNo + 1
+
+            ELSE IF ( psiOutput == -4 ) THEN
+
+               Zb = Zp
+               Psi3b = Psi3a
+
+               IF ( mpiRank == MPI_MASTER ) THEN
+
+                  WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
+                  CALL io_write_vtk_header ( psiFileNo , psiFilePos , nX , nY , nZ )
+                  WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
+!                  CALL io_write_vtk_xcoordinates ( psiFileNo , psiFilePos , nX , nXa , nXb , nXbc , Xp )
+!                  WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
+!                  CALL io_write_vtk_ycoordinates ( psiFileNo , psiFilePos , nY , nYa , nYb , nYbc , Yp )
+!                  WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
+
+               END IF
+
+!               DO mpiSource = 0 , mpiProcesses - 1
+!
+!                  CALL mpi_copy_q ( mpiRank , mpiSource , MPI_MASTER , nZ , nZa , nZb , nZbc , Zb )
+!                  IF ( mpiRank == MPI_MASTER ) THEN
+!
+!                     WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
+!                     CALL io_write_vtk_zcoordinates ( psiFileNo , psiFilePos , mpiSource , nZ , nZa , nZb , nZbc , Zb )
+!                     WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
+!
+!                  END IF
+!
+!               END DO
+!
+!               DO mpiSource = 0 , mpiProcesses - 1
+!
+!                  CALL mpi_copy_psi3 ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+!                  IF ( mpiRank == MPI_MASTER ) THEN
+!
+!                     WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
+!                     CALL io_write_vtk_repsi ( psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
+!                     WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
+!
+!                  END IF
+!
+!               END DO
+
+!               DO mpiSource = 0 , mpiProcesses - 1
+!
+!                  CALL mpi_copy_psi3 ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+!                  IF ( mpiRank == MPI_MASTER ) THEN
+!
+!                     WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
+!                     CALL io_write_vtk_impsi ( psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
+!                     WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
+!
+!                  END IF
+!
+!               END DO
+               psiFileNo = psiFileNo + 1
+
+            ELSE IF ( psiOutput == -2 ) THEN
+
+               psiFilePos = 1
+
+               CALL io_write_vtk_psi3 ( psiFileNo , psiFilePos , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Xp , Yp , Zp , Psi3a )
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
+
+            ELSE IF ( psiOutput == -3 ) THEN
+
+               IF ( mpiRank == MPI_MASTER ) THEN
+
+                  CALL io_write_vtk ( psiFileNo , filePosX , filePosY , filePosZ , filePosRePsi , filePosImPsi , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Xp , Yp , Zp , Psi3a )
+
+               END IF
+               psiFileNo = psiFileNo + 1
+
 
             END IF
 
@@ -1222,7 +1346,47 @@
 
          END SUBROUTINE
 
-         SUBROUTINE mpi_copy_real3 ( mpiRank , mpiSource , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Real3 ) 
+         SUBROUTINE mpi_copy_q ( mpiRank , mpiSource , mpiDestination , nQ , nQa , nQb , nQbc , Q )
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: mpiRank
+            INTEGER, INTENT ( IN ) :: mpiSource
+            INTEGER, INTENT ( IN ) :: mpiDestination
+            INTEGER, INTENT ( IN ) :: nQ
+            INTEGER, INTENT ( IN ) :: nQa
+            INTEGER, INTENT ( IN ) :: nQb
+            INTEGER, INTENT ( IN ) :: nQbc 
+
+            REAL, DIMENSION ( nQa - nQbc : nQb + nQbc ), INTENT ( INOUT ) :: Q
+
+            INTEGER :: j
+
+            IF ( ( mpiRank == mpiDestination ) .AND. ( mpiRank /= mpiSource ) ) THEN
+
+               DO j = nQa , nQb
+
+                  CALL MPI_RECV ( Q ( j ) , 1 , mpiReal , mpiSource , mpiSource , MPI_COMM_WORLD , MPIstatus , mpiError )
+
+               END DO
+
+            ELSE IF ( ( mpiRank == mpiSource ) .AND. ( mpiRank /= mpiDestination ) ) THEN
+
+               DO j = nQa , nQb
+
+                  CALL MPI_SSEND ( Q ( j ) , 1 , mpiReal , mpiDestination , mpiRank , MPI_COMM_WORLD , mpiError )
+
+               END DO
+
+            END IF
+
+            CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+
+            RETURN
+
+         END SUBROUTINE 
+
+         SUBROUTINE mpi_copy_vex3 ( mpiRank , mpiSource , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex3 ) 
 
             IMPLICIT NONE
 
@@ -1239,7 +1403,7 @@
             INTEGER, INTENT ( IN ) :: nZb
             INTEGER, INTENT ( IN ) :: nZbc 
 
-            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Real3
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Vex3
 
             INTEGER :: j , k , l
 
@@ -1251,7 +1415,7 @@
 
                      DO j = nXa , nXb
 
-                        CALL MPI_RECV ( Real3 ( j , k , l ) , 1 , mpiReal , mpiSource , mpiSource , MPI_COMM_WORLD , MPIstatus , mpiError )
+                        CALL MPI_RECV ( Vex3 ( j , k , l ) , 1 , mpiReal , mpiSource , mpiSource , MPI_COMM_WORLD , MPIstatus , mpiError )
 
                      END DO ! possible alternative: no loop over j; call MPI_RECV ( Real3b ( nXa , nYa , l ) , nXb - nXa + 1 , mpiReal ... )
 
@@ -1267,7 +1431,7 @@
 
                      DO j = nXa , nXb
 
-                        CALL MPI_SSEND ( Real3 ( j , k , l ) , 1 , mpiReal , mpiDestination , mpiRank , MPI_COMM_WORLD , mpiError )
+                        CALL MPI_SSEND ( Vex3 ( j , k , l ) , 1 , mpiReal , mpiDestination , mpiRank , MPI_COMM_WORLD , mpiError )
 
                      END DO ! possible alternative: no loop over j; call MPI_SSEND ( Real3a ( nXa , nYa , l ) , nXb - nXa + 1 , mpiReal ... )
 
@@ -1283,7 +1447,7 @@
  
          END SUBROUTINE
 
-         SUBROUTINE mpi_copy_cmplx3 ( mpiRank , mpiSource , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Cmplx3 )
+         SUBROUTINE mpi_copy_psi3 ( mpiRank , mpiSource , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
             IMPLICIT NONE
 
@@ -1300,7 +1464,7 @@
             INTEGER, INTENT ( IN ) :: nZb
             INTEGER, INTENT ( IN ) :: nZbc 
 
-            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Cmplx3
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
             INTEGER :: j , k , l
 
@@ -1312,7 +1476,7 @@
 
                      DO j = nXa , nXb
 
-                        CALL MPI_RECV ( Cmplx3 ( j , k , l ) , 1 , mpiCmplx , mpiSource , mpiSource , MPI_COMM_WORLD , MPIstatus , mpiError )
+                        CALL MPI_RECV ( Psi3 ( j , k , l ) , 1 , mpiCmplx , mpiSource , mpiSource , MPI_COMM_WORLD , MPIstatus , mpiError )
 
                      END DO ! possible alternative: no loop over j; call MPI_RECV ( Real3b ( nXa , nYa , l ) , nXb - nXa + 1 , mpiReal ... )
 
@@ -1328,7 +1492,7 @@
 
                      DO j = nXa , nXb
 
-                        CALL MPI_SSEND ( Cmplx3 ( j , k , l ) , 1 , mpiCmplx , mpiDestination , mpiRank , MPI_COMM_WORLD , mpiError )
+                        CALL MPI_SSEND ( Psi3 ( j , k , l ) , 1 , mpiCmplx , mpiDestination , mpiRank , MPI_COMM_WORLD , mpiError )
 
                      END DO ! possible alternative: no loop over j; call MPI_SSEND ( Real3a ( nXa , nYa , l ) , nXb - nXa + 1 , mpiReal ... )
 
