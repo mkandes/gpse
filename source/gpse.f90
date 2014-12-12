@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Wednesday, December 10th, 2014
+!     Thursday, December 11th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -55,8 +55,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.7'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Wednesday, December 10th, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.8'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Thursday, December 11th, 2014'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -114,6 +114,8 @@
       INTEGER :: filePosZ      = -1
       INTEGER :: filePosRePsi  = -1
       INTEGER :: filePosImPsi  = -1
+      INTEGER :: psiUnit = -1
+      INTEGER :: vexUnit = -1
       INTEGER :: j , k , l , m , n  ! Reserved loop counters
       
 
@@ -895,6 +897,10 @@
 
             IF ( psiOutput > 0 ) THEN
 
+            END IF
+
+            IF ( psiOutput > 0 ) THEN
+
                CALL mpi_gather_cmplx3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3a , Psi3f )
                IF ( mpiRank == MPI_MASTER ) THEN
 
@@ -941,55 +947,49 @@
 
                IF ( mpiRank == MPI_MASTER ) THEN
 
-                  WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
-                  CALL io_write_vtk_header ( psiFileNo , psiFilePos , nX , nY , nZ )
-                  WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
-!                  CALL io_write_vtk_xcoordinates ( psiFileNo , psiFilePos , nX , nXa , nXb , nXbc , Xp )
-!                  WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
-!                  CALL io_write_vtk_ycoordinates ( psiFileNo , psiFilePos , nY , nYa , nYb , nYbc , Yp )
-!                  WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
+                  CALL io_write_vtk_header ( 'psi-', psiFileNo , psiFilePos , nX , nY , nZ )
+                  CALL io_write_vtk_xcoordinates ( 'psi-' , psiFileNo , psiFilePos , nX , nXa , nXb , nXbc , Xp )
+                  CALL io_write_vtk_ycoordinates ( 'psi-' , psiFileNo , psiFilePos , nY , nYa , nYb , nYbc , Yp )
 
                END IF
 
-!               DO mpiSource = 0 , mpiProcesses - 1
-!
-!                  CALL mpi_copy_q ( mpiRank , mpiSource , MPI_MASTER , nZ , nZa , nZb , nZbc , Zb )
-!                  IF ( mpiRank == MPI_MASTER ) THEN
-!
-!                     WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
-!                     CALL io_write_vtk_zcoordinates ( psiFileNo , psiFilePos , mpiSource , nZ , nZa , nZb , nZbc , Zb )
-!                     WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
-!
-!                  END IF
-!
-!               END DO
-!
-!               DO mpiSource = 0 , mpiProcesses - 1
-!
-!                  CALL mpi_copy_psi3 ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
-!                  IF ( mpiRank == MPI_MASTER ) THEN
-!
-!                     WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
-!                     CALL io_write_vtk_repsi ( psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
-!                     WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
-!
-!                  END IF
-!
-!               END DO
+              DO mpiSource = 0 , mpiProcesses - 1
 
-!               DO mpiSource = 0 , mpiProcesses - 1
-!
-!                  CALL mpi_copy_psi3 ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
-!                  IF ( mpiRank == MPI_MASTER ) THEN
-!
-!                     WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
-!                     CALL io_write_vtk_impsi ( psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
-!                     WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) psiFilePos
-!
-!                  END IF
-!
-!               END DO
-               psiFileNo = psiFileNo + 1
+                  CALL mpi_copy_q ( mpiRank , mpiSource , MPI_MASTER , nZ , nZa , nZb , nZbc , Zb )
+                  IF ( mpiRank == MPI_MASTER ) THEN
+
+                     CALL io_write_vtk_zcoordinates ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nZ , nZa , nZb , nZbc , Zb )
+
+                  END IF
+
+              END DO
+
+              DO mpiSource = 0 , mpiProcesses - 1
+
+                  CALL mpi_copy_psi3 ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+                  IF ( mpiRank == MPI_MASTER ) THEN
+
+                     CALL io_write_vtk_repsi ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
+
+                  END IF
+
+              END DO
+
+              Psi3b = Psi3a
+
+              DO mpiSource = 0 , mpiProcesses - 1
+
+                  CALL mpi_copy_psi3 ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+                  IF ( mpiRank == MPI_MASTER ) THEN 
+
+                     CALL io_write_vtk_impsi ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
+
+                  END IF
+
+              END DO
+
+
+              psiFileNo = psiFileNo + 1
 
             ELSE IF ( psiOutput == -2 ) THEN
 

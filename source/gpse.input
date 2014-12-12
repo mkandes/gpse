@@ -27,7 +27,7 @@
    nYpsi     = 0         ! Degree of Hermite polynomial used to define anisotropic SHO wave function along y-axis
    nZpsi     = 0         ! Degree of Hermite polynomial used to define both anisotropic and axially-symmetric SHO wave functions along z-axis
    nRpsi     = 0         ! Degree of (associated) Laguerre polynomials used to define radial components of isotropic and axially-symmetric SHO wave functions
-   mLpsi     = 0         ! Projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
+   mLpsi     = 1         ! Projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
    xOpsi     = 0.0       ! X-coordinate of origin used to define initial wave function
    yOpsi     = 1.0       ! Y-coordinate of origin used to define initial wave function
    zOpsi     = 0.0       ! Z-coordinate of origin used to define initial wave function

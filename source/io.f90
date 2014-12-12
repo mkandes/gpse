@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Wednesday, December 10th, 2014
+!     Thursday, December 11th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -377,26 +377,47 @@
 
          END SUBROUTINE
 
-         SUBROUTINE io_write_vtk_header ( fileUnit , filePosition , nX , nY , nZ )
+!         SUBROUTINE io_write_( characterString , fileName , fileUnit , filePosition )
+!
+!            IMPLICIT NONE
+!
+!            CHARACTER ( LEN = * ), INTENT ( IN ) :: characterString
+!            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
+!
+!            INTEGER              , INTENT ( IN ) :: fileUnit
+!            INTEGER              , INTENT ( IN ) :: filePosition
+!
+!            OPEN ( UNIT = fileUnit , FILE = fileName , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
+!
+!            CLOSE ( UNIT = fileUnit , STATUS = 'KEEP' )            
+!            
+!
+!            RETURN
+!
+!         END SUBROUTINE
+
+         SUBROUTINE io_write_vtk_header ( fileName , fileUnit , filePosition , nX , nY , nZ )
 
             IMPLICIT NONE
 
-            INTEGER, INTENT ( IN ) :: fileUnit
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
+
+            INTEGER, INTENT ( IN    ) :: fileUnit
             INTEGER, INTENT ( INOUT ) :: filePosition
-            INTEGER, INTENT ( IN ) :: nX
-            INTEGER, INTENT ( IN ) :: nY
-            INTEGER, INTENT ( IN ) :: nZ
+            INTEGER, INTENT ( IN    ) :: nX
+            INTEGER, INTENT ( IN    ) :: nY
+            INTEGER, INTENT ( IN    ) :: nZ
 
             CHARACTER ( LEN = 4 ) :: fileUnitChar
 
             WRITE ( UNIT = fileUnitChar , FMT = '(I4.4)' ) fileUnit
-            OPEN  ( UNIT = fileUnit , FILE = TRIM ( 'psi-'//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
+            OPEN  ( UNIT = fileUnit , FILE = TRIM ( fileName//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
 
-               WRITE ( UNIT = fileUnit , POS = 1  , FMT = '(A26)'                         ) '# vtk DataFile Version 3.0'//NEW_LINE ( 'A' )
-               WRITE ( UNIT = fileUnit , POS = 27 , FMT = '(A26)'                         ) 'STANDARD LEGACY VTK FORMAT'//NEW_LINE ( 'A' )
-               WRITE ( UNIT = fileUnit , POS = 53 , FMT = '(A5)'                          ) 'ASCII'//NEW_LINE ( 'A' )
-               WRITE ( UNIT = fileUnit , POS = 58 , FMT = '(A24)'                         ) 'DATASET RECTILINEAR_GRID'//NEW_LINE ( 'A' )
-               WRITE ( UNIT = fileUnit , POS = 82 , FMT = '(A10,1X,I4.1,1X,I4.1,1X,I4.1)' ) 'DIMENSIONS' , nX , nY , nZ
+               WRITE ( UNIT = fileUnit , FMT = '(A26)' ) '# vtk DataFile Version 3.0' ! VTK file identifier and version number
+               WRITE ( UNIT = fileUnit , FMT = '(A26)' ) 'STANDARD LEGACY VTK FORMAT' ! VTK file header; 256 characters maximum
+               WRITE ( UNIT = fileUnit , FMT = '(A5)'  ) 'ASCII'                      ! VTK file format: ASCII or BINARY
+               WRITE ( UNIT = fileUnit , FMT = '(A24)' ) 'DATASET RECTILINEAR_GRID'             ! VTK dataset structure
+               WRITE ( UNIT = fileUnit , FMT = '(A10,1X,I4.1,1X,I4.1,1X,I4.1)' ) 'DIMENSIONS' , nX , nY , nZ
 
                INQUIRE ( UNIT = fileUnit , POS = filePosition )
 
@@ -406,16 +427,18 @@
 
          END SUBROUTINE
 
-         SUBROUTINE io_write_vtk_xcoordinates ( fileUnit , filePosition , nX , nXa , nXb , nXbc , X )
+         SUBROUTINE io_write_vtk_xcoordinates ( fileName , fileUnit , filePosition , nX , nXa , nXb , nXbc , X )
 
             IMPLICIT NONE
 
-            INTEGER, INTENT ( IN ) :: fileUnit
-            INTEGER, INTENT ( INOUT ) :: filePosition
-            INTEGER, INTENT ( IN ) :: nX
-            INTEGER, INTENT ( IN ) :: nXa
-            INTEGER, INTENT ( IN ) :: nXb
-            INTEGER, INTENT ( IN ) :: nXbc
+            CHARACTER ( LEN = * ), INTENT ( IN    ) :: fileName
+
+            INTEGER              , INTENT ( IN    ) :: fileUnit
+            INTEGER              , INTENT ( INOUT ) :: filePosition
+            INTEGER              , INTENT ( IN    ) :: nX
+            INTEGER              , INTENT ( IN    ) :: nXa
+            INTEGER              , INTENT ( IN    ) :: nXb
+            INTEGER              , INTENT ( IN    ) :: nXbc
      
             REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
 
@@ -424,12 +447,12 @@
             INTEGER :: j
 
             WRITE ( UNIT = fileUnitChar , FMT = '(I4.4)' ) fileUnit
-            OPEN  ( UNIT = fileUnit , FILE = TRIM ( 'psi-'//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
+            OPEN  ( UNIT = fileUnit , FILE = TRIM ( fileName//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
 
-               WRITE ( UNIT = fileUnit , FMT = '(A13,1X,I4.1,1X,A6)' ) 'X_COORDINATES' , nX , 'double'
+               WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(A13,1X,I4.1,1X,A6)' ) 'X_COORDINATES' , nX , 'double'
                DO j = nXa , nXb
 
-                  WRITE ( UNIT = fileUnit , FMT = '(F23.15)' ) X ( j )
+                  WRITE ( UNIT = fileUnit , FMT = * ) X ( j )
 
                END DO
 
@@ -441,16 +464,18 @@
 
          END SUBROUTINE
 
-         SUBROUTINE io_write_vtk_ycoordinates ( fileUnit , filePosition , nY , nYa , nYb , nYbc , Y )
+         SUBROUTINE io_write_vtk_ycoordinates ( fileName , fileUnit , filePosition , nY , nYa , nYb , nYbc , Y )
 
             IMPLICIT NONE
 
-            INTEGER, INTENT ( IN ) :: fileUnit
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
+
+            INTEGER, INTENT ( IN    ) :: fileUnit
             INTEGER, INTENT ( INOUT ) :: filePosition
-            INTEGER, INTENT ( IN ) :: nY
-            INTEGER, INTENT ( IN ) :: nYa
-            INTEGER, INTENT ( IN ) :: nYb
-            INTEGER, INTENT ( IN ) :: nYbc
+            INTEGER, INTENT ( IN    ) :: nY
+            INTEGER, INTENT ( IN    ) :: nYa
+            INTEGER, INTENT ( IN    ) :: nYb
+            INTEGER, INTENT ( IN    ) :: nYbc
 
             REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
 
@@ -459,12 +484,13 @@
             INTEGER :: k
 
             WRITE ( UNIT = fileUnitChar , FMT = '(I4.4)' ) fileUnit
-            OPEN  ( UNIT = fileUnit , FILE = TRIM ( 'psi-'//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
+            OPEN  ( UNIT = fileUnit , FILE = TRIM ( fileName//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
 
-               WRITE ( UNIT = fileUnit , FMT = '(A13,1X,I4.1,1X,A6)' ) 'Y_COORDINATES' , nY , 'double'
+               WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(A13,1X,I4.1,1X,A6)' ) 'Y_COORDINATES' , nY , 'double'
+
                DO k = nYa , nYb
 
-                  WRITE ( UNIT = fileUnit , FMT = '(F23.15)' ) Y ( k )
+                  WRITE ( UNIT = fileUnit , FMT = * ) Y ( k )
 
                END DO
 
@@ -476,9 +502,11 @@
 
          END SUBROUTINE
 
-         SUBROUTINE io_write_vtk_zcoordinates ( fileUnit , filePosition , mpiSource , nZ , nZa , nZb , nZbc , Z )
+         SUBROUTINE io_write_vtk_zcoordinates ( fileName , fileUnit , filePosition , mpiSource , nZ , nZa , nZb , nZbc , Z )
 
             IMPLICIT NONE
+
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
 
             INTEGER, INTENT ( IN ) :: fileUnit
             INTEGER, INTENT ( INOUT ) :: filePosition
@@ -495,22 +523,24 @@
             INTEGER :: l
 
             WRITE ( UNIT = fileUnitChar , FMT = '(I4.4)' ) fileUnit
-            OPEN  ( UNIT = fileUnit , FILE = TRIM ( 'psi-'//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
+            OPEN  ( UNIT = fileUnit , FILE = TRIM ( fileName//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
 
                IF ( mpiSource == 0 ) THEN ! i.e., if mpiSource == MPI_MASTER
 
-                  WRITE ( UNIT = fileUnit , FMT = '(A13,1X,I4.1,1X,A6)' ) 'Z_COORDINATES' , nZ , 'double'
+                  WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(A13,1X,I4.1,1X,A6)' ) 'Z_COORDINATES' , nZ , 'double'
                   DO l = nZa , nZb 
 
-                     WRITE ( UNIT = fileUnit , FMT = '(F23.15)' ) Z ( l )
+                     WRITE ( UNIT = fileUnit , FMT = * ) Z ( l )
 
                   END DO
 
                ELSE
 
-                  DO l = nZa , nZb
+                  WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(F23.15)' ) Z ( nZa )
 
-                     WRITE ( UNIT = fileUnit , FMT = '(F23.15)' ) Z ( l )
+                  DO l = nZa + 1 , nZb
+
+                     WRITE ( UNIT = fileUnit , FMT = * ) Z ( l )
 
                   END DO
 
@@ -524,9 +554,11 @@
 
          END SUBROUTINE
 
-         SUBROUTINE io_write_vtk_repsi ( fileUnit , filePosition , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3)
+         SUBROUTINE io_write_vtk_repsi ( fileName , fileUnit , filePosition , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3 )
 
             IMPLICIT NONE
+
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
 
             INTEGER, INTENT ( IN ) :: fileUnit
             INTEGER, INTENT ( INOUT ) :: filePosition
@@ -551,15 +583,15 @@
             INTEGER :: j , k , l
 
             WRITE ( UNIT = fileUnitChar , FMT = '(I4.4)' ) fileUnit
-            OPEN  ( UNIT = fileUnit , FILE = TRIM ( 'psi-'//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
+            OPEN  ( UNIT = fileUnit , FILE = TRIM ( fileName//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
  
             IF ( mpiSource == 0 ) THEN
 
-               WRITE ( UNIT = fileUnit , FMT = '(A10,1X,I19.1)' ) 'POINT_DATA' , nX * nY * nZ
+               WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(A10,1X,I19.1)' ) 'POINT_DATA' , nX * nY * nZ
                WRITE ( UNIT = fileUnit , FMT = '(A24)'          ) 'SCALARS Re(Psi) double 1'
                WRITE ( UNIT = fileUnit , FMT = '(A20)'          ) 'LOOKUP_TABLE default'
 
-               DO l = nZb , nZb
+               DO l = nZa , nZb
 
                   DO k = nYa , nYb
 
@@ -575,13 +607,14 @@
 
             ELSE
 
-               DO l = nZb , nZb
+               DO l = nZa , nZb
 
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
-
-                        WRITE ( UNIT = fileUnit , FMT = * ) REAL ( Psi3 ( j , k , l ) )
+                        
+                        WRITE ( UNIT = fileUnit , POS = filePosition , FMT = * ) REAL ( Psi3 ( j , k , l ) )
+                        INQUIRE ( UNIT = fileUnit , POS = filePosition )
 
                      END DO
 
@@ -599,9 +632,11 @@
 
          END SUBROUTINE
 
-         SUBROUTINE io_write_vtk_impsi ( fileUnit , filePosition , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3)
+         SUBROUTINE io_write_vtk_impsi ( fileName , fileUnit , filePosition , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3)
 
             IMPLICIT NONE
+
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
 
             INTEGER, INTENT ( IN ) :: fileUnit
             INTEGER, INTENT ( INOUT ) :: filePosition
@@ -626,14 +661,14 @@
             INTEGER :: j , k , l
 
             WRITE ( UNIT = fileUnitChar , FMT = '(I4.4)' ) fileUnit
-            OPEN  ( UNIT = fileUnit , FILE = TRIM ( 'psi-'//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
+            OPEN  ( UNIT = fileUnit , FILE = TRIM ( fileName//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
 
             IF ( mpiSource == 0 ) THEN
 
-               WRITE ( UNIT = fileUnit , FMT = '(A24)' ) 'SCALARS Im(Psi) double 1'
+               WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(A24)' ) 'SCALARS Im(Psi) double 1'
                WRITE ( UNIT = fileUnit , FMT = '(A20)' ) 'LOOKUP_TABLE default'
 
-               DO l = nZb , nZb
+               DO l = nZa , nZb
 
                   DO k = nYa , nYb
 
@@ -649,13 +684,14 @@
 
             ELSE
 
-               DO l = nZb , nZb
+               DO l = nZa , nZb
 
                   DO k = nYa , nYb
 
                      DO j = nXa , nXb
 
-                        WRITE ( UNIT = fileUnit , FMT = * ) AIMAG ( Psi3 ( j , k , l ) )
+                        WRITE ( UNIT = fileUnit , POS = filePosition , FMT = * ) AIMAG ( Psi3 ( j , k , l ) )
+                        INQUIRE ( UNIT = fileUnit , POS = filePosition )
 
                      END DO
 
