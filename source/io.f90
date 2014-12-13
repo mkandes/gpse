@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Thursday, December 11th, 2014
+!     Friday, December 12th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -46,6 +46,13 @@
       INTEGER, PUBLIC :: ioByteSizeReal  = -1
       INTEGER, PUBLIC :: ioByteSizeCmplx = -1
 
+      PUBLIC :: io_vtk_write_header
+      PUBLIC :: io_vtk_write_title
+      PUBLIC :: io_vtk_write_type
+      PUBLIC :: io_vtk_write_geometry
+      PUBLIC :: io_vtk_write_attributes
+
+
       PUBLIC :: io_get_byte_sizes
 
       PUBLIC :: io_read_real3
@@ -57,6 +64,8 @@
       PUBLIC :: io_read_vex3
       PUBLIC :: io_write_psi3
       PUBLIC :: io_write_vex3
+
+       
 
       PUBLIC :: io_write_vtk_header
       PUBLIC :: io_write_vtk_xcoordinates
@@ -80,6 +89,85 @@
       PUBLIC :: io_write_vtk_cmplx3
                    
       CONTAINS
+
+         SUBROUTINE io_vtk_write_header ( fileHeader , fileName , fileUnit , filePosition )
+
+            IMPLICIT NONE
+
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileHeader
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
+
+            INTEGER, INTENT ( IN    ) :: fileUnit
+            INTEGER, INTENT ( INOUT ) :: filePosition
+
+            OPEN    ( UNIT = fileUnit , FILE = fileName , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
+            
+            WRITE   ( UNIT = fileUnit , FMT = * ) fileHeader
+            INQUIRE ( UNIT = fileUnit , POS = filePosition )
+
+            CLOSE   ( UNIT = fileUnit , STATUS = 'KEEP' )
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE io_vtk_write_title ( fileTitle , fileName , fileUnit , filePosition ) ! Add exception: 256 characters maximum
+
+            IMPLICIT NONE
+
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileTitle
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
+
+            INTEGER, INTENT ( IN    ) :: fileUnit
+            INTEGER, INTENT ( INOUT ) :: filePosition
+
+            OPEN    ( UNIT = fileUnit , FILE = fileName , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
+                 
+            WRITE   ( UNIT = fileUnit , FMT = * ) fileTitle
+            INQUIRE ( UNIT = fileUnit , POS = filePosition )
+
+            CLOSE   ( UNIT = fileUnit , STATUS = 'KEEP' )
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE io_vtk_write_type ( fileType , fileName , fileUnit , filePosition ) ! Add exception: only 'ASCII' or 'BINARY' is allowed
+         
+            IMPLICIT NONE
+
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileType
+            CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
+
+            INTEGER, INTENT ( IN    ) :: fileUnit
+            INTEGER, INTENT ( INOUT ) :: filePosition
+
+            OPEN    ( UNIT = fileUnit , FILE = fileName , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
+
+            WRITE   ( UNIT = fileUnit , FMT = * ) fileType
+            INQUIRE ( UNIT = fileUnit , POS = filePosition )
+
+            CLOSE   ( UNIT = fileUnit , STATUS = 'KEEP' )
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE io_vtk_write_geometry ( )
+
+            IMPLICIT NONE
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE io_vtk_write_attributes ( )
+
+            IMPLICIT NONE
+
+            RETURN
+
+         END SUBROUTINE
 
          SUBROUTINE io_get_byte_sizes ( ioByteSizeInt, ioByteSizeReal , ioByteSizeCmplx )
 

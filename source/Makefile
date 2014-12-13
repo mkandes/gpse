@@ -171,25 +171,28 @@ endif
 
 all : gpse.x
 
-gpse.x : gpse.o evua.o grid.o io.o math.o psi.o vex.o 
+gpse.x : gpse.o evua.o grid.o grk4.o io.o math.o psi.o vex.o 
 	$(MPIF90) $(FFLAGS) -o $@ $^
 
-gpse.o : gpse.f90 evua.mod grid.mod io.mod math.mod psi.mod vex.mod 
+gpse.o : gpse.f90 evua.mod grid.mod grk4.mod io.mod math.mod psi.mod vex.mod 
 	$(MPIF90) $(FFLAGS) -c $<
 
-evua.o evua.mod : evua.f90 grid.mod math.mod
+evua.o evua.mod : evua.f90 math.mod
 	$(MPIF90) $(FFLAGS) -c $<
 
 grid.o grid.mod : grid.f90
 	$(MPIF90) $(FFLAGS) -c $<
 
-io.o io.mod : io.f90 grid.mod 
+grk4.o grk4.mod : grk4.f90
+	$(MPIF90) $(FFLAGS) -c $<
+
+io.o io.mod : io.f90 
 	$(MPIF90) $(FFLAGS) -c $<
 
 math.o math.mod : math.f90
 	$(MPIF90) $(FFLAGS) -c $<
 
-psi.o psi.mod : psi.f90 grid.mod math.mod
+psi.o psi.mod : psi.f90 math.mod
 	$(MPIF90) $(FFLAGS) -c $<
 
 vex.o vex.mod : vex.f90

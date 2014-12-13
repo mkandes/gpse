@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Thursday, December 11th, 2014
+!     Friday, December 12th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -43,6 +43,7 @@
       USE            :: MPI
       USE            :: EVUA
       USE            :: GRID
+      USE            :: GRK4
       USE            :: IO
       USE            :: MATH
       USE            :: PSI
@@ -55,8 +56,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.8'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Thursday, December 11th, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.3.9'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Friday, December 12th, 2014'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -580,6 +581,7 @@
 !        relations to file from MPI_MASTER; write wave function and 
 !        external potential to file from MPI_MASTER
 
+
             IF ( quadRule == 1 ) THEN ! use rectangle rule
             
                temp = l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3a )
@@ -897,25 +899,21 @@
 
             IF ( psiOutput > 0 ) THEN
 
-            END IF
-
-            IF ( psiOutput > 0 ) THEN
-
                CALL mpi_gather_cmplx3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3a , Psi3f )
                IF ( mpiRank == MPI_MASTER ) THEN
 
                   IF ( psiOutput == 1 ) THEN
 
-                     CALL io_write_bin_cmplx3 ( 'psi' , psiFileNo , Psi3f ) ! chkpting the wave function
+                     CALL io_write_bin_cmplx3 ( 'psi' , psiFileNo , Psi3f ) ! records I/O binary with full reduce
 
                   ELSE IF ( psiOutput == 2 ) THEN
 
-                     CALL io_write_vtk_cmplx3 ( 'psi' , psiFileNo , nX , nY , nZ , Xf , Yf , Zf , Psi3f )
+                     CALL io_write_vtk_cmplx3 ( 'psi' , psiFileNo , nX , nY , nZ , Xf , Yf , Zf , Psi3f ) ! records I/O vtk format with full reduce
 
                   ELSE IF ( psiOutput == 3 ) THEN
 
                      m = 1 
-                     CALL io_write_cmplx3 ( 'psi' , psiFileNo , m , Psi3f )
+                     CALL io_write_cmplx3 ( 'psi' , psiFileNo , m , Psi3f ) ! streaming I/O binary with full reduce
                      CALL io_get_byte_sizes ( ioByteSizeInt, ioByteSizeReal , ioByteSizeCmplx )
                      WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) ioByteSizeInt, ioByteSizeReal , ioByteSizeCmplx
 
@@ -924,7 +922,7 @@
                END IF
                psiFileNo = psiFileNo + 1
 
-            ELSE IF ( psiOutput == -1 ) THEN
+            ELSE IF ( psiOutput == -1 ) THEN ! streming I/O binary with partial reduce
 
                Psi3b = Psi3a
                psiFilePos = 1
@@ -940,7 +938,7 @@
                END DO
                psiFileNo = psiFileNo + 1
 
-            ELSE IF ( psiOutput == -4 ) THEN
+            ELSE IF ( psiOutput == -2 ) THEN ! streaming I/O vtk format with partial reduce
 
                Zb = Zp
                Psi3b = Psi3a
@@ -987,7 +985,6 @@
                   END IF
 
               END DO
-
 
               psiFileNo = psiFileNo + 1
 
@@ -1041,7 +1038,8 @@
 
 !        Compute 1st stage of generalized 4th-order Runge-Kutta (GRK4L): k_1 = f ( t_n , y_n )
 
-         CALL compute_f ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Xp , Yp , Zp , Vex3p , Psi3a , K1 )
+!         CALL compute_f ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Xp , Yp , Zp , Vex3p , Psi3a , K1 )
+         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , Xp , Yp , Zp , Vex3p , Psi3a , K1 )
 
 !        Compute the intermediate wave function for the 2nd stage of the GRK4L method: y_n + 0.5 * dT * k_1
 !        Note that the intermediate wave function is only computed on the interior grid points assigned to each MPI process.
@@ -1074,7 +1072,8 @@
 
 !        Compute 2nd stage of GRK4L: k_2 = f ( t_n + 0.5 * dT , y_n + 0.5 * dT * k_1 )
 
-         CALL compute_f ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Xp , Yp , Zp , Vex3p , Psi3b , K2 )
+!         CALL compute_f ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Xp , Yp , Zp , Vex3p , Psi3b , K2 )
+         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , Xp , Yp , Zp , Vex3p , Psi3b , K2 )
 
 !        Compute intermediate wave function for 3rd stage of GRK4L: y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( 1 / lambda ) * dT * k_2
 
@@ -1100,7 +1099,8 @@
 
 !        Compute stage three ... k_3 = f ( t_n + 0.5 * dT , y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( 1 / lambda ) * dT * k_2
 
-         CALL compute_f ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Xp , Yp , Zp , Vex3p , Psi3b , K3 )
+!         CALL compute_f ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Xp , Yp , Zp , Vex3p , Psi3b , K3 )
+         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , Xp , Yp , Zp , Vex3p , Psi3b , K3 )
 
 !        Compute intermediate wave function for 4th stage of GRK4L: y_n + ( 1 - lambda / 2 ) * dT * k_2 + ( lambda / 2 ) * dT * k_3
 
@@ -1130,7 +1130,8 @@
 
 !        Compute the fourth stage ... k_4 = f ( t_n + dT , y_n + ( 1 - lamda / 2 ) * dT * k_2 + ( lamda / 2) * dT * k_3 
 
-         CALL compute_f ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Xp , Yp , Zp , Vex3p , Psi3b , K4 )
+!         CALL compute_f ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Xp , Yp , Zp , Vex3p , Psi3b , K4 )
+         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , Xp , Yp , Zp , Vex3p , Psi3b , K4 )
 
 !        Compute wave function at nth+1 time step ... y_{ n + 1 } = y_n + ( dT / 6 ) * [ k_1 + ( 4 - lambda ) * k_2 + lambda * k_3 + k_4 ]
 
