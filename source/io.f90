@@ -74,8 +74,6 @@
       PUBLIC :: io_write_vtk_repsi
       PUBLIC :: io_write_vtk_impsi
 
-      PUBLIC :: io_write_vtk
-
       PUBLIC :: io_write_vtk_psi3
       PUBLIC :: io_write_vtk_vex3
 
@@ -790,98 +788,6 @@
             END IF
 
             INQUIRE ( UNIT = fileUnit , POS = filePosition )
-
-            CLOSE ( UNIT = fileUnit , STATUS = 'KEEP' )
-
-            RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE io_write_vtk ( fileUnit , filePosX , filePosY , filePosZ , filePosRePsi , filePosImPsi , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , X , Y , Z , Psi3 )
-
-            IMPLICIT NONE
-
-            INTEGER, INTENT ( IN    ) :: fileUnit
-            INTEGER, INTENT ( INOUT ) :: filePosX
-            INTEGER, INTENT ( INOUT ) :: filePosY
-            INTEGER, INTENT ( INOUT ) :: filePosZ
-            INTEGER, INTENT ( INOUT ) :: filePosRePsi
-            INTEGER, INTENT ( INOUT ) :: filePosImPsi
-            INTEGER, INTENT ( IN    ) :: nX
-            INTEGER, INTENT ( IN    ) :: nXa 
-            INTEGER, INTENT ( IN    ) :: nXb 
-            INTEGER, INTENT ( IN    ) :: nXbc
-            INTEGER, INTENT ( IN    ) :: nY
-            INTEGER, INTENT ( IN    ) :: nYa 
-            INTEGER, INTENT ( IN    ) :: nYb 
-            INTEGER, INTENT ( IN    ) :: nYbc
-            INTEGER, INTENT ( IN    ) :: nZ
-            INTEGER, INTENT ( IN    ) :: nZa 
-            INTEGER, INTENT ( IN    ) :: nZb 
-            INTEGER, INTENT ( IN    ) :: nZbc
-
-            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
-            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
-            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
-
-            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
-
-            CHARACTER ( LEN = 4 ) :: fileUnitChar
-
-            INTEGER :: j , k , l
-
-            WRITE ( UNIT = fileUnitChar , FMT = '(I4.4)' ) fileUnit
-            OPEN  ( UNIT = fileUnit , FILE = TRIM ( 'psi-'//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
-
-               INQUIRE ( UNIT = fileUnit , POS = filePosX )
-               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) 'a:', filePosX
-
-               WRITE ( UNIT = fileUnit , FMT = '(A26)'                         ) '# vtk DataFile Version 3.0'
-               WRITE ( UNIT = fileUnit , FMT = '(A26)'                         ) 'STANDARD LEGACY VTK FORMAT'
-               WRITE ( UNIT = fileUnit , FMT = '(A5)'                          ) 'ASCII'
-               WRITE ( UNIT = fileUnit , FMT = '(A24)'                         ) 'DATASET RECTILINEAR_GRID'
-               WRITE ( UNIT = fileUnit , FMT = '(A10,1X,I4.1,1X,I4.1,1X,I4.1)' ) 'DIMENSIONS' , nX , nY , nZ
-               WRITE ( UNIT = fileUnit , FMT = '(A13,1X,I4.1,1X,A6)'           ) 'X_COORDINATES' , nX , 'double'
-
-               INQUIRE ( UNIT = fileUnit , POS = filePosX )
-               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) 'b:', filePosX
-
-               DO j = nXa , nXb
-
-                  WRITE ( UNIT = fileUnit , FMT = '(F23.15)' ) X ( j ) ! j + nX * [ ( k - 1 ) + nY * ( l - 1 ) ]
-
-               END DO
-
-               INQUIRE ( UNIT = fileUnit , POS = filePosX )
-               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) 'c:', filePosX
-
-               WRITE ( UNIT = fileUnit , FMT = '(A13,1X,I4.1,1X,A6)'           ) 'Y_COORDINATES' , nY , 'double'
-
-               INQUIRE ( UNIT = fileUnit , POS = filePosY )
-               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) 'd:', filePosY
-
-               DO k = nYa , nYb 
-
-                  WRITE ( UNIT = fileUnit , FMT = '(F23.15)' ) Y ( k ) ! j + nX * [ ( k - 1 ) + nY * ( l - 1 ) ]
-
-               END DO
-
-               INQUIRE ( UNIT = fileUnit , POS = filePosY )
-               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) 'e:', filePosY
-
-               WRITE ( UNIT = fileUnit , FMT = '(A13,1X,I4.1,1X,A6)'           ) 'Z_COORDINATES' , nZ , 'double'
-
-               INQUIRE ( UNIT = fileUnit , POS = filePosZ )
-               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) 'f:', filePosZ
-
-               DO l = nZa , nZb 
-
-                  WRITE ( UNIT = fileUnit , FMT = '(F23.15)' ) Z ( l ) ! j + nX * [ ( k - 1 ) + nY * ( l - 1 ) ]
-
-               END DO
-
-               INQUIRE ( UNIT = fileUnit , POS = filePosZ )
-               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) 'g:', filePosZ
 
             CLOSE ( UNIT = fileUnit , STATUS = 'KEEP' )
 
