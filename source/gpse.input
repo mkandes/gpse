@@ -17,8 +17,8 @@
    dZ        = 0.125      ! Distance between grid points along the z-axis
    wX        = 0.0       ! X-component of the rotating reference frame's angular velocity vector
    wY        = 0.0       ! Y-component of the rotating reference frame's angular velocity vector
-   wZ        = 0.0       ! Z-component of the rotating reference frame's angular velocity vector
-   gS        = 0.0       ! Nonlinear atom-atom interaction coupling constant
+   wZ        = 0.1       ! Z-component of the rotating reference frame's angular velocity vector
+   gS        = 1000.0       ! Nonlinear atom-atom interaction coupling constant
    psiInput  = 0         ! 0 = No input wave function; 1 = Read wave function from .bin file; 2 = Read wave function from .vtk file
    psiOutput = 0         ! 0 = No output wave function; 1 = Checkpoint wave function to .bin file; 2 = Write wave function to .vtk file
    psiFileNo = 500       ! Set psiFileNo to input wave function file number 
@@ -30,7 +30,7 @@
    mLpsi     = 0         ! Projection of orbital angular momentum along z-axis for axially-symmetric SHO wave function
    xOpsi     = 1.0       ! X-coordinate of origin used to define initial wave function
    yOpsi     = 1.0       ! Y-coordinate of origin used to define initial wave function
-   zOpsi     = 0.0       ! Z-coordinate of origin used to define initial wave function
+   zOpsi     = 1.0       ! Z-coordinate of origin used to define initial wave function
    wXpsi     = 0.0       ! Angular frequency of SHO potential along x-axis used to define anisotropic SHO wave function
    wYpsi     = 0.0       ! Angular frequency of SHO potential along y-axis used to define anisotropic SHO wave function
    wZpsi     = 1.0       ! Angular frequency of SHO potential along z-axis used to define both anisotropic and axially-symmetric SHO wave functions

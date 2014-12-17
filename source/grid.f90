@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Thursday, October 16th, 2014
+!     Monday, December 15th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -42,13 +42,13 @@
       IMPLICIT NONE
       PRIVATE
 
-      PUBLIC :: grid_bound_cond_size
+      PUBLIC :: grid_boundary_condition_size
       PUBLIC :: grid_regular
       PUBLIC :: grid_regular_axis
 
       CONTAINS
 
-         SUBROUTINE grid_bound_cond_size ( fdOrder , nXbc , nYbc , nZbc )
+         SUBROUTINE grid_boundary_condition_size ( fdOrder , nXbc , nYbc , nZbc )
 
             IMPLICIT NONE
 
@@ -83,7 +83,8 @@
 
             ELSE
 
-               WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : grid : grid_bound_cond_size : ERROR - fdOrder not supported.'
+               WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : grid_boundary_condition_size : ERROR - fdOrder not supported.'
+               STOP
 
             END IF
 

@@ -31,153 +31,507 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, November 25th, 2014
+!     Tuesday, December 16th, 2014
 !
 ! -------------------------------------------------------------------------
 
       MODULE EVUA
 
          USE, INTRINSIC :: ISO_FORTRAN_ENV
+         USE            :: MPI
          USE            :: MATH
 
          IMPLICIT NONE
          PRIVATE
 
-         REAL, PUBLIC :: l2Norm = 0.0
-         REAL, PUBLIC :: avgX = 0.0
-         REAL, PUBLIC :: avgX2 = 0.0
-         REAL, PUBLIC :: avgX2COM = 0.0
-         REAL, PUBLIC :: avgY = 0.0
-         REAL, PUBLIC :: avgY2 = 0.0
-         REAL, PUBLIC :: avgY2COM = 0.0
-         REAL, PUBLIC :: avgZ = 0.0
-         REAL, PUBLIC :: avgZ2 = 0.0
-         REAL, PUBLIC :: avgZ2COM = 0.0
-         REAL, PUBLIC :: avgRxy = 0.0
-         REAL, PUBLIC :: avgR2xy = 0.0
-         REAL, PUBLIC :: avgRxyz = 0.0
-         REAL, PUBLIC :: avgR2xyz = 0.0
-         REAL, PUBLIC :: avgPx = 0.0
-         REAL, PUBLIC :: avgPx2 = 0.0
-         REAL, PUBLIC :: avgPy = 0.0
-         REAL, PUBLIC :: avgPy2 = 0.0
-         REAL, PUBLIC :: avgPz = 0.0
-         REAL, PUBLIC :: avgPz2 = 0.0
-         REAL, PUBLIC :: avgLx = 0.0
-         REAL, PUBLIC :: avgLxCOM = 0.0
-         REAL, PUBLIC :: avgLx2 = 0.0
-         REAL, PUBLIC :: avgLx2COM = 0.0
-         REAL, PUBLIC :: avgLy = 0.0
-         REAL, PUBLIC :: avgLyCOM = 0.0 
-         REAL, PUBLIC :: avgLy2 = 0.0
-         REAL, PUBLIC :: avgLy2COM = 0.0 
-         REAL, PUBLIC :: avgLz = 0.0
-         REAL, PUBLIC :: avgLzCOM = 0.0
-         REAL, PUBLIC :: avgLz2 = 0.0
-         REAL, PUBLIC :: avgLz2COM = 0.0
-         REAL, PUBLIC :: avgFx = 0.0
-         REAL, PUBLIC :: avgFy = 0.0
-         REAL, PUBLIC :: avgFz = 0.0
-         REAL, PUBLIC :: avgTauX = 0.0
-         REAL, PUBLIC :: avgTauXCOM = 0.0
-         REAL, PUBLIC :: avgTauY = 0.0
-         REAL, PUBLIC :: avgTauYCOM = 0.0
-         REAL, PUBLIC :: avgTauZ = 0.0
-         REAL, PUBLIC :: avgTauZCOM = 0.0
-         REAL, PUBLIC :: avgVex = 0.0
-         REAL, PUBLIC :: avgVmf = 0.0
-         REAL, PUBLIC :: avgIxx = 0.0
-         REAL, PUBLIC :: avgIyy = 0.0
-         REAL, PUBLIC :: avgIzz = 0.0
-         REAL, PUBLIC :: avgIxy = 0.0
-         REAL, PUBLIC :: avgIyz = 0.0
-         REAL, PUBLIC :: avgIxz = 0.0
-         REAL, PUBLIC :: avgIxxCOM = 0.0
-         REAL, PUBLIC :: avgIyyCOM = 0.0
-         REAL, PUBLIC :: avgIzzCOM = 0.0
-         REAL, PUBLIC :: avgIxyCOM = 0.0
-         REAL, PUBLIC :: avgIyzCOM = 0.0
-         REAL, PUBLIC :: avgIxzCOM = 0.0
-         REAL, PUBLIC :: avgTx = 0.0
-         REAL, PUBLIC :: avgTy = 0.0
-         REAL, PUBLIC :: avgTz = 0.0
-         REAL, PUBLIC :: avgE = 0.0
-         REAL, PUBLIC :: avgL2 = 0.0
-         REAL, PUBLIC :: avgMu = 0.0
-         REAL, PUBLIC :: sigX = 0.0
-         REAL, PUBLIC :: sigY = 0.0
-         REAL, PUBLIC :: sigZ = 0.0
-         REAL, PUBLIC :: sigRxy = 0.0
-         REAL, PUBLIC :: sigPx = 0.0
-         REAL, PUBLIC :: sigPy = 0.0
-         REAL, PUBLIC :: sigPz = 0.0
-         REAL, PUBLIC :: sigLx = 0.0
-         REAL, PUBLIC :: sigLy = 0.0
-         REAL, PUBLIC :: sigLz = 0.0
+         REAL, PRIVATE :: evuaL2Norma = 0.0
+         REAL, PRIVATE :: evuaL2Normb = 0.0
+         REAL, PRIVATE :: evuaXa = 0.0
+         REAL, PRIVATE :: evuaXb = 0.0
+         REAL, PRIVATE :: evuaYa = 0.0
+         REAL, PRIVATE :: evuaYb = 0.0
+         REAL, PRIVATE :: evuaZa = 0.0
+         REAL, PRIVATE :: evuaZb = 0.0
+         REAL, PRIVATE :: evuaRa = 0.0
+         REAL, PRIVATE :: evuaRb = 0.0
+         REAL, PRIVATE :: evuaX2a = 0.0
+         REAL, PRIVATE :: evuaX2b = 0.0
+         REAL, PRIVATE :: evuaY2a = 0.0
+         REAL, PRIVATE :: evuaY2b = 0.0
+         REAL, PRIVATE :: evuaZ2a = 0.0
+         REAL, PRIVATE :: evuaZ2b = 0.0
+         REAL, PRIVATE :: evuaR2a = 0.0
+         REAL, PRIVATE :: evuaR2b = 0.0
+         REAL, PRIVATE :: evuaIxxa = 0.0
+         REAL, PRIVATE :: evuaIxxb = 0.0
+         REAL, PRIVATE :: evuaIxya = 0.0
+         REAL, PRIVATE :: evuaIxyb = 0.0
+         REAL, PRIVATE :: evuaIxza = 0.0
+         REAL, PRIVATE :: evuaIxzb = 0.0
+         REAL, PRIVATE :: evuaIyya = 0.0
+         REAL, PRIVATE :: evuaIyyb = 0.0
+         REAL, PRIVATE :: evuaIyza = 0.0
+         REAL, PRIVATE :: evuaIyzb = 0.0
+         REAL, PRIVATE :: evuaIzza = 0.0
+         REAL, PRIVATE :: evuaIzzb = 0.0
+         REAL, PRIVATE :: evuaVexa = 0.0
+         REAL, PRIVATE :: evuaVexb = 0.0
+         REAL, PRIVATE :: evuaVmfa = 0.0
+         REAL, PRIVATE :: evuaVmfb = 0.0
+         REAL, PRIVATE :: evuaPxa = 0.0
+         REAL, PRIVATE :: evuaPxb = 0.0
+         REAL, PRIVATE :: evuaPya = 0.0
+         REAL, PRIVATE :: evuaPyb = 0.0
+         REAL, PRIVATE :: evuaPza = 0.0
+         REAL, PRIVATE :: evuaPzb = 0.0
+         REAL, PRIVATE :: evuaPx2a = 0.0
+         REAL, PRIVATE :: evuaPx2b = 0.0
+         REAL, PRIVATE :: evuaPy2a = 0.0
+         REAL, PRIVATE :: evuaPy2b = 0.0
+         REAL, PRIVATE :: evuaPz2a = 0.0
+         REAL, PRIVATE :: evuaPz2b = 0.0
+         REAL, PRIVATE :: evuaLxa = 0.0
+         REAL, PRIVATE :: evuaLxb = 0.0
+         REAL, PRIVATE :: evuaLya = 0.0
+         REAL, PRIVATE :: evuaLyb = 0.0
+         REAL, PRIVATE :: evuaLza = 0.0
+         REAL, PRIVATE :: evuaLzb = 0.0
+         REAL, PRIVATE :: evuaLx2a = 0.0
+         REAL, PRIVATE :: evuaLx2b = 0.0
+         REAL, PRIVATE :: evuaLy2a = 0.0
+         REAL, PRIVATE :: evuaLy2b = 0.0
+         REAL, PRIVATE :: evuaLz2a = 0.0
+         REAL, PRIVATE :: evuaLz2b = 0.0
+         REAL, PRIVATE :: evuaFxa = 0.0
+         REAL, PRIVATE :: evuaFxb = 0.0
+         REAL, PRIVATE :: evuaFya = 0.0
+         REAL, PRIVATE :: evuaFyb = 0.0
+         REAL, PRIVATE :: evuaFza = 0.0
+         REAL, PRIVATE :: evuaFzb = 0.0
+         REAL, PRIVATE :: evuaTauXa = 0.0
+         REAL, PRIVATE :: evuaTauXb = 0.0
+         REAL, PRIVATE :: evuaTauYa = 0.0
+         REAL, PRIVATE :: evuaTauYb = 0.0
+         REAL, PRIVATE :: evuaTauZa = 0.0
+         REAL, PRIVATE :: evuaTauZb = 0.0
+         REAL, PRIVATE :: evuaE = 0.0
+         REAL, PRIVATE :: evuaMu = 0.0
+         REAL, PRIVATE :: evuaL2 = 0.0
+         REAL, PRIVATE :: evuaTx = 0.0
+         REAL, PRIVATE :: evuaTy = 0.0
+         REAL, PRIVATE :: evuaTz = 0.0
+         REAL, PRIVATE :: evuaSigX = 0.0
+         REAL, PRIVATE :: evuaSigY = 0.0
+         REAL, PRIVATE :: evuaSigZ = 0.0
+         REAL, PRIVATE :: evuaSigPx = 0.0
+         REAL, PRIVATE :: evuaSigPy = 0.0
+         REAL, PRIVATE :: evuaSigPz = 0.0
+         REAL, PRIVATE :: evuaSigLx = 0.0
+         REAL, PRIVATE :: evuaSigLy = 0.0
+         REAL, PRIVATE :: evuaSigLz = 0.0
+         
+!         REAL, PUBLIC :: l2Norm = 0.0
+!         REAL, PUBLIC :: evuaX = 0.0
+!         REAL, PUBLIC :: evuaX2 = 0.0
+!         REAL, PUBLIC :: evuaX2COM = 0.0
+!         REAL, PUBLIC :: evuaY = 0.0
+!         REAL, PUBLIC :: evuaY2 = 0.0
+!         REAL, PUBLIC :: evuaY2COM = 0.0
+!         REAL, PUBLIC :: evuaZ = 0.0
+!         REAL, PUBLIC :: evuaZ2 = 0.0
+!         REAL, PUBLIC :: evuaZ2COM = 0.0
+!         REAL, PUBLIC :: evuaRxy = 0.0
+!         REAL, PUBLIC :: evuaR2xy = 0.0
+!         REAL, PUBLIC :: evuaRxyz = 0.0
+!         REAL, PUBLIC :: evuaR2xyz = 0.0
+!         REAL, PUBLIC :: evuaPx = 0.0
+!         REAL, PUBLIC :: evuaPx2 = 0.0
+!         REAL, PUBLIC :: evuaPy = 0.0
+!         REAL, PUBLIC :: evuaPy2 = 0.0
+!         REAL, PUBLIC :: evuaPz = 0.0
+!         REAL, PUBLIC :: evuaPz2 = 0.0
+!         REAL, PUBLIC :: evuaLx = 0.0
+!         REAL, PUBLIC :: evuaLxCOM = 0.0
+!         REAL, PUBLIC :: evuaLx2 = 0.0
+!         REAL, PUBLIC :: evuaLx2COM = 0.0
+!         REAL, PUBLIC :: evuaLy = 0.0
+!         REAL, PUBLIC :: evuaLyCOM = 0.0 
+!         REAL, PUBLIC :: evuaLy2 = 0.0
+!         REAL, PUBLIC :: evuaLy2COM = 0.0 
+!         REAL, PUBLIC :: evuaLz = 0.0
+!         REAL, PUBLIC :: evuaLzCOM = 0.0
+!         REAL, PUBLIC :: evuaLz2 = 0.0
+!         REAL, PUBLIC :: evuaLz2COM = 0.0
+!         REAL, PUBLIC :: evuaFx = 0.0
+!         REAL, PUBLIC :: evuaFy = 0.0
+!         REAL, PUBLIC :: evuaFz = 0.0
+!         REAL, PUBLIC :: evuaTauX = 0.0
+!         REAL, PUBLIC :: evuaTauXCOM = 0.0
+!         REAL, PUBLIC :: evuaTauY = 0.0
+!         REAL, PUBLIC :: evuaTauYCOM = 0.0
+!         REAL, PUBLIC :: evuaTauZ = 0.0
+!         REAL, PUBLIC :: evuaTauZCOM = 0.0
+!         REAL, PUBLIC :: evuaVex = 0.0
+!         REAL, PUBLIC :: evuaVmf = 0.0
+!         REAL, PUBLIC :: evuaIxx = 0.0
+!         REAL, PUBLIC :: evuaIyy = 0.0
+!         REAL, PUBLIC :: evuaIzz = 0.0
+!         REAL, PUBLIC :: evuaIxy = 0.0
+!         REAL, PUBLIC :: evuaIyz = 0.0
+!         REAL, PUBLIC :: evuaIxz = 0.0
+!         REAL, PUBLIC :: evuaIxxCOM = 0.0
+!         REAL, PUBLIC :: evuaIyyCOM = 0.0
+!         REAL, PUBLIC :: evuaIzzCOM = 0.0
+!         REAL, PUBLIC :: evuaIxyCOM = 0.0
+!         REAL, PUBLIC :: evuaIyzCOM = 0.0
+!         REAL, PUBLIC :: evuaIxzCOM = 0.0
+!         REAL, PUBLIC :: evuaTx = 0.0
+!         REAL, PUBLIC :: evuaTy = 0.0
+!         REAL, PUBLIC :: evuaTz = 0.0
+!         REAL, PUBLIC :: evuaE = 0.0
+!         REAL, PUBLIC :: evuaL2 = 0.0
+!         REAL, PUBLIC :: evuaMu = 0.0
+!         REAL, PUBLIC :: sigX = 0.0
+!         REAL, PUBLIC :: sigY = 0.0
+!         REAL, PUBLIC :: sigZ = 0.0
+!         REAL, PUBLIC :: sigRxy = 0.0
+!         REAL, PUBLIC :: sigPx = 0.0
+!         REAL, PUBLIC :: sigPy = 0.0
+!         REAL, PUBLIC :: sigPz = 0.0
+!         REAL, PUBLIC :: sigLx = 0.0
+!         REAL, PUBLIC :: sigLy = 0.0
+!         REAL, PUBLIC :: sigLz = 0.0
 
-         PUBLIC :: l2_norm_3d_rect
-         PUBLIC :: x_3d_rect
-         PUBLIC :: y_3d_rect
-         PUBLIC :: z_3d_rect
-         PUBLIC :: r_xy_3d_rect
-         PUBLIC :: r_xyz_3d_rect
-         PUBLIC :: x2_3d_rect
-         PUBLIC :: y2_3d_rect
-         PUBLIC :: z2_3d_rect
-         PUBLIC :: r2_xy_3d_rect
-         PUBLIC :: r2_xyz_3d_rect
-         PUBLIC :: px_3d_rect_cd2
-         PUBLIC :: px_3d_rect_cd4
-         PUBLIC :: py_3d_rect_cd2
-         PUBLIC :: py_3d_rect_cd4
-         PUBLIC :: pz_3d_rect_cd2
-         PUBLIC :: pz_3d_rect_cd4
-!         PUBLIC :: pr_3d_rect_cd2
-!         PUBLIC :: pr_3d_rect_cd4
-         PUBLIC :: px2_3d_rect_cd2
-         PUBLIC :: px2_3d_rect_cd4
-         PUBLIC :: py2_3d_rect_cd2
-         PUBLIC :: py2_3d_rect_cd4
-         PUBLIC :: pz2_3d_rect_cd2
-         PUBLIC :: pz2_3d_rect_cd4
-!         PUBLIC :: pr2_3d_rect_cd2
-!         PUBLIC :: pr2_3d_rect_cd4
-         PUBLIC :: lx_3d_rect_cd2
-         PUBLIC :: lx_3d_rect_cd4
-         PUBLIC :: ly_3d_rect_cd2
-         PUBLIC :: ly_3d_rect_cd4
-         PUBLIC :: lz_3d_rect_cd2
-         PUBLIC :: lz_3d_rect_cd4
-         PUBLIC :: lx2_3d_rect_cd2
-         PUBLIC :: lx2_3d_rect_cd4
-         PUBLIC :: ly2_3d_rect_cd2
-         PUBLIC :: ly2_3d_rect_cd4
-         PUBLIC :: lz2_3d_rect_cd2
-         PUBLIC :: lz2_3d_rect_cd4
-         PUBLIC :: fx_3d_rect_cd2
-         PUBLIC :: fx_3d_rect_cd4
-         PUBLIC :: fy_3d_rect_cd2
-         PUBLIC :: fy_3d_rect_cd4
-         PUBLIC :: fz_3d_rect_cd2
-         PUBLIC :: fz_3d_rect_cd4
-!         PUBLIC :: fr_3d_rect_cd2
-!         PUBLIC :: fr_3d_rect_cd4
-         PUBLIC :: taux_3d_rect_cd2
-         PUBLIC :: taux_3d_rect_cd4
-         PUBLIC :: tauy_3d_rect_cd2
-         PUBLIC :: tauy_3d_rect_cd4
-         PUBLIC :: tauz_3d_rect_cd2
-         PUBLIC :: tauz_3d_rect_cd4
-         PUBLIC :: ixx_3d_rect
-         PUBLIC :: iyy_3d_rect
-         PUBLIC :: izz_3d_rect
-         PUBLIC :: ixy_3d_rect
-         PUBLIC :: iyz_3d_rect
-         PUBLIC :: ixz_3d_rect
-         PUBLIC :: vex_3d_rect
-         PUBLIC :: vmf_3d_rect
+         PUBLIC :: evua_compute_base
+         PUBLIC :: evua_reduce_base
+         PUBLIC :: evua_compute_derived
+         PUBLIC :: evua_write_all
+         PUBLIC :: evua_normalize
+
+         PRIVATE :: l2_norm_3d_rect
+         PRIVATE :: x_3d_rect
+         PRIVATE :: y_3d_rect
+         PRIVATE :: z_3d_rect
+         PRIVATE :: r_xy_3d_rect
+         PRIVATE :: r_xyz_3d_rect
+         PRIVATE :: x2_3d_rect
+         PRIVATE :: y2_3d_rect
+         PRIVATE :: z2_3d_rect
+         PRIVATE :: r2_xy_3d_rect
+         PRIVATE :: r2_xyz_3d_rect
+         PRIVATE :: px_3d_rect_cd2
+         PRIVATE :: px_3d_rect_cd4
+         PRIVATE :: py_3d_rect_cd2
+         PRIVATE :: py_3d_rect_cd4
+         PRIVATE :: pz_3d_rect_cd2
+         PRIVATE :: pz_3d_rect_cd4
+         PRIVATE :: px2_3d_rect_cd2
+         PRIVATE :: px2_3d_rect_cd4
+         PRIVATE :: py2_3d_rect_cd2
+         PRIVATE :: py2_3d_rect_cd4
+         PRIVATE :: pz2_3d_rect_cd2
+         PRIVATE :: pz2_3d_rect_cd4
+!         PRIVATE :: pr2_3d_rect_cd2
+!         PRIVATE :: pr2_3d_rect_cd4
+         PRIVATE :: lx_3d_rect_cd2
+         PRIVATE :: lx_3d_rect_cd4
+         PRIVATE :: ly_3d_rect_cd2
+         PRIVATE :: ly_3d_rect_cd4
+         PRIVATE :: lz_3d_rect_cd2
+         PRIVATE :: lz_3d_rect_cd4
+         PRIVATE :: lx2_3d_rect_cd2
+         PRIVATE :: lx2_3d_rect_cd4
+         PRIVATE :: ly2_3d_rect_cd2
+         PRIVATE :: ly2_3d_rect_cd4
+         PRIVATE :: lz2_3d_rect_cd2
+         PRIVATE :: lz2_3d_rect_cd4
+         PRIVATE :: fx_3d_rect_cd2
+         PRIVATE :: fx_3d_rect_cd4
+         PRIVATE :: fy_3d_rect_cd2
+         PRIVATE :: fy_3d_rect_cd4
+         PRIVATE :: fz_3d_rect_cd2
+         PRIVATE :: fz_3d_rect_cd4
+         PRIVATE :: taux_3d_rect_cd2
+         PRIVATE :: taux_3d_rect_cd4
+         PRIVATE :: tauy_3d_rect_cd2
+         PRIVATE :: tauy_3d_rect_cd4
+         PRIVATE :: tauz_3d_rect_cd2
+         PRIVATE :: tauz_3d_rect_cd4
+         PRIVATE :: ixx_3d_rect
+         PRIVATE :: iyy_3d_rect
+         PRIVATE :: izz_3d_rect
+         PRIVATE :: ixy_3d_rect
+         PRIVATE :: iyz_3d_rect
+         PRIVATE :: ixz_3d_rect
+         PRIVATE :: vex_3d_rect
+         PRIVATE :: vmf_3d_rect
 
          CONTAINS
+
+            SUBROUTINE evua_compute_base ( evuaQuadRule , evuaFdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , dX , dY , dZ , gS , X , Y , Z , Vex3 , Psi3 )
+
+               IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: evuaQuadRule
+               INTEGER, INTENT ( IN ) :: evuaFdOrder
+               INTEGER, INTENT ( IN ) :: nXa 
+               INTEGER, INTENT ( IN ) :: nXb 
+               INTEGER, INTENT ( IN ) :: nXbc
+               INTEGER, INTENT ( IN ) :: nYa 
+               INTEGER, INTENT ( IN ) :: nYb 
+               INTEGER, INTENT ( IN ) :: nYbc
+               INTEGER, INTENT ( IN ) :: nZa 
+               INTEGER, INTENT ( IN ) :: nZb 
+               INTEGER, INTENT ( IN ) :: nZbc
+
+               REAL, INTENT ( IN ) :: xO
+               REAL, INTENT ( IN ) :: yO
+               REAL, INTENT ( IN ) :: zO
+               REAL, INTENT ( IN ) :: dX
+               REAL, INTENT ( IN ) :: dY
+               REAL, INTENT ( IN ) :: dZ
+               REAL, INTENT ( IN ) :: gS
+
+               REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
+               REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
+               REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
+
+               REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex3
+               
+               COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
+
+               IF ( evuaQuadRule == 1 ) THEN
+
+                  evuaL2norma = l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
+                  evuaXa = x_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , dX , dY , dZ , X , Psi3 )
+                  evuaYa = y_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , dX , dY , dZ , Y , Psi3 )
+                  evuaZa = z_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , zO , dX , dY , dZ , Z , Psi3 )
+                  evuaRa = r_xy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 )
+                  evuaX2a = x2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , dX , dY , dZ , X , Psi3 )
+                  evuaY2a = y2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , dX , dY , dZ , Y , Psi3 )
+                  evuaZ2a = z2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , zO , dX , dY , dZ , Z , Psi3 )
+                  evuaR2a = r2_xy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO ,  dX , dY , dZ , X , Y , Psi3 )
+                  evuaIxxa = ixx_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Psi3 )
+                  evuaIxya = ixy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 )
+                  evuaIxza = ixz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 )
+                  evuaIyya = iyy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 )
+                  evuaIyza = iyz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Psi3 )
+                  evuaIzza = izz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 )
+                  evuaVexa = vex_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Vex3 , Psi3 )
+                  evuaVmfa = vmf_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , gS , Psi3 )
+
+                  IF ( evuaFdOrder == 2 ) THEN
+
+                     evuaPxa = px_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , Psi3 )
+                     evuaPya = py_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , Psi3 )
+                     evuaPza = pz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , Psi3 )
+                     evuaPx2a = px2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
+                     evuaPy2a = py2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
+                     evuaPz2a = pz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
+                     evuaLxa = lx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO ,  dX , dY , dZ , Y , Z , Psi3 )
+                     evuaLya = ly_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 )
+                     evuaLza = lz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 )
+                     evuaLx2a = lx2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Psi3 )
+                     evuaLy2a = ly2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 )
+                     evuaLz2a = lz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 )
+                     evuaFxa = fx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , Vex3 , Psi3 )
+                     evuaFya = fy_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , Vex3 , Psi3 )
+                     evuaFza = fz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , Vex3 , Psi3 )
+                     evuaTauXa = taux_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Vex3 , Psi3 )
+                     evuaTauYa = tauy_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Vex3 , Psi3 )
+                     evuaTauZa = tauz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Vex3 , Psi3 )
+
+                  ELSE IF ( evuaFdOrder == 4 ) THEN
+
+                     evuaPxa = px_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , Psi3 )
+                     evuaPya = py_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , Psi3 )
+                     evuaPza = pz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , Psi3 )
+                     evuaPx2a = px2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
+                     evuaPy2a = py2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
+                     evuaPz2a = pz2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
+                     evuaLxa = lx_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO ,  dX , dY , dZ , Y , Z , Psi3 )
+                     evuaLya = ly_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 )
+                     evuaLza = lz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 )
+                     evuaLx2a = lx2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Psi3 )
+                     evuaLy2a = ly2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 )
+                     evuaLz2a = lz2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 )
+                     evuaFxa = fx_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , Vex3 , Psi3 )
+                     evuaFya = fy_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , Vex3 , Psi3 )
+                     evuaFza = fz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , Vex3 , Psi3 )
+                     evuaTauXa = taux_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Vex3 , Psi3 )
+                     evuaTauYa = tauy_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Vex3 , Psi3 )
+                     evuaTauZa = tauz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Vex3 , Psi3 )
+
+                  ELSE
+
+                     WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : evua_compute_base : ERROR - evuaFdOrder is not supported.'
+                     STOP
+
+                  END IF
+
+               ELSE
+
+                  WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : evua_compute_base : ERROR - evuaQuadRule is not supported.'
+                  STOP
+
+               END IF
+
+               RETURN
+
+            END SUBROUTINE
+
+            SUBROUTINE evua_reduce_base ( mpiMaster , mpiReal , mpiError )
+
+               IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: mpiMaster
+               INTEGER, INTENT ( IN ) :: mpiReal
+               INTEGER, INTENT ( INOUT ) :: mpiError
+ 
+               CALL MPI_REDUCE ( evuaL2norma , evuaL2normb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaXa , evuaXb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaYa , evuaYb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaZa , evuaZb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaRa , evuaRb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaX2a , evuaX2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaY2a , evuaY2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaZ2a , evuaZ2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaR2a , evuaR2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaIxxa , evuaIxxb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaIxya , evuaIxyb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaIxza , evuaIxzb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaIyya , evuaIyyb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaIyza , evuaIyzb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaIzza , evuaIzzb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaVexa , evuaVexb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaVmfa , evuaVmfb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaPxa , evuaPxb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaPya , evuaPyb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaPza , evuaPzb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaPx2a , evuaPx2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaPy2a , evuaPy2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaPz2a , evuaPz2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaLxa , evuaLxb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaLya , evuaLyb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaLza , evuaLzb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaLx2a , evuaLx2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaLy2a , evuaLy2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaLz2a , evuaLz2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaFxa , evuaFxb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaFya , evuaFyb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaFza , evuaFzb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaTauXa , evuaTauXb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaTauYa , evuaTauYb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_REDUCE ( evuaTauZa , evuaTauZb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+               RETURN
+
+            END SUBROUTINE
+
+            SUBROUTINE evua_compute_derived ( mpiRank , mpiMaster , wX , wY , wZ )
+
+               IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: mpiRank
+               INTEGER, INTENT ( IN ) :: mpiMaster
+ 
+               REAL, INTENT ( IN ) :: wX
+               REAL, INTENT ( IN ) :: wY
+               REAL, INTENT ( IN ) :: wZ
+
+               IF ( mpiRank == mpiMaster ) THEN
+
+!                 Kinetic energy expectation values
+
+                  evuaTx = 0.5 * evuaPx2b
+                  evuaTy = 0.5 * evuaPy2b
+                  evuaTz = 0.5 * evuaPz2b
+
+!                 Energy expectation value
+
+                  evuaE = evuaTx + evuaTy + evuaTz + evuaVexb + evuaVmfb - wX * evuaLxb - wY * evuaLyb - wZ * evuaLzb
+
+!                 Chemical potential
+
+                  evuaMu =  evuaTx + evuaTy + evuaTz + evuaVexb + 2.0 * evuaVmfb - wX * evuaLxb - wY * evuaLyb - wZ * evuaLzb
+
+!                 Squared angular momentum expectation value
+
+                  evuaL2 = evuaLx2b + evuaLy2b + evuaLz2b
+
+!                 Position, momentum and angular momentum uncertainty 
+               
+                  evuaSigX  = SQRT ( evuaX2b  - evuaXb**2  )
+                  evuaSigY  = SQRT ( evuaY2b  - evuaYb**2  )
+                  evuaSigZ  = SQRT ( evuaZ2b  - evuaZb**2  )
+                  evuaSigPx = SQRT ( evuaPx2b - evuaPxb**2 )
+                  evuaSigPy = SQRT ( evuaPy2b - evuaPyb**2 )
+                  evuaSigPz = SQRT ( evuaPz2b - evuaPzb**2 )
+                  evuaSigLx = SQRT ( evuaLx2b - evuaLxb**2 )
+                  evuaSigLy = SQRT ( evuaLy2b - evuaLyb**2 )
+                  evuaSigLz = SQRT ( evuaLz2b - evuaLzb**2 )
+
+               END IF
+
+               RETURN
+
+            END SUBROUTINE
+
+            SUBROUTINE evua_write_all ( mpiRank , mpiMaster , tN , wX , wY , wZ )
+
+               IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: mpiRank
+               INTEGER, INTENT ( IN ) :: mpiMaster
+
+               REAL, INTENT ( IN ) :: tN
+               REAL, INTENT ( IN ) :: wX
+               REAL, INTENT ( IN ) :: wY
+               REAL, INTENT ( IN ) :: wZ
+
+!              Write expectation values, uncertainties and uncertainty relations to file from MPI_MASTER
+
+               IF ( mpiRank == mpiMaster ) THEN
+
+                  WRITE ( UNIT = OUTPUT_UNIT , FMT = '(59(F23.15))' ) tN , wX , wY , wZ , evuaL2normb , evuaE , evuaMu , evuaL2 , evuaTx , evuaTy , evuaTz , evuaVexb , evuaVmfb , evuaXb , evuaYb , evuaZb , evuaRb , evuaPxb , evuaPyb , evuaPzb , evuaLxb , evuaLyb , evuaLzb , evuaFxb , evuaFyb , evuaFzb , evuaTauXb , evuaTauYb , evuaTauZb , evuaIxxb , evuaIxyb , evuaIxzb , evuaIyyb , evuaIyzb , evuaIzzb , evuaX2b , evuaY2b , evuaZ2b , evuaSigX , evuaSigY , evuaSigZ , evuaPx2b , evuaPy2b , evuaPz2b , evuaSigPx , evuaSigPy , evuaSigPz , evuaLx2b , evuaLy2b , evuaLz2b , evuaSigLx , evuaSigLy , evuaSigLz , evuaSigX * evuaSigPx , evuaSigY * evuaSigPy , evuaSigZ * evuaSigPz , evuaSigLx * evuaSigLy , evuaSigLy * evuaSigLz , evuaSigLz * evuaSigLx
+
+               END IF
+
+               RETURN
+
+            END SUBROUTINE
+
+            SUBROUTINE evua_normalize ( mpiMaster , mpiReal , mpiError , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
+
+               IMPLICIT NONE
+
+               INTEGER, INTENT ( IN ) :: mpiMaster
+               INTEGER, INTENT ( IN ) :: mpiReal
+               INTEGER, INTENT ( IN ) :: mpiError
+               INTEGER, INTENT ( IN ) :: nXa
+               INTEGER, INTENT ( IN ) :: nXb
+               INTEGER, INTENT ( IN ) :: nXbc 
+               INTEGER, INTENT ( IN ) :: nYa
+               INTEGER, INTENT ( IN ) :: nYb
+               INTEGER, INTENT ( IN ) :: nYbc 
+               INTEGER, INTENT ( IN ) :: nZa
+               INTEGER, INTENT ( IN ) :: nZb
+               INTEGER, INTENT ( IN ) :: nZbc 
+
+               REAL, INTENT ( IN ) :: dX
+               REAL, INTENT ( IN ) :: dY
+               REAL, INTENT ( IN ) :: dZ
+
+               COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Psi3 
+
+               evuaL2norma = l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ ,Psi3 )
+               CALL MPI_REDUCE ( evuaL2Norma , evuaL2Normb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_BCAST ( evuaL2Normb , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
+               Psi3 = Psi3 / SQRT ( evuaL2normb )
+
+               RETURN
+
+            END SUBROUTINE
 
             REAL FUNCTION l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
 
