@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Friday, December 19th, 2014
+!     Sunday, December 21st, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -56,8 +56,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.4.2'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Friday, December 19th, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.4.3'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Sunday, December 21st, 2014'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -300,7 +300,7 @@
 
          IF ( mpiRank == MPI_MASTER ) THEN ! read and initialize first block of wave function values from binary file on MPI_MASTER
 
-            CALL io_read_psi3 ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3a )
+            CALL io_read_bin_psi ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3a )
 
          END IF
 
@@ -308,11 +308,11 @@
 
             IF ( mpiRank == MPI_MASTER ) THEN ! read in next block of wave function values from binary file on MPI_MASTER
 
-               CALL io_read_psi3 ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+               CALL io_read_bin_psi ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
 
             END IF
 !           send read block from MPI_MASTER to mpiRank equal to mpiDestination
-            CALL mpi_copy_psi3 ( mpiRank , MPI_MASTER , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+            CALL mpi_copy_psi ( mpiRank , MPI_MASTER , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
 
          END DO
 
@@ -376,10 +376,10 @@
                psiFilePos = 1
                DO mpiSource = 0 , mpiProcesses - 1
 
-                  CALL mpi_copy_psi3 ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+                  CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
                   IF ( mpiRank == MPI_MASTER ) THEN
 
-                     CALL io_write_psi3 ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+                     CALL io_write_bin_psi ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
 
                   END IF
 
@@ -409,7 +409,7 @@
                END DO
                DO mpiSource = 0 , mpiProcesses - 1
 
-                  CALL mpi_copy_psi3 ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+                  CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
                   IF ( mpiRank == MPI_MASTER ) THEN
 
                      CALL io_write_vtk_repsi ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
@@ -420,7 +420,7 @@
                Psi3b = Psi3a
                DO mpiSource = 0 , mpiProcesses - 1
 
-                  CALL mpi_copy_psi3 ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+                  CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
                   IF ( mpiRank == MPI_MASTER ) THEN 
 
                      CALL io_write_vtk_impsi ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
@@ -584,6 +584,10 @@
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wY        = ', wY
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wZ        = ', wZ
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        gS        = ', gS
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiInput  = ', psiInput
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiOutput = ', psiOutput
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiFileNo = ', psiFileNo
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiInit   = ', psiInit
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nXpsi     = ', nXpsi
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nYpsi     = ', nYpsi
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nZpsi     = ', nZpsi
@@ -599,6 +603,10 @@
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        pXpsi     = ', pXpsi
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        pYpsi     = ', pYpsi
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        pZpsi     = ', pZpsi
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        vexInput  = ', vexInput
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        vexOutput = ', vexOutput
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        vexFileNo = ', vexFileNo
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        vexInit   = ', vexInit
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        xOvex     = ', xOvex
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        yOvex     = ', yOvex
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        zOvex     = ', zOvex
@@ -703,7 +711,6 @@
             CALL MPI_BCAST ( itpOn     , 1 , MPI_LOGICAL , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( rk4Lambda , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( fdOrder   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-            CALL MPI_BCAST ( quadRule  , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( nTsteps   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( nTwrite   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( nX        , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
@@ -805,7 +812,7 @@
 
          END SUBROUTINE 
 
-         SUBROUTINE mpi_copy_vex3 ( mpiRank , mpiSource , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex3 ) 
+         SUBROUTINE mpi_copy_vex ( mpiRank , mpiSource , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex3 ) 
 
             IMPLICIT NONE
 
@@ -866,7 +873,7 @@
  
          END SUBROUTINE
 
-         SUBROUTINE mpi_copy_psi3 ( mpiRank , mpiSource , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
+         SUBROUTINE mpi_copy_psi ( mpiRank , mpiSource , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
             IMPLICIT NONE
 
@@ -927,660 +934,6 @@
 
          END SUBROUTINE
 
-         SUBROUTINE mpi_gather_real3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Real3p , Real3f )
-
-         IMPLICIT NONE
-
-         INTEGER, INTENT ( IN ) :: nX
-         INTEGER, INTENT ( IN ) :: nXa
-         INTEGER, INTENT ( IN ) :: nXb
-         INTEGER, INTENT ( IN ) :: nXbc 
-         INTEGER, INTENT ( IN ) :: nY 
-         INTEGER, INTENT ( IN ) :: nYa
-         INTEGER, INTENT ( IN ) :: nYb
-         INTEGER, INTENT ( IN ) :: nYbc 
-         INTEGER, INTENT ( IN ) :: nZ 
-         INTEGER, INTENT ( IN ) :: nZa
-         INTEGER, INTENT ( IN ) :: nZb
-         INTEGER, INTENT ( IN ) :: nZbc
-
-         REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Real3p
-         REAL, DIMENSION ( 1 : nX , 1 : nY , 1 : nZ ), INTENT ( INOUT ) :: Real3f
-
-         INTEGER :: mpiSource
-         INTEGER :: nZaSource
-         INTEGER :: nZbSource
-         INTEGER :: j , k , l
-
-         IF ( mpiRank == MPI_MASTER ) THEN ! receive external potential and wave function data from all MPI processes
-
-!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-            DO l = nZa , nZb
-
-!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-               DO k = nYa , nYb
-
-                  DO j = nXa , nXb
-
-                     Real3f ( j , k , l ) = Real3p ( j , k , l )
-
-                  END DO
-
-               END DO
-!$OMP          END PARALLEL DO
-
-            END DO
-!$OMP       END PARALLEL DO
-
-            DO mpiSource = 1 , mpiProcesses - 1
-
-               CALL MPI_RECV ( nZaSource , 1 , mpiInt , mpiSource , 0 , MPI_COMM_WORLD , MpiStatus , mpiError )
-               CALL MPI_RECV ( nZbSource , 1 , mpiInt , mpiSource , 1 , MPI_COMM_WORLD , MpiStatus , mpiError )
-               DO l = nZaSource , nZbSource
-
-                  DO k = 1 , nY
-
-                     DO j = 1 , nX
-
-                        CALL MPI_RECV ( Real3f ( j , k , l ) , 1 , mpiReal , mpiSource , 2 , MPI_COMM_WORLD , MpiStatus , mpiError )
-
-                     END DO
-
-                  END DO
-
-               END DO
-
-            END DO
-
-         ELSE ! send real-valued, three-dimensional array data to MPI_MASTER
-
-            CALL MPI_SSEND ( nZa , 1 , mpiInt , MPI_MASTER , 0 , MPI_COMM_WORLD , mpiError )
-            CALL MPI_SSEND ( nZb , 1 , mpiInt , MPI_MASTER , 1 , MPI_COMM_WORLD , mpiError )
-            DO l = nZa , nZb
-
-               DO k = 1 , nY
-
-                  DO j = 1 , nX
-
-                     CALL MPI_SSEND ( Real3p ( j , k , l ) , 1 , mpiReal , MPI_MASTER , 2 , MPI_COMM_WORLD , mpiError )
-
-                  END DO
-
-               END DO
-
-            END DO
-
-         END IF
-
-         RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE mpi_gather_cmplx3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Cmplx3p , Cmplx3f )
-
-         IMPLICIT NONE
-
-         INTEGER, INTENT ( IN ) :: nX
-         INTEGER, INTENT ( IN ) :: nXa
-         INTEGER, INTENT ( IN ) :: nXb
-         INTEGER, INTENT ( IN ) :: nXbc
-         INTEGER, INTENT ( IN ) :: nY
-         INTEGER, INTENT ( IN ) :: nYa
-         INTEGER, INTENT ( IN ) :: nYb
-         INTEGER, INTENT ( IN ) :: nYbc
-         INTEGER, INTENT ( IN ) :: nZ
-         INTEGER, INTENT ( IN ) :: nZa
-         INTEGER, INTENT ( IN ) :: nZb
-         INTEGER, INTENT ( IN ) :: nZbc
-
-         COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Cmplx3p
-         COMPLEX, DIMENSION ( 1 : nX , 1 : nY , 1 : nZ ), INTENT ( INOUT ) :: Cmplx3f
-
-         INTEGER :: mpiSource
-         INTEGER :: nZaSource
-         INTEGER :: nZbSource
-         INTEGER :: j , k , l
-
-         IF ( mpiRank == MPI_MASTER ) THEN ! receive complex-valued, three-dimensional array data from all MPI processes
-
-!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-            DO l = nZa , nZb
-
-!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-               DO k = nYa , nYb
-
-                  DO j = nXa , nXb
-
-                     Cmplx3f ( j , k , l ) = Cmplx3p ( j , k , l )
-
-                  END DO
-
-               END DO
-!$OMP          END PARALLEL DO
-
-            END DO
-!$OMP       END PARALLEL DO
-            DO mpiSource = 1 , mpiProcesses - 1
-
-               CALL MPI_RECV ( nZaSource , 1 , mpiInt , mpiSource , 0 , MPI_COMM_WORLD , MpiStatus , mpiError )
-               CALL MPI_RECV ( nZbSource , 1 , mpiInt , mpiSource , 1 , MPI_COMM_WORLD , MpiStatus , mpiError )
-
-               DO l = nZaSource , nZbSource
-
-                  DO k = 1 , nY
-
-                     DO j = 1 , nX
-
-                        CALL MPI_RECV ( Cmplx3f ( j , k , l ) , 1 , mpiCmplx , mpiSource , 2 , MPI_COMM_WORLD , MpiStatus , mpiError )
-
-                     END DO
-
-                  END DO
-
-               END DO
-
-            END DO
-
-         ELSE ! send complex-valued, three-dimensional array data to MPI_MASTER
-
-            CALL MPI_SSEND ( nZa , 1 , mpiInt , MPI_MASTER , 0 , MPI_COMM_WORLD , mpiError )
-            CALL MPI_SSEND ( nZb , 1 , mpiInt , MPI_MASTER , 1 , MPI_COMM_WORLD , mpiError )
-
-            DO l = nZa , nZb
-
-               DO k = 1 , nY
-
-                  DO j = 1 , nX
-
-                     CALL MPI_SSEND ( Cmplx3p ( j , k , l ) , 1 , mpiCmplx , MPI_MASTER , 2 , MPI_COMM_WORLD , mpiError )
-
-                  END DO
-
-               END DO
-
-            END DO
-
-         END IF
-
-         RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE mpi_scatter_real3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Real3p , Real3f )
-
-         IMPLICIT NONE
-
-         INTEGER, INTENT ( IN ) :: nX
-         INTEGER, INTENT ( IN ) :: nXa
-         INTEGER, INTENT ( IN ) :: nXb
-         INTEGER, INTENT ( IN ) :: nXbc
-         INTEGER, INTENT ( IN ) :: nY
-         INTEGER, INTENT ( IN ) :: nYa
-         INTEGER, INTENT ( IN ) :: nYb
-         INTEGER, INTENT ( IN ) :: nYbc
-         INTEGER, INTENT ( IN ) :: nZ
-         INTEGER, INTENT ( IN ) :: nZa
-         INTEGER, INTENT ( IN ) :: nZb
-         INTEGER, INTENT ( IN ) :: nZbc
-
-         REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Real3p
-         REAL, DIMENSION ( 1 : nX , 1 : nY , 1 : nZ ), INTENT ( IN ) :: Real3f
-
-         INTEGER :: mpiDest
-         INTEGER :: nZaDest
-         INTEGER :: nZbDest
-         INTEGER :: j , k , l
-
-         IF ( mpiRank == MPI_MASTER ) THEN ! send real-valued, three-dimensional array data to all MPI processes
-
-!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-            DO l = nZa , nZb
-
-!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-               DO k = nYa , nYb
-
-                  DO j = nXa , nXb
-
-                     Real3p ( j , k , l ) = Real3f ( j , k , l )
-
-                  END DO
-
-               END DO
-!$OMP          END PARALLEL DO 
-
-            END DO
-!$OMP       END PARALLEL DO
-            DO mpiDest = 1 , mpiProcesses - 1
-
-               CALL MPI_RECV ( nZaDest , 1 , mpiInt , mpiDest , 0 , MPI_COMM_WORLD , MpiStatus , mpiError )
-               CALL MPI_RECV ( nZbDest , 1 , mpiInt , mpiDest , 1 , MPI_COMM_WORLD , MpiStatus , mpiError )
-
-               DO l = nZaDest , nZbDest
-
-                  DO k = 1 , nY
-
-                     DO j = 1 , nX
-
-                        CALL MPI_SSEND ( Real3f ( j , k , l ) , 1 , mpiReal , mpiDest , 2 , MPI_COMM_WORLD , mpiError )
-
-                     END DO
-
-                  END DO
-
-               END DO
-
-            END DO
-
-         ELSE ! receive real-valued, three-dimensional array data from MPI_MASTER
-
-            CALL MPI_SSEND ( nZa , 1 , mpiInt , MPI_MASTER , 0 , MPI_COMM_WORLD , mpiError )
-            CALL MPI_SSEND ( nZb , 1 , mpiInt , MPI_MASTER , 1 , MPI_COMM_WORLD , mpiError )
-            DO l = nZa , nZb
-
-               DO k = 1 , nY
-
-                  DO j = 1 , nY
-
-                     CALL MPI_RECV ( Real3p ( j , k , l ) , 1 , mpiReal , MPI_MASTER , 2 , MPI_COMM_WORLD , MpiStatus , mpiError )
-
-                  END DO
-
-               END DO
-
-            END DO
-
-         END IF
-
-         RETURN
-
-         END SUBROUTINE
-
-         SUBROUTINE mpi_scatter_cmplx3 ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Cmplx3p , Cmplx3f )
-
-         IMPLICIT NONE
-
-         INTEGER, INTENT ( IN ) :: nX
-         INTEGER, INTENT ( IN ) :: nXa
-         INTEGER, INTENT ( IN ) :: nXb
-         INTEGER, INTENT ( IN ) :: nXbc
-         INTEGER, INTENT ( IN ) :: nY
-         INTEGER, INTENT ( IN ) :: nYa
-         INTEGER, INTENT ( IN ) :: nYb
-         INTEGER, INTENT ( IN ) :: nYbc
-         INTEGER, INTENT ( IN ) :: nZ
-         INTEGER, INTENT ( IN ) :: nZa
-         INTEGER, INTENT ( IN ) :: nZb
-         INTEGER, INTENT ( IN ) :: nZbc
-
-         COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Cmplx3p
-         COMPLEX, DIMENSION ( 1 : nX , 1 : nY , 1 : nZ ), INTENT ( IN ) :: Cmplx3f
-
-         INTEGER :: mpiDest
-         INTEGER :: nZaDest
-         INTEGER :: nZbDest
-         INTEGER :: j , k , l
-
-         IF ( mpiRank == MPI_MASTER ) THEN ! send complex-valued, three-dimensional array data to all MPI processes
-
-!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-            DO l = nZa , nZb
-
-!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-               DO k = nYa , nYb
-
-                  DO j = nXa , nXb
-
-                     Cmplx3p ( j , k , l ) = Cmplx3f ( j , k , l )
-
-                  END DO
-
-               END DO
-!$OMP          END PARALLEL DO 
-
-            END DO
-!$OMP       END PARALLEL DO
-            DO mpiDest = 1 , mpiProcesses - 1
-
-               CALL MPI_RECV ( nZaDest , 1 , mpiInt , mpiDest , 0 , MPI_COMM_WORLD , MpiStatus , mpiError )
-               CALL MPI_RECV ( nZbDest , 1 , mpiInt , mpiDest , 1 , MPI_COMM_WORLD , MpiStatus , mpiError )
-
-               DO l = nZaDest , nZbDest
-
-                  DO k = 1 , nY
-
-                     DO j = 1 , nX
-
-                        CALL MPI_SSEND ( Cmplx3f ( j , k , l ) , 1 , mpiCmplx , mpiDest , 2 , MPI_COMM_WORLD , mpiError )
-
-                     END DO
-
-                  END DO
-
-               END DO
-
-            END DO
-
-         ELSE ! receive complex-valued, three-dimensional array data from MPI_MASTER
-
-            CALL MPI_SSEND ( nZa , 1 , mpiInt , MPI_MASTER , 0 , MPI_COMM_WORLD , mpiError )
-            CALL MPI_SSEND ( nZb , 1 , mpiInt , MPI_MASTER , 1 , MPI_COMM_WORLD , mpiError )
-            DO l = nZa , nZb
-
-               DO k = 1 , nY
-
-                  DO j = 1 , nY
-
-                     CALL MPI_RECV ( Cmplx3p ( j , k , l ) , 1 , mpiCmplx , MPI_MASTER , 2 , MPI_COMM_WORLD , MpiStatus , mpiError )
-
-                  END DO
-
-               END DO
-
-            END DO
-
-         END IF
-
-         RETURN
-
-         END SUBROUTINE
-
-!         SUBROUTINE compute_f ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , X , Y , Z , Vex3 , Psi3 , F3 )
-!
-!            IMPLICIT NONE
-!
-!            INTEGER, INTENT ( IN ) :: nXa
-!            INTEGER, INTENT ( IN ) :: nXb
-!            INTEGER, INTENT ( IN ) :: nXbc
-!            INTEGER, INTENT ( IN ) :: nYa
-!            INTEGER, INTENT ( IN ) :: nYb
-!            INTEGER, INTENT ( IN ) :: nYbc
-!            INTEGER, INTENT ( IN ) :: nZa
-!            INTEGER, INTENT ( IN ) :: nZb
-!            INTEGER, INTENT ( IN ) :: nZbc
-!
-!            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
-!            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
-!            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
-!            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex3
-!
-!            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
-!            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: F3
-!
-!            IF ( fdOrder == 2 ) THEN 
-!
-!               CALL f_gp_3d_rrf_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , X , Y , Z , Vex3 , Psi3 , F3 )
-!
-!            ELSE IF ( fdOrder == 4 ) THEN
-!
-!               CALL f_gp_3d_rrf_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , X , Y , Z , Vex3 , Psi3 , F3 )
-!
-!            ELSE IF ( fdOrder == 6 ) THEN
-!
-!               CALL f_gp_3d_rrf_cd6 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , X , Y , Z , Vex3 , Psi3 , F3 )
-!
-!            ELSE IF ( fdOrder == 8 ) THEN
-!
-!               CALL f_gp_3d_rrf_cd8 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , X , Y , Z , Vex3 , Psi3 , F3 )
-!
-!            ELSE
-!
-!               WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : compute_f : ERROR - fdOrder not supported.'
-!
-!            END IF
-!
-!            RETURN
-!
-!         END SUBROUTINE
-!
-!         SUBROUTINE f_gp_3d_rrf_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , X , Y , Z , Vex3 , Psi3 , F3 ) 
-!
-!            IMPLICIT NONE
-!
-!            INTEGER, INTENT ( IN ) :: nXa
-!            INTEGER, INTENT ( IN ) :: nXb
-!            INTEGER, INTENT ( IN ) :: nXbc
-!            INTEGER, INTENT ( IN ) :: nYa
-!            INTEGER, INTENT ( IN ) :: nYb
-!            INTEGER, INTENT ( IN ) :: nYbc
-!            INTEGER, INTENT ( IN ) :: nZa
-!            INTEGER, INTENT ( IN ) :: nZb
-!            INTEGER, INTENT ( IN ) :: nZbc
-!
-!            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
-!            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
-!            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
-!            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex3
-!
-!            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
-!            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: F3
-!
-!            INTEGER :: j , k , l
-!
-!!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-!            DO l = nZa , nZb  
-!
-!!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-!               DO k = nYa , nYb  
-!
-!                  DO j = nXa , nXb  
-!
-!                     F3 ( j , k , l ) = &
-!                        & CMPLX ( 0.5 * ( wY * X ( j ) - wX * Y ( k ) ) / dZ , 0.5 / dZ**2 ) * Psi3 ( j , k , l - 1 ) + &  
-!                        & CMPLX ( 0.5 * ( wX * Z ( l ) - wZ * X ( j ) ) / dY , 0.5 / dY**2 ) * Psi3 ( j , k - 1 , l ) + &  
-!                        & CMPLX ( 0.5 * ( wZ * Y ( k ) - wY * Z ( l ) ) / dX , 0.5 / dX**2 ) * Psi3 ( j - 1 , k , l ) - &  
-!                        & CMPLX ( 0.0 , 1.0 / dX**2 + 1.0 / dY**2 + 1.0 / dZ**2 + Vex3 ( j , k , l ) + gS * ABS ( Psi3 ( j , k , l ) )**2 ) * Psi3 ( j , k , l ) + &
-!                        & CMPLX ( 0.5 * ( wY * Z ( l ) - wZ * Y ( k ) ) / dX , 0.5 / dX**2 ) * Psi3 ( j + 1 , k , l ) + &  
-!                        & CMPLX ( 0.5 * ( wZ * X ( j ) - wX * Z ( l ) ) / dY , 0.5 / dY**2 ) * Psi3 ( j , k + 1 , l ) + &  
-!                        & CMPLX ( 0.5 * ( wX * Y ( k ) - wY * X ( j ) ) / dZ , 0.5 / dZ**2 ) * Psi3 ( j , k , l + 1 )  
-!
-!                  END DO
-!
-!               END DO
-!!$OMP          END PARALLEL DO
-!
-!            END DO
-!!$OMP       END PARALLEL DO 
-!
-!            RETURN
-!
-!         END SUBROUTINE
-!
-!         SUBROUTINE f_gp_3d_rrf_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , X , Y , Z , Vex3 , Psi3 , F3 ) 
-!
-!            IMPLICIT NONE
-!
-!            INTEGER, INTENT ( IN ) :: nXa
-!            INTEGER, INTENT ( IN ) :: nXb
-!            INTEGER, INTENT ( IN ) :: nXbc
-!            INTEGER, INTENT ( IN ) :: nYa
-!            INTEGER, INTENT ( IN ) :: nYb
-!            INTEGER, INTENT ( IN ) :: nYbc
-!            INTEGER, INTENT ( IN ) :: nZa
-!            INTEGER, INTENT ( IN ) :: nZb
-!            INTEGER, INTENT ( IN ) :: nZbc
-!
-!            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
-!            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
-!            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
-!            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex3 
-!
-!            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3 
-!            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: F3
-!
-!            INTEGER :: j , k , l
-!
-!!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-!            DO l = nZa , nZb
-!
-!!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-!               DO k = nYa , nYb
-!
-!                  DO j = nXa , nXb
-!
-!                     F3 ( j , k , l ) = &
-!                        & CMPLX ( ( wX * Y ( k ) - wY * X ( j ) ) / ( 12.0 * dZ ) , -1.0 / ( 24.0 * dZ**2 ) ) * Psi3 ( j , k , l - 2 ) + &
-!                        & CMPLX ( 0.75 * ( wY * X ( j ) - wX * Y ( k ) ) / dZ , 2.0 / ( 3.0 * dZ**2 ) ) * Psi3 ( j , k , l - 1 ) + &
-!                        & CMPLX ( ( wZ * X ( j ) - wX * Z ( l ) ) / ( 12.0 * dY ) , -1.0 / ( 24.0 * dY**2 ) ) * Psi3 ( j , k - 2 , l ) + &
-!                        & CMPLX ( 0.75 * ( wX * Z ( l ) - wZ * X ( j ) ) / dY , 2.0 / ( 3.0 * dY**2 ) ) * Psi3 ( j , k - 1 , l ) + &
-!                        & CMPLX ( ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 12.0 * dX ) , -1.0 / ( 24.0 * dX**2 ) ) * Psi3 ( j - 2 , k , l ) + &
-!                        & CMPLX ( 0.75 * ( wZ * Y ( k ) - wY * Z ( l ) ) / dX , 2.0 / ( 3.0 * dX**2 ) ) * Psi3 ( j - 1 , k , l ) - &
-!                        & CMPLX ( 0.0 , 1.25 * ( 1.0 / dX**2 + 1.0 / dY**2 + 1.0 / dZ**2 ) + Vex3 ( j , k , l ) + &
-!                        &    gS * ABS ( Psi3 ( j , k , l ) )**2 ) * Psi3 ( j , k , l ) + &
-!                        & CMPLX ( 0.75 * ( wY * Z ( l ) - wZ * Y ( k ) ) / dX , 2.0 / ( 3.0 * dX**2 ) ) * Psi3 ( j + 1 , k , l ) + &
-!                        & CMPLX ( ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 12.0 * dX ) , -1.0 / ( 24.0 * dX**2 ) ) * Psi3 ( j + 2 , k , l ) + &
-!                        & CMPLX ( 0.75 * ( wZ * X ( j ) - wX * Z ( l ) ) / dY , 2.0 / ( 3.0 * dY**2 ) ) * Psi3 ( j , k + 1 , l ) + &
-!                        & CMPLX ( ( wX * Z ( l ) - wZ * X ( j ) ) / ( 12.0 * dY ) , -1.0 / ( 24.0 * dY**2 ) ) * Psi3 ( j , k + 2 , l ) + &
-!                        & CMPLX ( 0.75 * ( wX * Y ( k ) - wY * X ( j ) ) / dZ , 2.0 / ( 3.0 * dZ**2 ) ) * Psi3 ( j , k , l + 1 ) + &
-!                        & CMPLX ( ( wY * X ( j ) - wX * Y ( k ) ) / ( 12.0 * dZ ) , -1.0 / ( 24.0 * dZ**2 ) ) * Psi3 ( j , k , l + 2 )
-!
-!                  END DO
-!
-!               END DO
-!!$OMP          END PARALLEL DO
-!
-!            END DO
-!!$OMP       END PARALLEL DO
-!
-!            RETURN
-!
-!         END SUBROUTINE
-!
-!         SUBROUTINE f_gp_3d_rrf_cd6 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , X , Y , Z , Vex3 , Psi3 , F3 )
-!
-!            IMPLICIT NONE
-!
-!            INTEGER, INTENT ( IN ) :: nXa
-!            INTEGER, INTENT ( IN ) :: nXb
-!            INTEGER, INTENT ( IN ) :: nXbc
-!            INTEGER, INTENT ( IN ) :: nYa
-!            INTEGER, INTENT ( IN ) :: nYb
-!            INTEGER, INTENT ( IN ) :: nYbc
-!            INTEGER, INTENT ( IN ) :: nZa
-!            INTEGER, INTENT ( IN ) :: nZb
-!            INTEGER, INTENT ( IN ) :: nZbc
-!
-!            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
-!            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
-!            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
-!            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex3
-!
-!            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
-!            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: F3
-!
-!            INTEGER :: j , k , l
-!
-!!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-!            DO l = nZa , nZb
-!
-!!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-!               DO k = nYa , nYb
-!
-!                  DO j = nXa , nXb
-!
-!                     F3 ( j , k , l ) = &
-!                        & CMPLX (       ( wY * X ( j ) - wX * Y ( k ) ) / ( 60.0 * dZ ) ,  1.0 / ( 180.0 * dZ**2 ) ) * Psi3 ( j , k , l - 3 ) + &
-!                        & CMPLX ( 3.0 * ( wX * Y ( k ) - wY * X ( j ) ) / ( 20.0 * dZ ) , -3.0 / ( 40.0 * dZ**2 ) ) * Psi3 ( j , k , l - 2 ) + &
-!                        & CMPLX ( 3.0 * ( wY * X ( j ) - wX * Y ( k ) ) / ( 4.0  * dZ ) ,  3.0 / ( 4.0 * dZ**2 ) ) * Psi3 ( j , k , l - 1 ) + &
-!                        & CMPLX (       ( wX * Z ( l ) - wZ * X ( j ) ) / ( 60.0 * dY ) ,  1.0 / ( 180.0 * dY**2 ) ) * Psi3 ( j , k - 3 , l ) + &
-!                        & CMPLX ( 3.0 * ( wZ * X ( j ) - wX * Z ( l ) ) / ( 20.0 * dY ) , -3.0 / ( 40.0 * dY**2 ) ) * Psi3 ( j , k - 2 , l ) + &
-!                        & CMPLX ( 3.0 * ( wX * Z ( l ) - wZ * X ( j ) ) / ( 4.0  * dY ) ,  3.0 / ( 4.0 * dY**2 ) ) * Psi3 ( j , k - 1 , l ) + &
-!                        & CMPLX (       ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 60.0 * dX ) ,  1.0 / ( 180.0 * dX**2 ) ) * Psi3 ( j - 3 , k , l ) + &
-!                        & CMPLX ( 3.0 * ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 20.0 * dX ) , -3.0 / ( 40.0 * dX**2 ) ) * Psi3 ( j - 2 , k , l ) + &
-!                        & CMPLX ( 3.0 * ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 4.0  * dX ) ,  3.0 / ( 4.0 * dX**2 ) ) * Psi3 ( j - 1 , k , l ) - &
-!                        & CMPLX ( 0.0 , ( 49.0 / 36.0 ) * ( 1.0 / dX**2 + 1.0 / dY**2 + 1.0 / dZ**2 ) + Vex3 ( j , k , l ) + gS * ABS ( Psi3 ( j , k , l ) )**2 ) * Psi3 ( j , k , l ) + &
-!                        & CMPLX ( 3.0 * ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 4.0  * dX ) ,  3.0 / ( 4.0 * dX**2 ) ) * Psi3 ( j + 1 , k , l ) + &
-!                        & CMPLX ( 3.0 * ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 20.0 * dX ) , -3.0 / ( 40.0 * dX**2 ) ) * Psi3 ( j + 2 , k , l ) + &
-!                        & CMPLX (       ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 60.0 * dX ) ,  1.0 / ( 180.0 * dX**2 ) ) * Psi3 ( j + 3 , k , l ) + &
-!                        & CMPLX ( 3.0 * ( wZ * X ( j ) - wX * Z ( l ) ) / ( 4.0  * dY ) ,  3.0 / ( 4.0 * dY**2 ) ) * Psi3 ( j , k + 1 , l ) + &
-!                        & CMPLX ( 3.0 * ( wX * Z ( l ) - wZ * X ( j ) ) / ( 20.0 * dY ) , -3.0 / ( 40.0 * dY**2 ) ) * Psi3 ( j , k + 2 , l ) + &
-!                        & CMPLX (       ( wZ * X ( j ) - wX * Z ( l ) ) / ( 60.0 * dY ) ,  1.0 / ( 180.0 * dY**2 ) ) * Psi3 ( j , k + 3 , l ) + &
-!                        & CMPLX ( 3.0 * ( wX * Y ( k ) - wY * X ( j ) ) / ( 4.0  * dZ ) ,  3.0 / ( 4.0 * dZ**2 ) ) * Psi3 ( j , k , l + 1 ) + &
-!                        & CMPLX ( 3.0 * ( wY * X ( j ) - wX * Y ( k ) ) / ( 20.0 * dZ ) , -3.0 / ( 40.0 * dZ**2 ) ) * Psi3 ( j , k , l + 2 ) + &
-!                        & CMPLX (       ( wX * Y ( k ) - wY * X ( j ) ) / ( 60.0 * dZ ) ,  1.0 / ( 180.0 * dZ**2 ) ) * Psi3 ( j , k , l + 3 )   
-!
-!                  END DO
-!
-!               END DO
-!!$OMP          END PARALLEL DO
-!
-!            END DO
-!!$OMP       END PARALLEL DO
-!
-!            RETURN
-!
-!         END SUBROUTINE
-!
-!         SUBROUTINE f_gp_3d_rrf_cd8 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , X , Y , Z , Vex3 , Psi3 , F3 )
-!
-!            IMPLICIT NONE
-!
-!            INTEGER, INTENT ( IN ) :: nXa
-!            INTEGER, INTENT ( IN ) :: nXb
-!            INTEGER, INTENT ( IN ) :: nXbc
-!            INTEGER, INTENT ( IN ) :: nYa
-!            INTEGER, INTENT ( IN ) :: nYb
-!            INTEGER, INTENT ( IN ) :: nYbc
-!            INTEGER, INTENT ( IN ) :: nZa
-!            INTEGER, INTENT ( IN ) :: nZb
-!            INTEGER, INTENT ( IN ) :: nZbc
-!
-!            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
-!            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
-!            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
-!            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Vex3
-!
-!            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
-!            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( OUT ) :: F3
-!
-!            INTEGER :: j , k , l
-!
-!!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-!            DO l = nZa , nZb
-!
-!!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-!               DO k = nYa , nYb
-!
-!                  DO j = nXa , nXb
-!
-!                     F3 ( j , k , l ) = &
-!                        & CMPLX (       ( wX * Y ( k ) - wY * X ( j ) ) / ( 280.0 * dZ ) , -1.0 / ( 1120.0 * dZ**2 ) ) * Psi3 ( j , k , l - 4 ) + &
-!                        & CMPLX ( 4.0 * ( wY * X ( j ) - wX * Y ( k ) ) / ( 105.0 * dZ ) ,  4.0 / ( 315.0 * dZ**2 ) ) * Psi3 ( j , k , l - 3 ) + &
-!                        & CMPLX (       ( wX * Y ( k ) - wY * X ( j ) ) / ( 5.0   * dZ ) , -1.0 / ( 10.0 * dZ**2 ) ) * Psi3 ( j , k , l - 2 ) + &
-!                        & CMPLX ( 4.0 * ( wY * X ( j ) - wX * Y ( k ) ) / ( 5.0   * dZ ) ,  4.0 / ( 5.0 * dZ**2 ) ) * Psi3 ( j , k , l - 1 ) + &
-!                        & CMPLX (       ( wZ * X ( j ) - wX * Z ( l ) ) / ( 280.0 * dY ) , -1.0 / ( 1120 * dY**2 ) ) * Psi3 ( j , k - 4 , l ) + &
-!                        & CMPLX ( 4.0 * ( wX * Z ( l ) - wZ * X ( j ) ) / ( 105.0 * dY ) ,  4.0 / ( 315.0 * dY**2 ) ) * Psi3 ( j , k - 3 , l ) + &
-!                        & CMPLX (       ( wZ * X ( j ) - wX * Z ( l ) ) / ( 5.0   * dY ) , -1.0 / ( 10.0 * dY**2 ) ) * Psi3 ( j , k - 2 , l ) + &
-!                        & CMPLX ( 4.0 * ( wX * Z ( l ) - wZ * X ( j ) ) / ( 5.0   * dY ) ,  4.0 / ( 5.0 * dY**2 ) ) * Psi3 ( j , k - 1 , l ) + &
-!                        & CMPLX (       ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 280.0 * dX ) , -1.0 / ( 1120.0 * dX**2 ) ) * Psi3 ( j - 4 , k , l ) + &
-!                        & CMPLX ( 4.0 * ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 105.0 * dX ) ,  4.0 / ( 315.0 * dX**2 ) ) * Psi3 ( j - 3 , k , l ) + &
-!                        & CMPLX (       ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 5.0   * dX ) , -1.0 / ( 10.0 * dX**2 ) ) * Psi3 ( j - 2 , k , l ) + &
-!                        & CMPLX ( 4.0 * ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 5.0   * dX ) ,  4.0 / ( 5.0 * dX**2 ) ) * Psi3 ( j - 1 , k , l ) - &
-!                        & CMPLX ( 0.0 , ( 205.0 / 144.0 ) * ( 1.0 / dX**2 + 1.0 / dY**2 + 1.0 / dZ**2 ) + Vex3 ( j , k , l ) + gS * ABS ( Psi3 ( j , k , l ) )**2 ) * Psi3 ( j , k , l ) + &
-!                        & CMPLX ( 4.0 * ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 5.0   * dX ) ,  4.0 / ( 5.0 * dX**2 ) ) * Psi3 ( j + 1 , k , l ) + &
-!                        & CMPLX (       ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 5.0   * dX ) , -1.0 / ( 10.0 * dX**2 ) ) * Psi3 ( j + 2 , k , l ) + &
-!                        & CMPLX ( 4.0 * ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 105.0 * dX ) ,  4.0 / ( 315.0 * dX**2 ) ) * Psi3 ( j + 3 , k , l ) + &
-!                        & CMPLX (       ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 280.0 * dX ) , -1.0 / ( 1120.0 * dX**2 ) ) * Psi3 ( j + 4 , k , l ) + &
-!                        & CMPLX ( 4.0 * ( wZ * X ( j ) - wX * Z ( l ) ) / ( 5.0   * dY ) ,  4.0 / ( 5.0 * dY**2 ) ) * Psi3 ( j , k + 1 , l ) + &
-!                        & CMPLX (       ( wX * Z ( l ) - wZ * X ( j ) ) / ( 5.0   * dY ) , -1.0 / ( 10.0 * dY**2 ) ) * Psi3 ( j , k + 2 , l ) + & 
-!                        & CMPLX ( 4.0 * ( wZ * X ( j ) - wX * Z ( l ) ) / ( 105.0 * dY ) ,  4.0 / ( 315.0 * dY**2 ) ) * Psi3 ( j , k + 3 , l ) + &
-!                        & CMPLX (       ( wX * Z ( l ) - wZ * X ( j ) ) / ( 280.0 * dY ) , -1.0 / ( 1120.0 * dY**2 ) ) * Psi3 ( j , k + 4 , l ) + &
-!                        & CMPLX ( 4.0 * ( wX * Y ( k ) - wY * X ( j ) ) / ( 5.0   * dX ) ,  4.0 / ( 5.0 * dX**2 ) ) * Psi3 ( j , k , l + 1 ) + &
-!                        & CMPLX (       ( wY * X ( j ) - wX * Y ( k ) ) / ( 5.0   * dX ) , -1.0 / ( 10.0 * dY**2 ) ) * Psi3 ( j , k , l + 2 ) + &
-!                        & CMPLX ( 4.0 * ( wX * Y ( k ) - wY * X ( j ) ) / ( 105.0 * dX ) ,  4.0 / ( 315.0 * dY**2 ) ) * Psi3 ( j , k , l + 3 ) + &
-!                        & CMPLX (       ( wY * X ( j ) - wX * Y ( k ) ) / ( 280.0 * dZ ) , -1.0 / ( 1120.0 * dZ**2 ) ) * Psi3 ( j , k , l + 4 ) 
-!
-!                  END DO
-!
-!               END DO
-!!$OMP          END PARALLEL DO
-!
-!            END DO
-!!$OMP       END PARALLEL DO
-!
-!            RETURN
-!
-!         END SUBROUTINE
-!
          SUBROUTINE mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3 ) 
 
             IMPLICIT NONE
