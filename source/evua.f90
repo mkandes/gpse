@@ -27,11 +27,11 @@
 !
 ! COPYRIGHT
 !     
-!     Copyright (c) 2014 Martin Charles Kandes
+!     Copyright (c) 2014, 2015 Martin Charles Kandes
 !
 ! LAST UPDATED
 !
-!     Friday, December 19th, 2014
+!     Saturday, January 3rd, 2015
 !
 ! -------------------------------------------------------------------------
 
@@ -44,16 +44,11 @@
          IMPLICIT NONE
          PRIVATE
 
-         REAL, PRIVATE :: evuaL2Norma = 0.0
-         REAL, PRIVATE :: evuaL2Normb = 0.0
-         REAL, PRIVATE :: evuaXa = 0.0
-         REAL, PRIVATE :: evuaXb = 0.0
-         REAL, PRIVATE :: evuaYa = 0.0
-         REAL, PRIVATE :: evuaYb = 0.0
-         REAL, PRIVATE :: evuaZa = 0.0
-         REAL, PRIVATE :: evuaZb = 0.0
-         REAL, PRIVATE :: evuaRa = 0.0
-         REAL, PRIVATE :: evuaRb = 0.0
+         REAL, PRIVATE :: evuaL2Norm = 0.0
+         REAL, PRIVATE :: evuaX = 0.0
+         REAL, PRIVATE :: evuaY = 0.0
+         REAL, PRIVATE :: evuaZ = 0.0
+         REAL, PRIVATE :: evuaR = 0.0
          REAL, PRIVATE :: evuaX2a = 0.0
          REAL, PRIVATE :: evuaX2b = 0.0
          REAL, PRIVATE :: evuaY2a = 0.0
@@ -62,76 +57,73 @@
          REAL, PRIVATE :: evuaZ2b = 0.0
          REAL, PRIVATE :: evuaR2a = 0.0
          REAL, PRIVATE :: evuaR2b = 0.0
-         REAL, PRIVATE :: evuaIxxa = 0.0
-         REAL, PRIVATE :: evuaIxxb = 0.0
-         REAL, PRIVATE :: evuaIxya = 0.0
-         REAL, PRIVATE :: evuaIxyb = 0.0
-         REAL, PRIVATE :: evuaIxza = 0.0
-         REAL, PRIVATE :: evuaIxzb = 0.0
-         REAL, PRIVATE :: evuaIyya = 0.0
-         REAL, PRIVATE :: evuaIyyb = 0.0
-         REAL, PRIVATE :: evuaIyza = 0.0
-         REAL, PRIVATE :: evuaIyzb = 0.0
-         REAL, PRIVATE :: evuaIzza = 0.0
-         REAL, PRIVATE :: evuaIzzb = 0.0
-         REAL, PRIVATE :: evuaVexa = 0.0
-         REAL, PRIVATE :: evuaVexb = 0.0
-         REAL, PRIVATE :: evuaVmfa = 0.0
-         REAL, PRIVATE :: evuaVmfb = 0.0
-         REAL, PRIVATE :: evuaPxa = 0.0
-         REAL, PRIVATE :: evuaPxb = 0.0
-         REAL, PRIVATE :: evuaPya = 0.0
-         REAL, PRIVATE :: evuaPyb = 0.0
-         REAL, PRIVATE :: evuaPza = 0.0
-         REAL, PRIVATE :: evuaPzb = 0.0
-         REAL, PRIVATE :: evuaPx2a = 0.0
-         REAL, PRIVATE :: evuaPx2b = 0.0
-         REAL, PRIVATE :: evuaPy2a = 0.0
-         REAL, PRIVATE :: evuaPy2b = 0.0
-         REAL, PRIVATE :: evuaPz2a = 0.0
-         REAL, PRIVATE :: evuaPz2b = 0.0
-         REAL, PRIVATE :: evuaLxa = 0.0
-         REAL, PRIVATE :: evuaLxb = 0.0
-         REAL, PRIVATE :: evuaLya = 0.0
-         REAL, PRIVATE :: evuaLyb = 0.0
-         REAL, PRIVATE :: evuaLza = 0.0
-         REAL, PRIVATE :: evuaLzb = 0.0
+         REAL, PRIVATE :: evuaIxxA = 0.0
+         REAL, PRIVATE :: evuaIxxB = 0.0
+         REAL, PRIVATE :: evuaIxyA = 0.0
+         REAL, PRIVATE :: evuaIxyB = 0.0
+         REAL, PRIVATE :: evuaIxzA = 0.0
+         REAL, PRIVATE :: evuaIxzB = 0.0
+         REAL, PRIVATE :: evuaIyyA = 0.0
+         REAL, PRIVATE :: evuaIyyB = 0.0
+         REAL, PRIVATE :: evuaIyzA = 0.0
+         REAL, PRIVATE :: evuaIyzB = 0.0
+         REAL, PRIVATE :: evuaIzzA = 0.0
+         REAL, PRIVATE :: evuaIzzB = 0.0
+         REAL, PRIVATE :: evuaVex = 0.0
+         REAL, PRIVATE :: evuaVmf = 0.0
+         REAL, PRIVATE :: evuaPx = 0.0
+         REAL, PRIVATE :: evuaPy = 0.0
+         REAL, PRIVATE :: evuaPz = 0.0
+         REAL, PRIVATE :: evuaPx2 = 0.0
+         REAL, PRIVATE :: evuaPy2 = 0.0
+         REAL, PRIVATE :: evuaPz2 = 0.0
+         REAL, PRIVATE :: evuaLxA = 0.0
+         REAL, PRIVATE :: evuaLxB = 0.0
+         REAL, PRIVATE :: evuaLyA = 0.0
+         REAL, PRIVATE :: evuaLyB = 0.0
+         REAL, PRIVATE :: evuaLzA = 0.0
+         REAL, PRIVATE :: evuaLzB = 0.0
          REAL, PRIVATE :: evuaLx2a = 0.0
          REAL, PRIVATE :: evuaLx2b = 0.0
          REAL, PRIVATE :: evuaLy2a = 0.0
          REAL, PRIVATE :: evuaLy2b = 0.0
          REAL, PRIVATE :: evuaLz2a = 0.0
          REAL, PRIVATE :: evuaLz2b = 0.0
-         REAL, PRIVATE :: evuaFxa = 0.0
-         REAL, PRIVATE :: evuaFxb = 0.0
-         REAL, PRIVATE :: evuaFya = 0.0
-         REAL, PRIVATE :: evuaFyb = 0.0
-         REAL, PRIVATE :: evuaFza = 0.0
-         REAL, PRIVATE :: evuaFzb = 0.0
+         REAL, PRIVATE :: evuaFx = 0.0
+         REAL, PRIVATE :: evuaFy = 0.0
+         REAL, PRIVATE :: evuaFz = 0.0
          REAL, PRIVATE :: evuaTauXa = 0.0
          REAL, PRIVATE :: evuaTauXb = 0.0
          REAL, PRIVATE :: evuaTauYa = 0.0
          REAL, PRIVATE :: evuaTauYb = 0.0
          REAL, PRIVATE :: evuaTauZa = 0.0
          REAL, PRIVATE :: evuaTauZb = 0.0
-         REAL, PRIVATE :: evuaE = 0.0
-         REAL, PRIVATE :: evuaMu = 0.0
-         REAL, PRIVATE :: evuaL2 = 0.0
+         REAL, PRIVATE :: evuaEa = 0.0
+         REAL, PRIVATE :: evuaEb = 0.0
+         REAL, PRIVATE :: evuaMuA = 0.0
+         REAL, PRIVATE :: evuaMuB = 0.0
+         REAL, PRIVATE :: evuaL2a = 0.0
+         REAL, PRIVATE :: evuaL2b = 0.0
          REAL, PRIVATE :: evuaTx = 0.0
          REAL, PRIVATE :: evuaTy = 0.0
          REAL, PRIVATE :: evuaTz = 0.0
-         REAL, PRIVATE :: evuaSigX = 0.0
-         REAL, PRIVATE :: evuaSigY = 0.0
-         REAL, PRIVATE :: evuaSigZ = 0.0
+         REAL, PRIVATE :: evuaSigXa = 0.0
+         REAL, PRIVATE :: evuaSigXb = 0.0
+         REAL, PRIVATE :: evuaSigYa = 0.0
+         REAL, PRIVATE :: evuaSigYb = 0.0
+         REAL, PRIVATE :: evuaSigZa = 0.0
+         REAL, PRIVATE :: evuaSigZb = 0.0
          REAL, PRIVATE :: evuaSigPx = 0.0
          REAL, PRIVATE :: evuaSigPy = 0.0
          REAL, PRIVATE :: evuaSigPz = 0.0
-         REAL, PRIVATE :: evuaSigLx = 0.0
-         REAL, PRIVATE :: evuaSigLy = 0.0
-         REAL, PRIVATE :: evuaSigLz = 0.0
+         REAL, PRIVATE :: evuaSigLxA = 0.0
+         REAL, PRIVATE :: evuaSigLxB = 0.0
+         REAL, PRIVATE :: evuaSigLyA = 0.0
+         REAL, PRIVATE :: evuaSigLyB = 0.0
+         REAL, PRIVATE :: evuaSigLzA = 0.0
+         REAL, PRIVATE :: evuaSigLzB = 0.0
          
          PUBLIC :: evua_compute_base
-         PUBLIC :: evua_reduce_base
          PUBLIC :: evua_compute_derived
          PUBLIC :: evua_write_all
          PUBLIC :: evua_normalize
@@ -194,10 +186,13 @@
 
          CONTAINS
 
-            SUBROUTINE evua_compute_base ( evuaQuadRule , evuaFdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , dX , dY , dZ , gS , X , Y , Z , Vex3 , Psi3 )
+            SUBROUTINE evua_compute_base ( mpiMaster , mpiReal , mpiError , evuaQuadRule , evuaFdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , dX , dY , dZ , gS , X , Y , Z , Vex3 , Psi3 )
 
                IMPLICIT NONE
 
+               INTEGER, INTENT ( IN ) :: mpiMaster
+               INTEGER, INTENT ( IN ) :: mpiReal
+               INTEGER, INTENT ( INOUT ) :: mpiError
                INTEGER, INTENT ( IN ) :: evuaQuadRule
                INTEGER, INTENT ( IN ) :: evuaFdOrder
                INTEGER, INTENT ( IN ) :: nXa 
@@ -226,67 +221,260 @@
                
                COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
+               REAL :: temp
+
                IF ( evuaQuadRule == 1 ) THEN
 
-                  evuaL2norma = evua_l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
-                  evuaXa = evua_x_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , dX , dY , dZ , X , Psi3 )
-                  evuaYa = evua_y_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , dX , dY , dZ , Y , Psi3 )
-                  evuaZa = evua_z_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , zO , dX , dY , dZ , Z , Psi3 )
-                  evuaRa = evua_r_xy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 )
-                  evuaX2a = evua_x2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , dX , dY , dZ , X , Psi3 )
-                  evuaY2a = evua_y2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , dX , dY , dZ , Y , Psi3 )
-                  evuaZ2a = evua_z2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , zO , dX , dY , dZ , Z , Psi3 )
-                  evuaR2a = evua_r2_xy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO ,  dX , dY , dZ , X , Y , Psi3 )
-                  evuaIxxa = evua_ixx_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Psi3 )
-                  evuaIxya = evua_ixy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 )
-                  evuaIxza = evua_ixz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 )
-                  evuaIyya = evua_iyy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 )
-                  evuaIyza = evua_iyz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Psi3 )
-                  evuaIzza = evua_izz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 )
-                  evuaVexa = evua_vex_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Vex3 , Psi3 )
-                  evuaVmfa = evua_vmf_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , gS , Psi3 )
+                  temp = evua_l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 ) ! 1
+                  CALL MPI_REDUCE ( temp , evuaL2Norm , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_x_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , dX , dY , dZ , X , Psi3 ) ! 2
+                  CALL MPI_REDUCE ( temp , evuaX , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+                  CALL MPI_BCAST ( evuaX , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_x2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , dX , dY , dZ , X , Psi3 ) ! 3
+                  CALL MPI_REDUCE ( temp , evuaX2a , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_x2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , dX , dY , dZ , X , Psi3 ) ! 4
+                  CALL MPI_REDUCE ( temp , evuaX2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_y_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , dX , dY , dZ , Y , Psi3 ) ! 5
+                  CALL MPI_REDUCE ( temp , evuaY , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+                  CALL MPI_BCAST ( evuaY , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_y2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , dX , dY , dZ , Y , Psi3 ) ! 6
+                  CALL MPI_REDUCE ( temp , evuaY2a , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_y2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaY , dX , dY , dZ , Y , Psi3 ) ! 7
+                  CALL MPI_REDUCE ( temp , evuaY2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_z_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , zO , dX , dY , dZ , Z , Psi3 ) ! 8 
+                  CALL MPI_REDUCE ( temp , evuaZ , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+                  CALL MPI_BCAST ( evuaZ , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_z2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , zO , dX , dY , dZ , Z , Psi3 ) ! 9
+                  CALL MPI_REDUCE ( temp , evuaZ2a , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_z2_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaZ , dX , dY , dZ , Z , Psi3 ) ! 10
+                  CALL MPI_REDUCE ( temp , evuaZ2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_r_xy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 ) ! 11
+                  CALL MPI_REDUCE ( temp , evuaR , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+                  CALL MPI_BCAST ( evuaR , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_r2_xy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 ) ! 12
+                  CALL MPI_REDUCE ( temp , evuaR2a , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_r2_xy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaY , dX , dY , dZ , X , Y , Psi3 ) ! 13
+                  CALL MPI_REDUCE ( temp , evuaR2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_ixx_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Psi3 ) ! 14
+                  CALL MPI_REDUCE ( temp , evuaIxxA , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_ixx_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaY , evuaZ , dX , dY , dZ , Y , Z , Psi3 ) ! 15
+                  CALL MPI_REDUCE ( temp , evuaIxxB , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_ixy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 ) ! 16
+                  CALL MPI_REDUCE ( temp , evuaIxyA , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_ixy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaY , dX , dY , dZ , X , Y , Psi3 ) ! 17
+                  CALL MPI_REDUCE ( temp , evuaIxyB , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_ixz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 ) ! 18
+                  CALL MPI_REDUCE ( temp , evuaIxzA , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_ixz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaZ , dX , dY , dZ , X , Z , Psi3 ) ! 19
+                  CALL MPI_REDUCE ( temp , evuaIxzB , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_iyy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 ) ! 20
+                  CALL MPI_REDUCE ( temp , evuaIyyA , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_iyy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaZ , dX , dY , dZ , X , Z , Psi3 ) ! 21
+                  CALL MPI_REDUCE ( temp , evuaIyyB , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_iyz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Psi3 ) ! 22
+                  CALL MPI_REDUCE ( temp , evuaIyzA , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_iyz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaY , evuaZ , dX , dY , dZ , Y , Z , Psi3 ) ! 23
+                  CALL MPI_REDUCE ( temp , evuaIyzB , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_izz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 ) ! 24
+                  CALL MPI_REDUCE ( temp , evuaIzzA , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_izz_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaY , dX , dY , dZ , X , Y , Psi3 ) ! 25
+                  CALL MPI_REDUCE ( temp , evuaIzzB , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_vex_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Vex3 , Psi3 ) ! 26
+                  CALL MPI_REDUCE ( temp , evuaVex , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                  temp = evua_vmf_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , gS , Psi3 ) ! 27
+                  CALL MPI_REDUCE ( temp , evuaVmf , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
 
                   IF ( evuaFdOrder == 2 ) THEN
 
-                     evuaPxa = evua_px_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , Psi3 )
-                     evuaPya = evua_py_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , Psi3 )
-                     evuaPza = evua_pz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , Psi3 )
-                     evuaPx2a = evua_px2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
-                     evuaPy2a = evua_py2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
-                     evuaPz2a = evua_pz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
-                     evuaLxa = evua_lx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO ,  dX , dY , dZ , Y , Z , Psi3 )
-                     evuaLya = evua_ly_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 )
-                     evuaLza = evua_lz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 )
-                     evuaLx2a = evua_lx2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Psi3 )
-                     evuaLy2a = evua_ly2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 )
-                     evuaLz2a = evua_lz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 )
-                     evuaFxa = evua_fx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , Vex3 , Psi3 )
-                     evuaFya = evua_fy_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , Vex3 , Psi3 )
-                     evuaFza = evua_fz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , Vex3 , Psi3 )
-                     evuaTauXa = evua_taux_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Vex3 , Psi3 )
-                     evuaTauYa = evua_tauy_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Vex3 , Psi3 )
-                     evuaTauZa = evua_tauz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Vex3 , Psi3 )
+                     temp = evua_px_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , Psi3 ) ! 28
+                     CALL MPI_REDUCE ( temp , evuaPx , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_py_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , Psi3 ) ! 29
+                     CALL MPI_REDUCE ( temp , evuaPy , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_pz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , Psi3 ) ! 30
+                     CALL MPI_REDUCE ( temp , evuaPz , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_px2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 ) ! 31
+                     CALL MPI_REDUCE ( temp , evuaPx2 , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_py2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 ) ! 32
+                     CALL MPI_REDUCE ( temp , evuaPy2 , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_pz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 ) ! 33
+                     CALL MPI_REDUCE ( temp , evuaPz2 , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO ,  dX , dY , dZ , Y , Z , Psi3 ) ! 34
+                     CALL MPI_REDUCE ( temp , evuaLxA , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaY , evuaZ ,  dX , dY , dZ , Y , Z , Psi3 ) ! 35
+                     CALL MPI_REDUCE ( temp , evuaLxB , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_ly_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 ) ! 36
+                     CALL MPI_REDUCE ( temp , evuaLyA , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_ly_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaZ , dX , dY , dZ , X , Z , Psi3 ) ! 37
+                     CALL MPI_REDUCE ( temp , evuaLyB , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 ) ! 38
+                     CALL MPI_REDUCE ( temp , evuaLzA , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaY , dX , dY , dZ , X , Y , Psi3 ) ! 39
+                     CALL MPI_REDUCE ( temp , evuaLzB , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lx2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Psi3 ) ! 40
+                     CALL MPI_REDUCE ( temp , evuaLx2a , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lx2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaY , evuaZ , dX , dY , dZ , Y , Z , Psi3 ) ! 41
+                     CALL MPI_REDUCE ( temp , evuaLx2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_ly2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 ) ! 42 
+                     CALL MPI_REDUCE ( temp , evuaLy2a , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_ly2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaZ , dX , dY , dZ , X , Z , Psi3 ) ! 43
+                     CALL MPI_REDUCE ( temp , evuaLy2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 ) ! 44
+                     CALL MPI_REDUCE ( temp , evuaLz2a , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lz2_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaY , dX , dY , dZ , X , Y , Psi3 ) ! 45
+                     CALL MPI_REDUCE ( temp , evuaLz2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_fx_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , Vex3 , Psi3 ) ! 46
+                     CALL MPI_REDUCE ( temp , evuaFx , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_fy_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , Vex3 , Psi3 ) ! 47
+                     CALL MPI_REDUCE ( temp , evuaFy , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_fz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , Vex3 , Psi3 ) ! 48
+                     CALL MPI_REDUCE ( temp , evuaFz , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_taux_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Vex3 , Psi3 ) ! 49
+                     CALL MPI_REDUCE ( temp , evuaTauXa , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_taux_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaY , evuaZ , dX , dY , dZ , Y , Z , Vex3 , Psi3 ) ! 50
+                     CALL MPI_REDUCE ( temp , evuaTauXb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_tauy_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Vex3 , Psi3 ) ! 51
+                     CALL MPI_REDUCE ( temp , evuaTauYa , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_tauy_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaZ , dX , dY , dZ , X , Z , Vex3 , Psi3 ) ! 52
+                     CALL MPI_REDUCE ( temp , evuaTauYb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_tauz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Vex3 , Psi3 ) ! 53
+                     CALL MPI_REDUCE ( temp , evuaTauZa , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_tauz_3d_rect_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaY , dX , dY , dZ , X , Y , Vex3 , Psi3 ) ! 54
+                     CALL MPI_REDUCE ( temp , evuaTauZb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
 
                   ELSE IF ( evuaFdOrder == 4 ) THEN
 
-                     evuaPxa = evua_px_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , Psi3 )
-                     evuaPya = evua_py_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , Psi3 )
-                     evuaPza = evua_pz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , Psi3 )
-                     evuaPx2a = evua_px2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
-                     evuaPy2a = evua_py2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
-                     evuaPz2a = evua_pz2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 )
-                     evuaLxa = evua_lx_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO ,  dX , dY , dZ , Y , Z , Psi3 )
-                     evuaLya = evua_ly_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 )
-                     evuaLza = evua_lz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 )
-                     evuaLx2a = evua_lx2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Psi3 )
-                     evuaLy2a = evua_ly2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 )
-                     evuaLz2a = evua_lz2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 )
-                     evuaFxa = evua_fx_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , Vex3 , Psi3 )
-                     evuaFya = evua_fy_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , Vex3 , Psi3 )
-                     evuaFza = evua_fz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , Vex3 , Psi3 )
-                     evuaTauXa = evua_taux_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Vex3 , Psi3 )
-                     evuaTauYa = evua_tauy_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Vex3 , Psi3 )
-                     evuaTauZa = evua_tauz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Vex3 , Psi3 )
+                     temp = evua_px_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , Psi3 ) ! 28
+                     CALL MPI_REDUCE ( temp , evuaPx , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_py_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , Psi3 ) ! 29
+                     CALL MPI_REDUCE ( temp , evuaPy , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_pz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , Psi3 ) ! 30
+                     CALL MPI_REDUCE ( temp , evuaPz , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_px2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 ) ! 31
+                     CALL MPI_REDUCE ( temp , evuaPx2 , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_py2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 ) ! 32
+                     CALL MPI_REDUCE ( temp , evuaPy2 , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_pz2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3 ) ! 33
+                     CALL MPI_REDUCE ( temp , evuaPz2 , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lx_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO ,  dX , dY , dZ , Y , Z , Psi3 ) ! 34
+                     CALL MPI_REDUCE ( temp , evuaLxA , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lx_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaY , evuaZ ,  dX , dY , dZ , Y , Z , Psi3 ) ! 35
+                     CALL MPI_REDUCE ( temp , evuaLxB , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_ly_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 ) ! 36
+                     CALL MPI_REDUCE ( temp , evuaLyA , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_ly_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaZ , dX , dY , dZ , X , Z , Psi3 ) ! 37
+                     CALL MPI_REDUCE ( temp , evuaLyB , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 ) ! 38
+                     CALL MPI_REDUCE ( temp , evuaLzA , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaY , dX , dY , dZ , X , Y , Psi3 ) ! 39
+                     CALL MPI_REDUCE ( temp , evuaLzB , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lx2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Psi3 ) ! 40
+                     CALL MPI_REDUCE ( temp , evuaLx2a , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lx2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaY , evuaZ , dX , dY , dZ , Y , Z , Psi3 ) ! 41
+                     CALL MPI_REDUCE ( temp , evuaLx2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_ly2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Psi3 ) ! 42 
+                     CALL MPI_REDUCE ( temp , evuaLy2a , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_ly2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaZ , dX , dY , dZ , X , Z , Psi3 ) ! 43
+                     CALL MPI_REDUCE ( temp , evuaLy2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lz2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 ) ! 44
+                     CALL MPI_REDUCE ( temp , evuaLz2a , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_lz2_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaY , dX , dY , dZ , X , Y , Psi3 ) ! 45
+                     CALL MPI_REDUCE ( temp , evuaLz2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_fx_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dY , dZ , Vex3 , Psi3 ) ! 46
+                     CALL MPI_REDUCE ( temp , evuaFx , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_fy_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dZ , Vex3 , Psi3 ) ! 47
+                     CALL MPI_REDUCE ( temp , evuaFy , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_fz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , Vex3 , Psi3 ) ! 48
+                     CALL MPI_REDUCE ( temp , evuaFz , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_taux_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , yO , zO , dX , dY , dZ , Y , Z , Vex3 , Psi3 ) ! 49
+                     CALL MPI_REDUCE ( temp , evuaTauXa , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_taux_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaY , evuaZ , dX , dY , dZ , Y , Z , Vex3 , Psi3 ) ! 50
+                     CALL MPI_REDUCE ( temp , evuaTauXb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_tauy_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , zO , dX , dY , dZ , X , Z , Vex3 , Psi3 ) ! 51
+                     CALL MPI_REDUCE ( temp , evuaTauYa , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_tauy_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaZ , dX , dY , dZ , X , Z , Vex3 , Psi3 ) ! 52
+                     CALL MPI_REDUCE ( temp , evuaTauYb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_tauz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Vex3 , Psi3 ) ! 53
+                     CALL MPI_REDUCE ( temp , evuaTauZa , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+
+                     temp = evua_tauz_3d_rect_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , evuaX , evuaY , dX , dY , dZ , X , Y , Vex3 , Psi3 ) ! 54
+                     CALL MPI_REDUCE ( temp , evuaTauZb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
 
                   ELSE
 
@@ -301,54 +489,6 @@
                   STOP
 
                END IF
-
-               RETURN
-
-            END SUBROUTINE
-
-            SUBROUTINE evua_reduce_base ( mpiMaster , mpiReal , mpiError )
-
-               IMPLICIT NONE
-
-               INTEGER, INTENT ( IN ) :: mpiMaster
-               INTEGER, INTENT ( IN ) :: mpiReal
-               INTEGER, INTENT ( INOUT ) :: mpiError
- 
-               CALL MPI_REDUCE ( evuaL2norma , evuaL2normb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaXa , evuaXb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaYa , evuaYb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaZa , evuaZb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaRa , evuaRb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaX2a , evuaX2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaY2a , evuaY2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaZ2a , evuaZ2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaR2a , evuaR2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaIxxa , evuaIxxb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaIxya , evuaIxyb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaIxza , evuaIxzb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaIyya , evuaIyyb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaIyza , evuaIyzb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaIzza , evuaIzzb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaVexa , evuaVexb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaVmfa , evuaVmfb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaPxa , evuaPxb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaPya , evuaPyb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaPza , evuaPzb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaPx2a , evuaPx2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaPy2a , evuaPy2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaPz2a , evuaPz2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaLxa , evuaLxb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaLya , evuaLyb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaLza , evuaLzb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaLx2a , evuaLx2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaLy2a , evuaLy2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaLz2a , evuaLz2b , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaFxa , evuaFxb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaFya , evuaFyb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaFza , evuaFzb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaTauXa , evuaTauXb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaTauYa , evuaTauYb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_REDUCE ( evuaTauZa , evuaTauZb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
 
                RETURN
 
@@ -369,33 +509,48 @@
 
 !                 Kinetic energy expectation values
 
-                  evuaTx = 0.5 * evuaPx2b
-                  evuaTy = 0.5 * evuaPy2b
-                  evuaTz = 0.5 * evuaPz2b
+                  evuaTx = 0.5 * evuaPx2 ! 55
+                  evuaTy = 0.5 * evuaPy2 ! 56
+                  evuaTz = 0.5 * evuaPz2 ! 57
 
 !                 Energy expectation value
 
-                  evuaE = evuaTx + evuaTy + evuaTz + evuaVexb + evuaVmfb - wX * evuaLxb - wY * evuaLyb - wZ * evuaLzb
+                  evuaEa = evuaTx + evuaTy + evuaTz + evuaVex + evuaVmf - wX * evuaLxA - wY * evuaLyA - wZ * evuaLzA ! 58
+                  evuaEb = evuaTx + evuaTy + evuaTz + evuaVex + evuaVmf - wX * evuaLxB - wY * evuaLyB - wZ * evuaLzB ! 59
 
 !                 Chemical potential
 
-                  evuaMu =  evuaTx + evuaTy + evuaTz + evuaVexb + 2.0 * evuaVmfb - wX * evuaLxb - wY * evuaLyb - wZ * evuaLzb
+                  evuaMuA =  evuaTx + evuaTy + evuaTz + evuaVex + 2.0 * evuaVmf - wX * evuaLxA - wY * evuaLyA - wZ * evuaLzA ! 60
+                  evuaMuB =  evuaTx + evuaTy + evuaTz + evuaVex + 2.0 * evuaVmf - wX * evuaLxB - wY * evuaLyB - wZ * evuaLzB ! 61
 
 !                 Squared angular momentum expectation value
 
-                  evuaL2 = evuaLx2b + evuaLy2b + evuaLz2b
+                  evuaL2a = evuaLx2a + evuaLy2a + evuaLz2a ! 62
+                  evuaL2b = evuaLx2b + evuaLy2b + evuaLz2b ! 63
 
 !                 Position, momentum and angular momentum uncertainty 
-               
-                  evuaSigX  = SQRT ( evuaX2b  - evuaXb**2  )
-                  evuaSigY  = SQRT ( evuaY2b  - evuaYb**2  )
-                  evuaSigZ  = SQRT ( evuaZ2b  - evuaZb**2  )
-                  evuaSigPx = SQRT ( evuaPx2b - evuaPxb**2 )
-                  evuaSigPy = SQRT ( evuaPy2b - evuaPyb**2 )
-                  evuaSigPz = SQRT ( evuaPz2b - evuaPzb**2 )
-                  evuaSigLx = SQRT ( evuaLx2b - evuaLxb**2 )
-                  evuaSigLy = SQRT ( evuaLy2b - evuaLyb**2 )
-                  evuaSigLz = SQRT ( evuaLz2b - evuaLzb**2 )
+              
+                  evuaSigXa = SQRT ( evuaX2a  - evuaX**2 ) ! 64
+                  evuaSigXb = SQRT ( evuaX2b  - evuaX**2 ) ! 65
+
+                  evuaSigYa = SQRT ( evuaY2a  - evuaY**2 ) ! 66
+                  evuaSigYb = SQRT ( evuaY2b  - evuaY**2 ) ! 67
+
+                  evuaSigZa = SQRT ( evuaZ2a  - evuaZ**2 ) ! 68
+                  evuaSigZb = SQRT ( evuaZ2b  - evuaZ**2 ) ! 69
+
+                  evuaSigPx = SQRT ( evuaPx2 - evuaPx**2 ) ! 70
+                  evuaSigPy = SQRT ( evuaPy2 - evuaPy**2 ) ! 71
+                  evuaSigPz = SQRT ( evuaPz2 - evuaPz**2 ) ! 72
+
+                  evuaSigLxA = SQRT ( evuaLx2a - evuaLxA**2 ) ! 73
+                  evuaSigLxB = SQRT ( evuaLx2b - evuaLxB**2 ) ! 74 
+
+                  evuaSigLyA = SQRT ( evuaLy2a - evuaLyA**2 ) ! 75
+                  evuaSigLyB = SQRT ( evuaLy2b - evuaLyB**2 ) ! 76
+
+                  evuaSigLzA = SQRT ( evuaLz2a - evuaLzA**2 ) ! 77
+                  evuaSigLzB = SQRT ( evuaLz2b - evuaLzB**2 ) ! 78
 
                END IF
 
@@ -415,11 +570,11 @@
                REAL, INTENT ( IN ) :: wY
                REAL, INTENT ( IN ) :: wZ
 
-!              Write expectation values, uncertainties and uncertainty relations to file from MPI_MASTER
+!              Write expectation values, uncertainties and uncertainty relations to file from mpiMaster
 
                IF ( mpiRank == mpiMaster ) THEN
-
-                  WRITE ( UNIT = OUTPUT_UNIT , FMT = '(59(F23.15))' ) tN , wX , wY , wZ , evuaL2normb , evuaE , evuaMu , evuaL2 , evuaTx , evuaTy , evuaTz , evuaVexb , evuaVmfb , evuaXb , evuaYb , evuaZb , evuaRb , evuaPxb , evuaPyb , evuaPzb , evuaLxb , evuaLyb , evuaLzb , evuaFxb , evuaFyb , evuaFzb , evuaTauXb , evuaTauYb , evuaTauZb , evuaIxxb , evuaIxyb , evuaIxzb , evuaIyyb , evuaIyzb , evuaIzzb , evuaX2b , evuaY2b , evuaZ2b , evuaSigX , evuaSigY , evuaSigZ , evuaPx2b , evuaPy2b , evuaPz2b , evuaSigPx , evuaSigPy , evuaSigPz , evuaLx2b , evuaLy2b , evuaLz2b , evuaSigLx , evuaSigLy , evuaSigLz , evuaSigX * evuaSigPx , evuaSigY * evuaSigPy , evuaSigZ * evuaSigPz , evuaSigLx * evuaSigLy , evuaSigLy * evuaSigLz , evuaSigLz * evuaSigLx
+        
+                  WRITE ( UNIT = OUTPUT_UNIT , FMT = '(82(F23.15))' ) tN , wX , wY , wZ , evuaL2Norm , evuaEa , evuaEb , evuaMuA , evuaMuB , evuaL2a , evuaL2b , evuaTx , evuaTy , evuaTz , evuaVex , evuaVmf , evuaX , evuaX2a , evuaSigXa , evuaX2b , evuaSigXb , evuaPx , evuaPx2 , evuaSigPx , evuaLxA , evuaLx2a , evuaSigLxA , evuaLxB , evuaLx2b , evuaSigLxB , evuaFx , evuaTauXa , evuaTauXb , evuaY , evuaY2a , evuaSigYa , evuaY2b , evuaSigYb , evuaPy , evuaPy2 , evuaSigPy , evuaLyA , evuaLy2a , evuaSigLyA , evuaLyB , evuaLy2b , evuaSigLyB , evuaFy , evuaTauYa , evuaTauYb , evuaZ , evuaZ2a , evuaSigZa , evuaZ2b , evuaSigZb , evuaPz , evuaPz2 , evuaSigPz , evuaLzA , evuaLz2a , evuaSigLzA , evuaLzB , evuaLz2b , evuaSigLzB , evuaFz , evuaTauZa , evuaTauZb , evuaR , evuaR2a , evuaR2b , evuaIxxA , evuaIxyA , evuaIxzA , evuaIyyA , evuaIyzA , evuaIzzA , evuaIxxB , evuaIxyB , evuaIxzB , evuaIyyB , evuaIyzB , evuaIzzB
 
                END IF
 
@@ -448,12 +603,14 @@
                REAL, INTENT ( IN ) :: dY
                REAL, INTENT ( IN ) :: dZ
 
-               COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Psi3 
+               COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Psi3
 
-               evuaL2norma = evua_l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ ,Psi3 )
-               CALL MPI_REDUCE ( evuaL2Norma , evuaL2Normb , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-               CALL MPI_BCAST ( evuaL2Normb , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
-               Psi3 = Psi3 / SQRT ( evuaL2normb )
+               REAL :: temp
+
+               temp = evua_l2_norm_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ ,Psi3 )
+               CALL MPI_REDUCE ( temp , evuaL2Norm , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
+               CALL MPI_BCAST ( evuaL2Norm , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
+               Psi3 = Psi3 / SQRT ( evuaL2Norm )
 
                RETURN
 

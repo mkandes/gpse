@@ -45,6 +45,7 @@
       PUBLIC  :: grk4_y_3d_stgx
       PUBLIC  :: grk4_f_gp_3d_rrf_cdx
 
+      PRIVATE :: grk4_y_3d_stg1
       PRIVATE :: grk4_y_3d_stg2
       PRIVATE :: grk4_y_3d_stg3
       PRIVATE :: grk4_y_3d_stg4
@@ -240,7 +241,7 @@
 
                   DO j = nXa , nXb
 
-                     Psi3b ( j , k , l ) = Psi3a ( j , k , l ) + dTz * ( CMPLX ( 0.5 - 1.0 / REAL( grk4Lambda ) , 0.0 ) * K1 ( j , k , l ) + CMPLX ( 1.0 / REAL ( grk4Lambda ) , 0.0 ) * K2 ( j , k , l ) )
+                     Psi3b ( j , k , l ) = Psi3a ( j , k , l ) + dTz * ( CMPLX ( 0.5 - 1.0 / REAL ( grk4Lambda ) , 0.0 ) * K1 ( j , k , l ) + CMPLX ( 1.0 / REAL ( grk4Lambda ) , 0.0 ) * K2 ( j , k , l ) )
 
                   END DO
 

@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Sunday, December 21st, 2014
+!     Saturday, January 3rd, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -56,8 +56,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.4.3'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Sunday, December 21st, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.4.4'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, January 3rd, 2014'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -365,8 +365,7 @@
 !        relations to file from MPI_MASTER; write wave function and 
 !        external potential to file from MPI_MASTER
 
-            CALL evua_compute_base ( 1 , fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , 0.0 , 0.0 , 0.0 , dX , dY , dZ , gS , Xa , Ya , Za , Vex3a , Psi3a ) ! Compute partial base expectation values locally on each MPI process
-            CALL evua_reduce_base ( MPI_MASTER , mpiReal , mpiError ) ! Reduce partial base expectation values from all MPI processes to MPI_MASTER to get full base expectation values
+            CALL evua_compute_base ( MPI_MASTER , mpiReal , mpiError , 1 , fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , dX , dY , dZ , gS , Xa , Ya , Za , Vex3a , Psi3a ) ! Compute partial base expectation values locally on each MPI process; reduce partial base expectation values from all MPI processes to MPI_MASTER to get full base expectation values
             CALL evua_compute_derived ( mpiRank , MPI_MASTER , wX , wY , wZ ) ! Compute derived expectation values, uncertainties from base expectation values 
             CALL evua_write_all ( mpiRank , MPI_MASTER , tN , wX , wY , wZ )  ! Write expectation values, undertainties and uncertainty relations to file from MPI_MASTER
 
@@ -619,6 +618,7 @@
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wZvex     = ', wZvex
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wRvex     = ', wRvex
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     BROADCASTING INPUT PARAMETERS TO ALL MPI PROCESSES ... '
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# 1 : tN , 2 : wX , 3 : wY , 4 : wZ , 5 : evuaL2Norm , 6 : evuaEa , 7 : evuaEb , 8 : evuaMuA , 9 : evuaMuB , 10 : evuaL2a , 11 : evuaL2b , 12 : evuaTx , 13 : evuaTy , 14 : evuaTz , 15 : evuaVex , 16 : evuaVmf , 17 : evuaX , 18 : evuaX2a , 19 : evuaSigXa , 20 : evuaX2b , 21 : evuaSigXb , 22 : evuaPx , 23 : evuaPx2 , 24 : evuaSigPx , 25 : evuaLxA , 26 : evuaLx2a , 27 : evuaSigLxA , 28 : evuaLxB , 29 : evuaLx2b , 30 : evuaSigLxB , 31 : evuaFx , 32 : evuaTauXa , 33 : evuaTauXb , 34 : evuaY , 35 : evuaY2a , 36 : evuaSigYa , 37 : evuaY2b , 38 : evuaSigYb , 39 : evuaPy , 40 : evuaPy2 , 41 : evuaSigPy , 42 : evuaLyA , 43 : evuaLy2a , 44 : evuaSigLyA , 45 : evuaLyB , 46 : evuaLy2b , 47 : evuaSigLyB , 48 : evuaFy , 49 : evuaTauYa , 50 : evuaTauYb , 51 : evuaZ , 52 : evuaZ2a , 53 : evuaSigZa , 54 : evuaZ2b , 55 : evuaSigZb , 56 : evuaPz , 57 : evuaPz2 , 58 : evuaSigPz , 59 : evuaLzA , 60 : evuaLz2a , 61 : evuaSigLzA , 62 : evuaLzB , 63 : evuaLz2b , 64 : evuaSigLzB , 65 : evuaFz , 66 : evuaTauZa , 67 : evuaTauZb , 68 : evuaR , 69 : evuaR2a , 70 : evuaR2b , 71 : evuaIxxA , 72 : evuaIxyA , 73 : evuaIxzA , 74 : evuaIyyA , 75 : evuaIyzA , 76 : evuaIzzA , 77 : evuaIxxB , 78 : evuaIxyB , 79 : evuaIxzB , 80 : evuaIyyB , 81 : evuaIyzB , 82 : evuaIzzB'
 
             END IF
 
