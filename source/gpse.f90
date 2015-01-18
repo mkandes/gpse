@@ -27,11 +27,11 @@
 !
 ! COPYRIGHT
 !     
-!     Copyright (c) 2014 Martin Charles Kandes
+!     Copyright (c) 2014, 2015 Martin Charles Kandes
 !
 ! LAST UPDATED
 !
-!     Saturday, January 3rd, 2014
+!     Sunday, January 18th, 2015
 !
 ! -------------------------------------------------------------------------
 
@@ -56,8 +56,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.4.4'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, January 3rd, 2014'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.4.5'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Sunday, January 18th, 2015'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -128,6 +128,9 @@
       REAL :: dX    = 0.0 !
       REAL :: dY    = 0.0 !
       REAL :: dZ    = 0.0 !
+      REAL :: xOrrf = 0.0 !
+      REAL :: yOrrf = 0.0 !
+      REAL :: zOrrf = 0.0 !
       REAL :: wX    = 0.0 ! X-component of the rotating reference frame's angular velocity vector
       REAL :: wY    = 0.0 ! Y-component of the rotating reference frame's angular velocity vector
       REAL :: wZ    = 0.0 ! Z-component of the rotating reference frame's angular velocity vector
@@ -188,7 +191,7 @@
 
 ! --- NAMELIST DECLARATIONS -----------------------------------------------
 
-      NAMELIST /gpseIn/ itpOn , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , t0 , xO , yO , zO , dT , dX , dY , dZ , wX , wY , wZ , gS , psiInput , psiOutput , psiFileNo , psiInit , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , wXpsi , wYpsi , wZpsi , wRpsi , pXpsi , pYpsi , pZpsi , vexInput , vexOutput , vexFileNo , vexInit , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex
+      NAMELIST /gpseIn/ itpOn , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , t0 , xO , yO , zO , dT , dX , dY , dZ , xOrrf , yOrrf , zOrrf , wX , wY , wZ , gS , psiInput , psiOutput , psiFileNo , psiInit , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , wXpsi , wYpsi , wZpsi , wRpsi , pXpsi , pYpsi , pZpsi , vexInput , vexOutput , vexFileNo , vexInit , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex
 
 ! --- NAMELIST DEFINITIONS ------------------------------------------------
 
@@ -436,7 +439,7 @@
          CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
 !        Compute 1st stage of generalized 4th-order Runge-Kutta (GRK4L): k_1 = f ( t_n , y_n )
-         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3a , K1 )
+         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3a , K1 )
 !        Compute the intermediate wave function for the 2nd stage of the GRK4L method: y_n + 0.5 * dT * k_1
 !        Note that the intermediate wave function is only computed on the interior grid points assigned to each MPI process.
          CALL grk4_y_3d_stgx ( 1 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , Psi3a , Psi3b )
@@ -445,13 +448,13 @@
 !        Compute V ( x , t_n + dT / 2 ), W ( t_n + dT / 2)
          tN = t0 + ( REAL ( n ) + 0.5 ) * dT
 !        Compute 2nd stage of GRK4L: k_2 = f ( t_n + 0.5 * dT , y_n + 0.5 * dT * k_1 )
-         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K2 )
+         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K2 )
 !        Compute intermediate wave function for 3rd stage of GRK4L: y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( 1 / lambda ) * dT * k_2
          CALL grk4_y_3d_stgx ( 2 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , Psi3a , Psi3b )
 !        Exchange boundary condition information among nearest neighbor processes
          CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
 !        Compute stage three ... k_3 = f ( t_n + 0.5 * dT , y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( 1 / lambda ) * dT * k_2
-         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K3 )
+         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K3 )
 !        Compute intermediate wave function for 4th stage of GRK4L: y_n + ( 1 - lambda / 2 ) * dT * k_2 + ( lambda / 2 ) * dT * k_3
          CALL grk4_y_3d_stgx ( 3 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , Psi3a , Psi3b )
 !        Exchange boundary condition information among nearest neighbor processes
@@ -459,7 +462,7 @@
 !        Calculate V ( x , t_n + dT ), W ( t_n + dT )
          tN = t0 + REAL ( n + 1 ) * dT
 !        Compute the fourth stage ... k_4 = f ( t_n + dT , y_n + ( 1 - lamda / 2 ) * dT * k_2 + ( lamda / 2) * dT * k_3 
-         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K4 )
+         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K4 )
 !        Compute wave function at nth+1 time step ... y_{ n + 1 } = y_n + ( dT / 6 ) * [ k_1 + ( 4 - lambda ) * k_2 + lambda * k_3 + k_4 ]
          CALL grk4_y_3d_stgx ( 4 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , Psi3a , Psi3b )
 !        Exchange boundary condition information among nearest neighbor processes
@@ -579,6 +582,9 @@
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        dX        = ', dX
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        dY        = ', dY
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        dZ        = ', dZ
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        xOrrf     = ', xOrrf
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        yOrrf     = ', yOrrf
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        zOrrf     = ', zOrrf
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wX        = ', wX
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wY        = ', wY
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wZ        = ', wZ

@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, December 13th, 2014
+!     Thursday, January 15th, 2014
 !
 ! -------------------------------------------------------------------------
 
@@ -108,7 +108,7 @@
 
          END SUBROUTINE
 
-         SUBROUTINE grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
+         SUBROUTINE grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
             IMPLICIT NONE
 
             INTEGER, INTENT ( IN ) :: fdOrder
@@ -122,6 +122,9 @@
             INTEGER, INTENT ( IN ) :: nZb
             INTEGER, INTENT ( IN ) :: nZbc
 
+            REAL, INTENT ( IN ) :: xO
+            REAL, INTENT ( IN ) :: yO
+            REAL, INTENT ( IN ) :: zO 
             REAL, INTENT ( IN ) :: dX
             REAL, INTENT ( IN ) :: dY
             REAL, INTENT ( IN ) :: dZ
@@ -140,11 +143,11 @@
 
             IF ( fdOrder == 2 ) THEN
 
-               CALL grk4_f_gp_3d_rrf_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
+               CALL grk4_f_gp_3d_rrf_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
 
             ELSE IF ( fdOrder == 4 ) THEN
 
-               CALL grk4_f_gp_3d_rrf_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
+               CALL grk4_f_gp_3d_rrf_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
 
             ELSE IF ( fdOrder == 6 ) THEN
 
@@ -349,7 +352,7 @@
 
          END SUBROUTINE
 
-         SUBROUTINE grk4_f_gp_3d_rrf_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
+         SUBROUTINE grk4_f_gp_3d_rrf_cd2 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F )
 
             IMPLICIT NONE
 
@@ -363,6 +366,9 @@
             INTEGER, INTENT ( IN ) :: nZb
             INTEGER, INTENT ( IN ) :: nZbc
 
+            REAL, INTENT ( IN ) :: xO
+            REAL, INTENT ( IN ) :: yO
+            REAL, INTENT ( IN ) :: zO
             REAL, INTENT ( IN ) :: dX
             REAL, INTENT ( IN ) :: dY
             REAL, INTENT ( IN ) :: dZ
@@ -390,13 +396,13 @@
                   DO j = nXa , nXb
 
                      F ( j , k , l ) = &
-                        & CMPLX ( 0.5 * ( wY * X ( j ) - wX * Y ( k ) ) / dZ , 0.5 / dZ**2 ) * Psi ( j , k , l - 1 ) + &
-                        & CMPLX ( 0.5 * ( wX * Z ( l ) - wZ * X ( j ) ) / dY , 0.5 / dY**2 ) * Psi ( j , k - 1 , l ) + &
-                        & CMPLX ( 0.5 * ( wZ * Y ( k ) - wY * Z ( l ) ) / dX , 0.5 / dX**2 ) * Psi ( j - 1 , k , l ) - &
+                        & CMPLX ( 0.5 * ( wY * ( X ( j ) - xO ) - wX * ( Y ( k ) - yO ) ) / dZ , 0.5 / dZ**2 ) * Psi ( j , k , l - 1 ) + &
+                        & CMPLX ( 0.5 * ( wX * ( Z ( l ) - zO ) - wZ * ( X ( j ) - xO ) ) / dY , 0.5 / dY**2 ) * Psi ( j , k - 1 , l ) + &
+                        & CMPLX ( 0.5 * ( wZ * ( Y ( k ) - yO ) - wY * ( Z ( l ) - zO ) ) / dX , 0.5 / dX**2 ) * Psi ( j - 1 , k , l ) - &
                         & CMPLX ( 0.0 , 1.0 / dX**2 + 1.0 / dY**2 + 1.0 / dZ**2 + Vex ( j , k , l ) + gS * ABS ( Psi ( j , k , l ) )**2 ) * Psi ( j , k , l ) + &
-                        & CMPLX ( 0.5 * ( wY * Z ( l ) - wZ * Y ( k ) ) / dX , 0.5 / dX**2 ) * Psi ( j + 1 , k , l ) + &
-                        & CMPLX ( 0.5 * ( wZ * X ( j ) - wX * Z ( l ) ) / dY , 0.5 / dY**2 ) * Psi ( j , k + 1 , l ) + &
-                        & CMPLX ( 0.5 * ( wX * Y ( k ) - wY * X ( j ) ) / dZ , 0.5 / dZ**2 ) * Psi ( j , k , l + 1 )
+                        & CMPLX ( 0.5 * ( wY * ( Z ( l ) - zO ) - wZ * ( Y ( k ) - yO ) ) / dX , 0.5 / dX**2 ) * Psi ( j + 1 , k , l ) + &
+                        & CMPLX ( 0.5 * ( wZ * ( X ( j ) - xO ) - wX * ( Z ( l ) - zO ) ) / dY , 0.5 / dY**2 ) * Psi ( j , k + 1 , l ) + &
+                        & CMPLX ( 0.5 * ( wX * ( Y ( k ) - yO ) - wY * ( X ( j ) - xO ) ) / dZ , 0.5 / dZ**2 ) * Psi ( j , k , l + 1 )
 
                   END DO
 
@@ -410,7 +416,7 @@
 
          END SUBROUTINE
 
-         SUBROUTINE grk4_f_gp_3d_rrf_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F ) 
+         SUBROUTINE grk4_f_gp_3d_rrf_cd4 ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , dX , dY , dZ , wX , wY , wZ , gS , X , Y , Z , Vex , Psi , F ) 
 
             IMPLICIT NONE
 
@@ -424,6 +430,9 @@
             INTEGER, INTENT ( IN ) :: nZb
             INTEGER, INTENT ( IN ) :: nZbc
 
+            REAL, INTENT ( IN ) :: xO
+            REAL, INTENT ( IN ) :: yO
+            REAL, INTENT ( IN ) :: zO
             REAL, INTENT ( IN ) :: dX
             REAL, INTENT ( IN ) :: dY
             REAL, INTENT ( IN ) :: dZ
@@ -451,20 +460,20 @@
                   DO j = nXa , nXb
 
                      F ( j , k , l ) = &
-                        & CMPLX ( ( wX * Y ( k ) - wY * X ( j ) ) / ( 12.0 * dZ ) , -1.0 / ( 24.0 * dZ**2 ) ) * Psi ( j , k , l - 2 ) + &
-                        & CMPLX ( 0.75 * ( wY * X ( j ) - wX * Y ( k ) ) / dZ , 2.0 / ( 3.0 * dZ**2 ) ) * Psi ( j , k , l - 1 ) + &
-                        & CMPLX ( ( wZ * X ( j ) - wX * Z ( l ) ) / ( 12.0 * dY ) , -1.0 / ( 24.0 * dY**2 ) ) * Psi ( j , k - 2 , l ) + &
-                        & CMPLX ( 0.75 * ( wX * Z ( l ) - wZ * X ( j ) ) / dY , 2.0 / ( 3.0 * dY**2 ) ) * Psi ( j , k - 1 , l ) + &
-                        & CMPLX ( ( wY * Z ( l ) - wZ * Y ( k ) ) / ( 12.0 * dX ) , -1.0 / ( 24.0 * dX**2 ) ) * Psi ( j - 2 , k , l ) + &
-                        & CMPLX ( 0.75 * ( wZ * Y ( k ) - wY * Z ( l ) ) / dX , 2.0 / ( 3.0 * dX**2 ) ) * Psi ( j - 1 , k , l ) - &
+                        & CMPLX ( ( wX * ( Y ( k ) - yO ) - wY * ( X ( j ) - xO ) ) / ( 12.0 * dZ ) , -1.0 / ( 24.0 * dZ**2 ) ) * Psi ( j , k , l - 2 ) + &
+                        & CMPLX ( 0.75 * ( wY * ( X ( j ) - xO ) - wX * ( Y ( k ) - yO ) ) / dZ , 2.0 / ( 3.0 * dZ**2 ) ) * Psi ( j , k , l - 1 ) + &
+                        & CMPLX ( ( wZ * ( X ( j ) - xO ) - wX * ( Z ( l ) - zO ) ) / ( 12.0 * dY ) , -1.0 / ( 24.0 * dY**2 ) ) * Psi ( j , k - 2 , l ) + &
+                        & CMPLX ( 0.75 * ( wX * ( Z ( l ) - zO ) - wZ * ( X ( j ) - xO ) ) / dY , 2.0 / ( 3.0 * dY**2 ) ) * Psi ( j , k - 1 , l ) + &
+                        & CMPLX ( ( wY * ( Z ( l ) - zO ) - wZ * ( Y ( k ) - yO ) ) / ( 12.0 * dX ) , -1.0 / ( 24.0 * dX**2 ) ) * Psi ( j - 2 , k , l ) + &
+                        & CMPLX ( 0.75 * ( wZ * ( Y ( k ) - yO ) - wY * ( Z ( l ) - zO ) ) / dX , 2.0 / ( 3.0 * dX**2 ) ) * Psi ( j - 1 , k , l ) - &
                         & CMPLX ( 0.0 , 1.25 * ( 1.0 / dX**2 + 1.0 / dY**2 + 1.0 / dZ**2 ) + Vex ( j , k , l ) + &
                         &    gS * ABS ( Psi ( j , k , l ) )**2 ) * Psi ( j , k , l ) + &
-                        & CMPLX ( 0.75 * ( wY * Z ( l ) - wZ * Y ( k ) ) / dX , 2.0 / ( 3.0 * dX**2 ) ) * Psi ( j + 1 , k , l ) + &
-                        & CMPLX ( ( wZ * Y ( k ) - wY * Z ( l ) ) / ( 12.0 * dX ) , -1.0 / ( 24.0 * dX**2 ) ) * Psi ( j + 2 , k , l ) + &
-                        & CMPLX ( 0.75 * ( wZ * X ( j ) - wX * Z ( l ) ) / dY , 2.0 / ( 3.0 * dY**2 ) ) * Psi ( j , k + 1 , l ) + &
-                        & CMPLX ( ( wX * Z ( l ) - wZ * X ( j ) ) / ( 12.0 * dY ) , -1.0 / ( 24.0 * dY**2 ) ) * Psi ( j , k + 2 , l ) + &
-                        & CMPLX ( 0.75 * ( wX * Y ( k ) - wY * X ( j ) ) / dZ , 2.0 / ( 3.0 * dZ**2 ) ) * Psi ( j , k , l + 1 ) + &
-                        & CMPLX ( ( wY * X ( j ) - wX * Y ( k ) ) / ( 12.0 * dZ ) , -1.0 / ( 24.0 * dZ**2 ) ) * Psi ( j , k , l + 2 )
+                        & CMPLX ( 0.75 * ( wY * ( Z ( l ) - zO ) - wZ * ( Y ( k ) - yO ) ) / dX , 2.0 / ( 3.0 * dX**2 ) ) * Psi ( j + 1 , k , l ) + &
+                        & CMPLX ( ( wZ * ( Y ( k ) - yO ) - wY * ( Z ( l ) - zO ) ) / ( 12.0 * dX ) , -1.0 / ( 24.0 * dX**2 ) ) * Psi ( j + 2 , k , l ) + &
+                        & CMPLX ( 0.75 * ( wZ * ( X ( j ) - xO ) - wX * ( Z ( l ) - zO ) ) / dY , 2.0 / ( 3.0 * dY**2 ) ) * Psi ( j , k + 1 , l ) + &
+                        & CMPLX ( ( wX * ( Z ( l ) - zO ) - wZ * ( X ( j ) - xO ) ) / ( 12.0 * dY ) , -1.0 / ( 24.0 * dY**2 ) ) * Psi ( j , k + 2 , l ) + &
+                        & CMPLX ( 0.75 * ( wX * ( Y ( k ) - yO ) - wY * ( X ( j ) - xO ) ) / dZ , 2.0 / ( 3.0 * dZ**2 ) ) * Psi ( j , k , l + 1 ) + &
+                        & CMPLX ( ( wY * ( X ( j ) - xO ) - wX * ( Y ( k ) - yO ) ) / ( 12.0 * dZ ) , -1.0 / ( 24.0 * dZ**2 ) ) * Psi ( j , k , l + 2 )
 
                   END DO
 
