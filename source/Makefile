@@ -68,7 +68,7 @@ OPENMP   := ON
 #     GNU Fortran (GCC) 4.1.2 20080704 (Red Hat 4.1.2-48) ( dugong.sdsu.edu )
 
 STD_GNU  := -fimplicit-none -fmodule-private -ffree-form -ffree-line-length-none -std=gnu
-INT_GNU  := # -fdefault-integer-8
+INT_GNU  := # -fdefault-integer-8 ! need to come up with better way to provide overall support for INT64; perhaps rely on MPI-3 mpi_08 module?
 REAL_GNU := -fdefault-real-8
 RUNTIME_OPTIONS = -fconvert=native # Specify the representation of data for unformatted files.
 OPT_GNU  := -O2 -mtune=native

@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, January 3rd, 2015
+!     Monday, March 16th, 2015
 !
 ! -------------------------------------------------------------------------
 
@@ -42,6 +42,9 @@
          USE            :: MATH
 
          IMPLICIT NONE
+
+!         INCLUDE 'mpif.h'
+
          PRIVATE
 
          REAL, PRIVATE :: evuaL2Norm = 0.0
@@ -260,7 +263,7 @@
 
                   temp = evua_r_xy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 ) ! 11
                   CALL MPI_REDUCE ( temp , evuaR , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )
-                  CALL MPI_BCAST ( evuaR , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError )
+                  CALL MPI_BCAST ( evuaR , 1 , mpiReal , mpiMaster , MPI_COMM_WORLD , mpiError ) ! is this BCAST needed? rm in gpse_v0.4.6? 
 
                   temp = evua_r2_xy_3d_rect ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , dX , dY , dZ , X , Y , Psi3 ) ! 12
                   CALL MPI_REDUCE ( temp , evuaR2a , 1 , mpiReal , MPI_SUM , mpiMaster , MPI_COMM_WORLD , mpiError )

@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, November 29th, 2014
+!     Friday, March 13th, 2015
 !
 ! -------------------------------------------------------------------------
 
@@ -46,7 +46,7 @@
       INTEGER, PUBLIC :: psiInput  = -1
       INTEGER, PUBLIC :: psiOutput = -1
       INTEGER, PUBLIC :: psiFileNo = -1
-      INTEGER, PUBLIC :: psiFilePos = -1
+      INTEGER ( KIND = 8 ), PUBLIC :: psiFilePos = -1  ! hard coded KIND = 8 to avoid integer overflow when writing out large files; include in gpse_v0.4.6 update
       INTEGER, PUBLIC :: psiInit   = -1
 !      INTEGER, PRIVATE :: nX        = -1
 !      INTEGER, PRIVATE :: nY        = -1

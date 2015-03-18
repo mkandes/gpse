@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Sunday, January 18th, 2015
+!     Monday, March 16th, 2015
 !
 ! -------------------------------------------------------------------------
 
@@ -54,10 +54,12 @@
       
       IMPLICIT NONE
 
+!      INCLUDE 'mpif.h'
+
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.4.5'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Sunday, January 18th, 2015'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.4.6'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Monday, March 16th, 2015'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -375,7 +377,7 @@
             IF ( psiOutput == 1 ) THEN ! Write wave function to file from MPI_MASTER using streaming I/O binary with partial reduce
 
                Psi3b = Psi3a
-               psiFilePos = 1
+               psiFilePos = 1 
                DO mpiSource = 0 , mpiProcesses - 1
 
                   CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
@@ -392,6 +394,7 @@
 
                Zb = Za
                Psi3b = Psi3a
+               psiFilePos = 1 ! initialize file position ; added in debugging a 32-bit integer index overflow when nX*nY*nZ >= 512^3, note in gpse_v0.4.6 changes
                IF ( mpiRank == MPI_MASTER ) THEN
 
                   CALL io_write_vtk_header ( 'psi-', psiFileNo , psiFilePos , nX , nY , nZ )

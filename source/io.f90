@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Sunday, December 21st, 2014
+!     Friday, March 13th, 2015
 !
 ! -------------------------------------------------------------------------
 
@@ -60,7 +60,8 @@
             IMPLICIT NONE
 
             INTEGER, INTENT ( IN    ) :: fileUnit
-            INTEGER, INTENT ( INOUT ) :: filePosition
+            INTEGER ( KIND = 8 ), INTENT ( INOUT ) :: filePosition ! hard coded KIND = 8 to avoid integer overflow when writing out large files; include in gpse_v0.4.6 update
+
             INTEGER, INTENT ( IN    ) :: nXa 
             INTEGER, INTENT ( IN    ) :: nXb 
             INTEGER, INTENT ( IN    ) :: nXbc 
@@ -106,7 +107,8 @@
             IMPLICIT NONE
 
             INTEGER, INTENT ( IN    ) :: fileUnit
-            INTEGER, INTENT ( INOUT ) :: filePosition
+            INTEGER ( KIND = 8 ), INTENT ( INOUT ) :: filePosition ! hard coded KIND = 8 to avoid integer overflow when writing out large files; include in gpse_v0.4.6 update
+
             INTEGER, INTENT ( IN    ) :: nXa 
             INTEGER, INTENT ( IN    ) :: nXb 
             INTEGER, INTENT ( IN    ) :: nXbc 
@@ -152,7 +154,8 @@
             IMPLICIT NONE
 
             INTEGER, INTENT ( IN    ) :: fileUnit
-            INTEGER, INTENT ( INOUT ) :: filePosition
+            INTEGER ( KIND = 8 ), INTENT ( INOUT ) :: filePosition ! hard coded KIND = 8 to avoid integer overflow when writing out large files; include in gpse_v0.4.6 update
+
             INTEGER, INTENT ( IN    ) :: nXa
             INTEGER, INTENT ( IN    ) :: nXb
             INTEGER, INTENT ( IN    ) :: nXbc 
@@ -198,7 +201,8 @@
             IMPLICIT NONE
 
             INTEGER, INTENT ( IN    ) :: fileUnit
-            INTEGER, INTENT ( INOUT ) :: filePosition
+            INTEGER ( KIND = 8 ), INTENT ( INOUT ) :: filePosition ! hard coded KIND = 8 to avoid integer overflow when writing out large files; include in gpse_v0.4.6 update
+
             INTEGER, INTENT ( IN    ) :: nXa 
             INTEGER, INTENT ( IN    ) :: nXb 
             INTEGER, INTENT ( IN    ) :: nXbc 
@@ -246,7 +250,8 @@
             CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
 
             INTEGER, INTENT ( IN    ) :: fileUnit
-            INTEGER, INTENT ( INOUT ) :: filePosition
+            INTEGER ( KIND = 8 ), INTENT ( INOUT ) :: filePosition ! hard coded KIND = 8 to avoid integer overflow when writing out large files; include in gpse_v0.4.6 update
+
             INTEGER, INTENT ( IN    ) :: nX
             INTEGER, INTENT ( IN    ) :: nY
             INTEGER, INTENT ( IN    ) :: nZ
@@ -277,7 +282,8 @@
             CHARACTER ( LEN = * ), INTENT ( IN    ) :: fileName
 
             INTEGER              , INTENT ( IN    ) :: fileUnit
-            INTEGER              , INTENT ( INOUT ) :: filePosition
+            INTEGER ( KIND = 8 ), INTENT ( INOUT ) :: filePosition ! hard coded KIND = 8 to avoid integer overflow when writing out large files; include in gpse_v0.4.6 update
+
             INTEGER              , INTENT ( IN    ) :: nX
             INTEGER              , INTENT ( IN    ) :: nXa
             INTEGER              , INTENT ( IN    ) :: nXb
@@ -314,7 +320,8 @@
             CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
 
             INTEGER, INTENT ( IN    ) :: fileUnit
-            INTEGER, INTENT ( INOUT ) :: filePosition
+            INTEGER ( KIND = 8 ) , INTENT ( INOUT ) :: filePosition ! hard coded KIND = 8 to avoid integer overflow when writing out large files; include in gpse_v0.4.6 update
+
             INTEGER, INTENT ( IN    ) :: nY
             INTEGER, INTENT ( IN    ) :: nYa
             INTEGER, INTENT ( IN    ) :: nYb
@@ -352,7 +359,8 @@
             CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
 
             INTEGER, INTENT ( IN ) :: fileUnit
-            INTEGER, INTENT ( INOUT ) :: filePosition
+            INTEGER ( KIND = 8 ) , INTENT ( INOUT ) :: filePosition ! hard coded KIND = 8 to avoid integer overflow when writing out large files; include in gpse_v0.4.6 update
+
             INTEGER, INTENT ( IN ) :: mpiSource
             INTEGER, INTENT ( IN ) :: nZ
             INTEGER, INTENT ( IN ) :: nZa 
@@ -404,7 +412,8 @@
             CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
 
             INTEGER, INTENT ( IN ) :: fileUnit
-            INTEGER, INTENT ( INOUT ) :: filePosition
+            INTEGER ( KIND = 8 ), INTENT ( INOUT ) :: filePosition ! hard coded KIND = 8 to avoid integer overflow when writing out large files; include in gpse_v0.4.6 update
+
             INTEGER, INTENT ( IN    ) :: mpiSource
             INTEGER, INTENT ( IN ) :: nX
             INTEGER, INTENT ( IN    ) :: nXa
@@ -482,7 +491,8 @@
             CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
 
             INTEGER, INTENT ( IN ) :: fileUnit
-            INTEGER, INTENT ( INOUT ) :: filePosition
+            INTEGER ( KIND = 8 ), INTENT ( INOUT ) :: filePosition ! hard coded KIND = 8 to avoid integer overflow when writing out large files; include in gpse_v0.4.6 update
+
             INTEGER, INTENT ( IN    ) :: mpiSource
             INTEGER, INTENT ( IN ) :: nX
             INTEGER, INTENT ( IN    ) :: nXa
