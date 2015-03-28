@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Monday, March 16th, 2015
+!     Friday, March 20th, 2015
 !
 ! -------------------------------------------------------------------------
 
@@ -591,7 +591,7 @@
 
                INTEGER, INTENT ( IN ) :: mpiMaster
                INTEGER, INTENT ( IN ) :: mpiReal
-               INTEGER, INTENT ( IN ) :: mpiError
+               INTEGER, INTENT ( INOUT ) :: mpiError
                INTEGER, INTENT ( IN ) :: nXa
                INTEGER, INTENT ( IN ) :: nXb
                INTEGER, INTENT ( IN ) :: nXbc 

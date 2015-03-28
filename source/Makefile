@@ -29,11 +29,11 @@
 #
 # COPYRIGHT
 #     
-#     Copyright (c) 2014 Martin Charles Kandes
+#     Copyright (c) 2014, 2015 Martin Charles Kandes
 #
 # LAST UPDATED
 #
-#     Saturday, December 6th, 2014
+#     Sunday, March 22nd, 2015
 #
 # -------------------------------------------------------------------------
 
@@ -171,10 +171,10 @@ endif
 
 all : gpse.x
 
-gpse.x : gpse.o evua.o grid.o grk4.o io.o math.o psi.o vex.o 
+gpse.x : gpse.o evua.o grid.o grk4.o io.o math.o psi.o rot.o vex.o 
 	$(MPIF90) $(FFLAGS) -o $@ $^
 
-gpse.o : gpse.f90 evua.mod grid.mod grk4.mod io.mod math.mod psi.mod vex.mod 
+gpse.o : gpse.f90 evua.mod grid.mod grk4.mod io.mod math.mod psi.mod rot.mod vex.mod 
 	$(MPIF90) $(FFLAGS) -c $<
 
 evua.o evua.mod : evua.f90 math.mod
@@ -193,6 +193,9 @@ math.o math.mod : math.f90
 	$(MPIF90) $(FFLAGS) -c $<
 
 psi.o psi.mod : psi.f90 math.mod
+	$(MPIF90) $(FFLAGS) -c $<
+
+rot.o rot.mod : rot.f90
 	$(MPIF90) $(FFLAGS) -c $<
 
 vex.o vex.mod : vex.f90

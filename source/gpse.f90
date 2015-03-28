@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Monday, March 16th, 2015
+!     Saturday, March 28th, 2015
 !
 ! -------------------------------------------------------------------------
 
@@ -47,6 +47,7 @@
       USE            :: IO
       USE            :: MATH
       USE            :: PSI
+      USE            :: ROT
       USE            :: VEX
 
 ! --- MODULE DEFINITIONS --------------------------------------------------
@@ -58,8 +59,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.4.6'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Monday, March 16th, 2015'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.4.7'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, March 28th, 2015'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -123,6 +124,7 @@
       
       REAL :: tN    = 0.0 ! Time at nth time step
       REAL :: t0    = 0.0 ! Time at the beginning of the simulation
+      REAL :: tF    = 0.0 ! Time at the end of the simulation
       REAL :: xO    = 0.0 !
       REAL :: yO    = 0.0 !
       REAL :: zO    = 0.0 !
@@ -133,9 +135,12 @@
       REAL :: xOrrf = 0.0 !
       REAL :: yOrrf = 0.0 !
       REAL :: zOrrf = 0.0 !
-      REAL :: wX    = 0.0 ! X-component of the rotating reference frame's angular velocity vector
-      REAL :: wY    = 0.0 ! Y-component of the rotating reference frame's angular velocity vector
-      REAL :: wZ    = 0.0 ! Z-component of the rotating reference frame's angular velocity vector
+      REAL :: wXo    = 0.0 ! X-component of the rotating reference frame's angular velocity vector
+      REAL :: wYo    = 0.0 ! Y-component of the rotating reference frame's angular velocity vector
+      REAL :: wZo    = 0.0 ! Z-component of the rotating reference frame's angular velocity vector
+      REAL :: wX    = 0.0
+      REAL :: wY    = 0.0
+      REAL :: wZ    = 0.0 
       REAL :: gS    = 0.0 ! Nonlinear atom-atom interaction coupling constant
       REAL :: xOpsi = 0.0 !
       REAL :: yOpsi = 0.0 !
@@ -159,6 +164,12 @@
       REAL :: wZvex = 0.0 !
       REAL :: wRvex = 0.0 !
 
+      REAL :: thetaXo = 0.0
+      REAL :: nu = 0.0 !
+     
+      REAL :: sigma = 0.0 !
+      REAL :: tSigma = 0.0 ! flip time
+
       COMPLEX :: dTz = CMPLX ( 0.0 , 0.0 ) ! Stores simulation time step in complex form; Used for imaginary time propagation
 
 ! --- VARIABLE DEFINITIONS ------------------------------------------------
@@ -174,6 +185,7 @@
       REAL, ALLOCATABLE, DIMENSION ( : ) :: Yb
       REAL, ALLOCATABLE, DIMENSION ( : ) :: Za
       REAL, ALLOCATABLE, DIMENSION ( : ) :: Zb
+      REAL, ALLOCATABLE, DIMENSION ( : ) :: Omega
       REAL, ALLOCATABLE, DIMENSION ( : , : , : ) :: Vex3a
       REAL, ALLOCATABLE, DIMENSION ( : , : , : ) :: Vex3b
 
@@ -193,7 +205,7 @@
 
 ! --- NAMELIST DECLARATIONS -----------------------------------------------
 
-      NAMELIST /gpseIn/ itpOn , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , t0 , xO , yO , zO , dT , dX , dY , dZ , xOrrf , yOrrf , zOrrf , wX , wY , wZ , gS , psiInput , psiOutput , psiFileNo , psiInit , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , wXpsi , wYpsi , wZpsi , wRpsi , pXpsi , pYpsi , pZpsi , vexInput , vexOutput , vexFileNo , vexInit , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex
+      NAMELIST /gpseIn/ itpOn , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , t0 , tF , xO , yO , zO , dT , dX , dY , dZ , xOrrf , yOrrf , zOrrf , wX , wY , wZ , gS , psiInput , psiOutput , psiFileNo , psiInit , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , wXpsi , wYpsi , wZpsi , wRpsi , pXpsi , pYpsi , pZpsi , vexInput , vexOutput , vexFileNo , vexInit , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex
 
 ! --- NAMELIST DEFINITIONS ------------------------------------------------
 
@@ -261,12 +273,17 @@
 
       END IF
 
+      wXo = wX
+      wYo = wY
+      wZo = wZ
+
       ALLOCATE ( Xa ( nXa - nXbc : nXb + nXbc ) )
       ALLOCATE ( Ya ( nYa - nYbc : nYb + nYbc ) )
       ALLOCATE ( Za ( nZa - nZbc : nZb + nZbc ) )
       ALLOCATE ( Xb ( nXa - nXbc : nXb + nXbc ) )
       ALLOCATE ( Yb ( nYa - nYbc : nYb + nYbc ) )
       ALLOCATE ( Zb ( nZa - nZbc : nZb + nZbc ) )
+      ALLOCATE ( Omega ( 3 ) )
       ALLOCATE ( Vex3a ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
       ALLOCATE ( Vex3b ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
       ALLOCATE ( K1 ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
@@ -282,6 +299,7 @@
       Yb = 0.0
       Za = 0.0
       Zb = 0.0
+      Omega = 0.0
       Vex3a = 0.0
       Vex3b = 0.0
       K1 = CMPLX ( 0.0 , 0.0 )
@@ -450,6 +468,36 @@
          CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
 !        Compute V ( x , t_n + dT / 2 ), W ( t_n + dT / 2)
          tN = t0 + ( REAL ( n ) + 0.5 ) * dT
+
+!   -----------------------------------------------------------------------------------------------------
+! What time dependence do we want to explore with Omega ( t )? 
+
+         Omega ( 1 ) = wXo ! for now, always do absolute rotation from initial state
+         Omega ( 2 ) = wYo
+         Omega ( 3 ) = wZo
+
+!    ( 1 ) Spin up: Omega ( t = 0 ) = ( 0, 0 , 0 ) ----> Omega ( t ) = ( wXf , wYf , wZf ) tanh?
+
+!    ( 2 ) Nutation: rocking back and forth, rotating about x-axis with a periodic twist
+
+!         thetaXo = PI / 6.0 ! nutation amplitude
+!         nu = 2.0 * PI * 0.1 ! nutation frequency
+!         thetaX = thetaXo * SIN ( nu * tN ) 
+!         R = rot_rx ( thetaX )
+
+!    ( 3 ) Compton flip: start with Omega ( t = 0 ) = ( 0 , 0 , wZo ) ----> rotate about y-axis to ---> Omega ( t ---> later always ) = ( 0 , 0 , -Wz )
+
+         tSigma = 10.0 ! flip time
+         sigma = 1.0 ! flip rate
+         thetaY = 0.5 * PI * ( ( TANH ( sigma * ( tN - tSigma ) ) / TANH ( 0.5 * sigma * ( tF - t0 ) ) ) + 1.0 )
+         R = rot_ry ( thetaY )
+
+         Omega = MATMUL ( R , Omega )
+         wX = Omega ( 1 )
+         wY = Omega ( 2 )
+         wZ = Omega ( 3 ) 
+!    ----------------------------------------------------------------------------------------------
+
 !        Compute 2nd stage of GRK4L: k_2 = f ( t_n + 0.5 * dT , y_n + 0.5 * dT * k_1 )
          CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K2 )
 !        Compute intermediate wave function for 3rd stage of GRK4L: y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( 1 / lambda ) * dT * k_2
@@ -464,6 +512,32 @@
          CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
 !        Calculate V ( x , t_n + dT ), W ( t_n + dT )
          tN = t0 + REAL ( n + 1 ) * dT
+
+!   -----------------------------------------------------------------------------------------------------
+! What time dependence do we want to explore with Omega ( t )? 
+
+         Omega ( 1 ) = wXo ! for now, always do absolute rotation from initial state
+         Omega ( 2 ) = wYo
+         Omega ( 3 ) = wZo
+
+!    ( 1 ) Spin up: Omega ( t = 0 ) = ( 0, 0 , 0 ) ----> Omega ( t ) = ( wXf , wYf , wZf ) tanh?
+
+!    ( 2 ) Nutation: rocking back and forth, rotating about x-axis with a periodic twist
+
+!         thetaX = thetaXo * SIN ( nu * tN ) 
+!         R = rot_rx ( thetaX )
+
+!    ( 3 ) Compton flip: start with Omega ( t = 0 ) = ( 0 , 0 , wZo ) ----> rotate about y-axis to ---> Omega ( t ---> later always ) = ( 0 , 0 , -Wz )
+
+         thetaY = 0.5 * PI * ( ( TANH ( sigma * ( tN - tSigma ) ) / TANH ( 0.5 * sigma * ( tF - t0 ) ) ) + 1.0 )
+         R = rot_ry ( thetaY )
+
+         Omega = MATMUL ( R , Omega )
+         wX = Omega ( 1 )
+         wY = Omega ( 2 )
+         wZ = Omega ( 3 )  
+!    ----------------------------------------------------------------------------------------------
+
 !        Compute the fourth stage ... k_4 = f ( t_n + dT , y_n + ( 1 - lamda / 2 ) * dT * k_2 + ( lamda / 2) * dT * k_3 
          CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K4 )
 !        Compute wave function at nth+1 time step ... y_{ n + 1 } = y_n + ( dT / 6 ) * [ k_1 + ( 4 - lambda ) * k_2 + lambda * k_3 + k_4 ]
@@ -578,6 +652,7 @@
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nY        = ', nY
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nZ        = ', nZ
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        t0        = ', t0
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        tF        = ', tF
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        xO        = ', xO
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        yO        = ', yO
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        zO        = ', zO
@@ -729,6 +804,7 @@
             CALL MPI_BCAST ( nZ        , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( nZbc      , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( t0        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( tF        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( xO        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( yO        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( zO        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
