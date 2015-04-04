@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, March 28th, 2015
+!     Friday, April 3rd, 2015
 !
 ! -------------------------------------------------------------------------
 
@@ -59,8 +59,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.4.7'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, March 28th, 2015'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.4.8'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Friday, April 3rd, 2015'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -145,6 +145,7 @@
       REAL :: xOpsi = 0.0 !
       REAL :: yOpsi = 0.0 !
       REAL :: zOpsi = 0.0 !
+      REAL :: rOpsi = 0.0 !
       REAL :: wXpsi = 0.0 !
       REAL :: wYpsi = 0.0 !
       REAL :: wZpsi = 0.0 !
@@ -205,7 +206,7 @@
 
 ! --- NAMELIST DECLARATIONS -----------------------------------------------
 
-      NAMELIST /gpseIn/ itpOn , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , t0 , tF , xO , yO , zO , dT , dX , dY , dZ , xOrrf , yOrrf , zOrrf , wX , wY , wZ , gS , psiInput , psiOutput , psiFileNo , psiInit , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , wXpsi , wYpsi , wZpsi , wRpsi , pXpsi , pYpsi , pZpsi , vexInput , vexOutput , vexFileNo , vexInit , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex
+      NAMELIST /gpseIn/ itpOn , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , t0 , tF , xO , yO , zO , dT , dX , dY , dZ , xOrrf , yOrrf , zOrrf , wX , wY , wZ , gS , psiInput , psiOutput , psiFileNo , psiInit , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , rOpsi , wXpsi , wYpsi , wZpsi , wRpsi , pXpsi , pYpsi , pZpsi , vexInput , vexOutput , vexFileNo , vexInit , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex
 
 ! --- NAMELIST DEFINITIONS ------------------------------------------------
 
@@ -315,7 +316,7 @@
 
       IF ( psiInput == 0 ) THEN ! compute initial wave function from available analytic expression
 
-         CALL psi_init ( psiInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , wXpsi , wYpsi , wZpsi , wRpsi , Xa , Ya , Za , Psi3a )
+         CALL psi_init ( psiInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , rOpsi , wXpsi , wYpsi , wZpsi , wRpsi , Xa , Ya , Za , Psi3a )
 
       ELSE IF ( psiInput == 1 ) THEN ! read initial wave function from binary file on MPI_MASTER
 
@@ -471,31 +472,31 @@
 
 !   -----------------------------------------------------------------------------------------------------
 ! What time dependence do we want to explore with Omega ( t )? 
-
-         Omega ( 1 ) = wXo ! for now, always do absolute rotation from initial state
-         Omega ( 2 ) = wYo
-         Omega ( 3 ) = wZo
-
+!
+!         Omega ( 1 ) = wXo ! for now, always do absolute rotation from initial state
+!         Omega ( 2 ) = wYo
+!         Omega ( 3 ) = wZo
+!
 !    ( 1 ) Spin up: Omega ( t = 0 ) = ( 0, 0 , 0 ) ----> Omega ( t ) = ( wXf , wYf , wZf ) tanh?
-
+!
 !    ( 2 ) Nutation: rocking back and forth, rotating about x-axis with a periodic twist
-
+!
 !         thetaXo = PI / 6.0 ! nutation amplitude
-!         nu = 2.0 * PI * 0.1 ! nutation frequency
+!         nu = 0.2 ! nutation frequency
 !         thetaX = thetaXo * SIN ( nu * tN ) 
 !         R = rot_rx ( thetaX )
-
+!
 !    ( 3 ) Compton flip: start with Omega ( t = 0 ) = ( 0 , 0 , wZo ) ----> rotate about y-axis to ---> Omega ( t ---> later always ) = ( 0 , 0 , -Wz )
-
-         tSigma = 10.0 ! flip time
-         sigma = 1.0 ! flip rate
-         thetaY = 0.5 * PI * ( ( TANH ( sigma * ( tN - tSigma ) ) / TANH ( 0.5 * sigma * ( tF - t0 ) ) ) + 1.0 )
-         R = rot_ry ( thetaY )
-
-         Omega = MATMUL ( R , Omega )
-         wX = Omega ( 1 )
-         wY = Omega ( 2 )
-         wZ = Omega ( 3 ) 
+!
+!         tSigma = 10.0 ! flip time
+!         sigma = 1.0 ! flip rate
+!         thetaY = 0.5 * PI * ( ( TANH ( sigma * ( tN - tSigma ) ) / TANH ( 0.5 * sigma * ( tF - t0 ) ) ) + 1.0 )
+!         R = rot_ry ( thetaY )
+!
+!         Omega = MATMUL ( R , Omega )
+!         wX = Omega ( 1 )
+!         wY = Omega ( 2 )
+!         wZ = Omega ( 3 ) 
 !    ----------------------------------------------------------------------------------------------
 
 !        Compute 2nd stage of GRK4L: k_2 = f ( t_n + 0.5 * dT , y_n + 0.5 * dT * k_1 )
@@ -515,27 +516,27 @@
 
 !   -----------------------------------------------------------------------------------------------------
 ! What time dependence do we want to explore with Omega ( t )? 
-
-         Omega ( 1 ) = wXo ! for now, always do absolute rotation from initial state
-         Omega ( 2 ) = wYo
-         Omega ( 3 ) = wZo
-
+!
+!         Omega ( 1 ) = wXo ! for now, always do absolute rotation from initial state
+!         Omega ( 2 ) = wYo
+!         Omega ( 3 ) = wZo
+!
 !    ( 1 ) Spin up: Omega ( t = 0 ) = ( 0, 0 , 0 ) ----> Omega ( t ) = ( wXf , wYf , wZf ) tanh?
-
+!
 !    ( 2 ) Nutation: rocking back and forth, rotating about x-axis with a periodic twist
-
+!
 !         thetaX = thetaXo * SIN ( nu * tN ) 
 !         R = rot_rx ( thetaX )
-
+!
 !    ( 3 ) Compton flip: start with Omega ( t = 0 ) = ( 0 , 0 , wZo ) ----> rotate about y-axis to ---> Omega ( t ---> later always ) = ( 0 , 0 , -Wz )
-
-         thetaY = 0.5 * PI * ( ( TANH ( sigma * ( tN - tSigma ) ) / TANH ( 0.5 * sigma * ( tF - t0 ) ) ) + 1.0 )
-         R = rot_ry ( thetaY )
-
-         Omega = MATMUL ( R , Omega )
-         wX = Omega ( 1 )
-         wY = Omega ( 2 )
-         wZ = Omega ( 3 )  
+!
+!         thetaY = 0.5 * PI * ( ( TANH ( sigma * ( tN - tSigma ) ) / TANH ( 0.5 * sigma * ( tF - t0 ) ) ) + 1.0 )
+!         R = rot_ry ( thetaY )
+!
+!         Omega = MATMUL ( R , Omega )
+!         wX = Omega ( 1 )
+!         wY = Omega ( 2 )
+!         wZ = Omega ( 3 )  
 !    ----------------------------------------------------------------------------------------------
 
 !        Compute the fourth stage ... k_4 = f ( t_n + dT , y_n + ( 1 - lamda / 2 ) * dT * k_2 + ( lamda / 2) * dT * k_3 
@@ -625,7 +626,7 @@
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     COPYRIGHT'
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'     
-               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#         Copyright (c) 2014 Martin Charles Kandes'
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#         Copyright (c) 2014, 2015 Martin Charles Kandes'
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     LAST UPDATED'
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
@@ -679,6 +680,7 @@
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        xOpsi     = ', xOpsi
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        yOpsi     = ', yOpsi
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        zOpsi     = ', zOpsi
+               WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        rOpsi     = ', rOpsi
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wXpsi     = ', wXpsi
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wYpsi     = ', wYpsi
                WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wZpsi     = ', wZpsi
@@ -829,6 +831,7 @@
             CALL MPI_BCAST ( xOpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( yOpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( zOpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
+            CALL MPI_BCAST ( rOpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( wXpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( wYpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
             CALL MPI_BCAST ( wZpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )

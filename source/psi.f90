@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Friday, March 13th, 2015
+!     Friday, April 3rd, 2015
 !
 ! -------------------------------------------------------------------------
 
@@ -69,11 +69,12 @@
 
       PRIVATE :: psi_3d_se_sho_ani
       PRIVATE :: psi_3d_se_sho_axi
+      PRIVATE :: psi_3d_se_shor_axi
       PRIVATE :: psi_3d_se_sho_iso
 
       CONTAINS
 
-         SUBROUTINE psi_init ( psiInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nX , nY , nZ , nR , mL , xO , yO , zO , wX , wY , wZ , wR , X , Y , Z , Psi3 )
+         SUBROUTINE psi_init ( psiInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nX , nY , nZ , nR , mL , xO , yO , zO , rO , wX , wY , wZ , wR , X , Y , Z , Psi3 )
 
             IMPLICIT NONE
 
@@ -96,6 +97,7 @@
             REAL, INTENT ( IN ) :: xO
             REAL, INTENT ( IN ) :: yO
             REAL, INTENT ( IN ) :: zO
+            REAL, INTENT ( IN ) :: rO
             REAL, INTENT ( IN ) :: wX
             REAL, INTENT ( IN ) :: wY
             REAL, INTENT ( IN ) :: wZ
@@ -118,6 +120,10 @@
             ELSE IF ( psiInit == 2 ) THEN 
 
                CALL psi_3d_se_sho_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nR , mL , nZ , xO , yO , zO , wR , wZ , X , Y , Z , Psi3 )
+
+            ELSE IF ( psiInit == 3 ) THEN
+
+               CALL psi_3d_se_shor_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nR , mL , nZ , xO , yO , zO , rO , wR , wZ , X , Y , Z , Psi3 )
 
             ELSE 
 
@@ -238,6 +244,68 @@
                         & EXP ( -0.5 * wR * ( ( X ( j ) - xO )**2 + ( Y ( k ) - yO )**2 ) ) * & 
                         & hermite ( nZ , SQRT ( wZ ) * ( Z ( l ) - zO ) ) * EXP ( -0.5 * wZ * ( Z ( l ) - zO )**2 ) , 0.0 ) * & 
                         & EXP ( CMPLX ( 0.0 , REAL ( mL ) * ATAN2 ( Y ( k ) - yO , X ( j ) - xO ) ) ) 
+
+                  END DO
+
+               END DO
+!$OMP          END PARALLEL DO
+
+            END DO
+!$OMP       END PARALLEL DO
+
+            RETURN
+
+         END SUBROUTINE
+
+         SUBROUTINE psi_3d_se_shor_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nR , mL , nZ , xO , yO , zO , rO , wR , wZ , X , Y , Z , Psi3 )
+
+            IMPLICIT NONE
+
+            INTEGER, INTENT ( IN ) :: nXa 
+            INTEGER, INTENT ( IN ) :: nXb 
+            INTEGER, INTENT ( IN ) :: nXbc
+            INTEGER, INTENT ( IN ) :: nYa 
+            INTEGER, INTENT ( IN ) :: nYb 
+            INTEGER, INTENT ( IN ) :: nYbc
+            INTEGER, INTENT ( IN ) :: nZa 
+            INTEGER, INTENT ( IN ) :: nZb 
+            INTEGER, INTENT ( IN ) :: nZbc
+            INTEGER, INTENT ( IN ) :: nR
+            INTEGER, INTENT ( IN ) :: mL
+            INTEGER, INTENT ( IN ) :: nZ
+
+            REAL, INTENT ( IN ) :: xO
+            REAL, INTENT ( IN ) :: yO
+            REAL, INTENT ( IN ) :: zO
+            REAL, INTENT ( IN ) :: rO
+            REAL, INTENT ( IN ) :: wR
+            REAL, INTENT ( IN ) :: wZ
+
+            REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
+            REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
+            REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
+
+            COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Psi3
+
+            INTEGER :: j , k , l 
+
+!$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
+            DO l = nZa , nZb
+
+!$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
+               DO k = nYa , nYb
+
+                  DO j = nXa , nXb
+
+                     Psi3 ( j , k , l ) = CMPLX ( &
+                        & SQRT ( ( wR**( ABS ( mL ) + 1 ) * REAL ( factorial ( nR ) ) ) / &
+                        & ( PI * REAL ( factorial ( nR + ABS ( mL ) ) ) ) ) * &
+                        & ( 1.0 / SQRT ( REAL ( 2**nZ * factorial ( nZ ) ) ) ) * SQRT ( SQRT ( wZ / PI ) ) * &
+                        & SQRT ( ( X ( j ) - xO )**2 + ( Y ( k ) - yO )**2 )**ABS ( mL ) * &
+                        & alaguerre ( nR , ABS ( mL ) , wR * ( SQRT ( ( X ( j ) - xO )**2 + ( Y ( k ) - yO )**2 ) - rO )**2 ) * &
+                        & EXP ( -0.5 * wR * ( SQRT ( ( X ( j ) - xO )**2 + ( Y ( k ) - yO )**2 ) - rO )**2 ) * &
+                        & hermite ( nZ , SQRT ( wZ ) * ( Z ( l ) - zO ) ) * EXP ( -0.5 * wZ * ( Z ( l ) - zO )**2 ) , 0.0 ) * &
+                        & EXP ( CMPLX ( 0.0 , REAL ( mL ) * ATAN2 ( Y ( k ) - yO , X ( j ) - xO ) ) )
 
                   END DO
 
