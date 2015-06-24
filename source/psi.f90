@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Friday, April 3rd, 2015
+!     Wednesday, June 24th, 2015
 !
 ! -------------------------------------------------------------------------
 
@@ -365,12 +365,12 @@
             INTEGER :: j , k , l
 
 !$OMP       PARALLEL DO IF ( nZa /= nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-            DO l = nZa , nZb
+            DO l = nZa - nZbc , nZb + nZbc ! if you don't include boundary points, they will not be properly boosted with interior points
 
 !$OMP          PARALLEL DO IF ( nZa == nZb ) DEFAULT ( SHARED ) SCHEDULE ( STATIC )
-               DO k = nYa , nYb
+               DO k = nYa - nYbc , nYb + nYbc
 
-                  DO j = nXa , nXb
+                  DO j = nXa - nXbc , nXb + nXbc
 
                      Psi3 ( j , k , l ) = Psi3 ( j , k , l ) * EXP ( CMPLX ( 0.0 , pX * ( X ( j ) - xO ) + pY * ( Y ( k ) - yO ) + pZ * ( Z ( l ) - zO ) ) )
 

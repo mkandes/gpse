@@ -31,7 +31,7 @@
 !
 ! LAST UPDATED
 !
-!     Friday, April 3rd, 2015
+!     Wednesday, June 24th, 2015
 !
 ! -------------------------------------------------------------------------
 
@@ -59,8 +59,8 @@
 
 ! --- PARAMETER DECLARATIONS  ---------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.4.8'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Friday, April 3rd, 2015'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.4.9'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Wednesday, June 24th, 2015'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -486,12 +486,12 @@
 !         thetaX = thetaXo * SIN ( nu * tN ) 
 !         R = rot_rx ( thetaX )
 !
-!    ( 3 ) Compton flip: start with Omega ( t = 0 ) = ( 0 , 0 , wZo ) ----> rotate about y-axis to ---> Omega ( t ---> later always ) = ( 0 , 0 , -Wz )
+!    ( 3 ) Compton flip: 
 !
 !         tSigma = 10.0 ! flip time
 !         sigma = 1.0 ! flip rate
-!         thetaY = 0.5 * PI * ( ( TANH ( sigma * ( tN - tSigma ) ) / TANH ( 0.5 * sigma * ( tF - t0 ) ) ) + 1.0 )
-!         R = rot_ry ( thetaY )
+!         thetaX = 0.5 * PI * ( ( TANH ( sigma * ( tN - tSigma ) ) / TANH ( 0.5 * sigma * ( tF - t0 ) ) ) + 1.0 )
+!         R = rot_rx ( thetaX )
 !
 !         Omega = MATMUL ( R , Omega )
 !         wX = Omega ( 1 )
@@ -528,10 +528,10 @@
 !         thetaX = thetaXo * SIN ( nu * tN ) 
 !         R = rot_rx ( thetaX )
 !
-!    ( 3 ) Compton flip: start with Omega ( t = 0 ) = ( 0 , 0 , wZo ) ----> rotate about y-axis to ---> Omega ( t ---> later always ) = ( 0 , 0 , -Wz )
+!    ( 3 ) Compton flip:
 !
-!         thetaY = 0.5 * PI * ( ( TANH ( sigma * ( tN - tSigma ) ) / TANH ( 0.5 * sigma * ( tF - t0 ) ) ) + 1.0 )
-!         R = rot_ry ( thetaY )
+!         thetaX = 0.5 * PI * ( ( TANH ( sigma * ( tN - tSigma ) ) / TANH ( 0.5 * sigma * ( tF - t0 ) ) ) + 1.0 )
+!         R = rot_rx ( thetaX )
 !
 !         Omega = MATMUL ( R , Omega )
 !         wX = Omega ( 1 )
