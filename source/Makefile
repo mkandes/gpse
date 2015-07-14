@@ -5,9 +5,11 @@
 #
 # SYNOPSIS
 #
+#     make
+#
 # DESCRIPTION
 #
-#     This Makefile ...
+#     This Makefile compiles the gpse source code. 
 #
 # OPTIONS
 #
@@ -33,7 +35,7 @@
 #
 # LAST UPDATED
 #
-#     Sunday, March 22nd, 2015
+#     Friday, July 10th, 2015
 #
 # -------------------------------------------------------------------------
 
@@ -43,7 +45,7 @@
 
 SHELL    := /bin/bash
 
-#     Get hostname of the machine gpse will be compiled and run on.
+#     Get hostname of the machine the source will be compiled and run on.
 
 HNAME    := $(shell hostname)
 
@@ -63,9 +65,6 @@ OPTIMIZE := ON
 OPENMP   := ON
 
 #     Specify compiler-specific compilation options.
-#
-#     GNU Fortran (GCC) 4.8.2 ( ivymike )
-#     GNU Fortran (GCC) 4.1.2 20080704 (Red Hat 4.1.2-48) ( dugong.sdsu.edu )
 
 STD_GNU  := -fimplicit-none -fmodule-private -ffree-form -ffree-line-length-none -std=gnu
 INT_GNU  := # -fdefault-integer-8 ! need to come up with better way to provide overall support for INT64; perhaps rely on MPI-3 mpi_08 module?
@@ -78,8 +77,6 @@ CHK_GNU  := -fcheck=all
 DBG_GNU  := -ffpe-trap=invalid,overflow -fbacktrace -fdump-core -finit-real=nan
 WRN_GNU  := -Wall -fmax-errors=0 -Wno-array-temporaries -Warray-bounds -Wcharacter-truncation -Wline-truncation -Wconversion-extra -Wimplicit-interface -Wimplicit-procedure -Wunderflow -Wextra -Wuninitialized
 
-#     ifort (IFORT) 11.1 20100414 ( dugong.sdsu.edu )
-
 STD_IFORT  := -stand f03 -implicitnone -free -m64 -static -static-intel -static-libgcc -mkl=parallel
 INT_IFORT  := -integer-size 64
 REAL_IFORT := -real-size 64
@@ -89,8 +86,6 @@ AUTO_IFORT := -parallel -par-num-threads=4 -par-schedule=auto -par-report3
 CHK_IFORT  := -check all
 DBG_IFORT  := -debug all
 WRN_IFORT  := -warn all
-
-#     pgf90 10.9-0 64-bit target on x86-64 Linux -tp istanbul-64 ( dugong.sdsu.edu )
 
 STD_PGI    := -Mfree -m64 -mcmodel=medium -Minfo -Mneginfo -Mpreprocess -Dpgf95
 INT_PGI    := -i4

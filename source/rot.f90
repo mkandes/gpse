@@ -1,13 +1,16 @@
 ! ==========================================================================
 ! NAME
 !
-!     rot [ rot ] - rot module
+!     rot [ rot ] - Rotation Module
 !
 ! SYNOPSIS
 !
+!     USE :: ROT
+!
 ! DESCRIPTION  
 !
-!     rot is a Fortran module ... 
+!     ROT is a custom Fortran module written to compute the elemental 
+!        rotation matrices of a Cartesian coordinate system.
 !
 ! OPTIONS
 !
@@ -31,94 +34,146 @@
 !
 ! LAST UPDATED
 !
-!     Monday, March 23rd, 2015
+!     Friday, July 10th, 2015
 !
 ! -------------------------------------------------------------------------
 
       MODULE rot
 
+! --- MODULE DECLARATIONS -------------------------------------------------
+
       USE, INTRINSIC :: ISO_FORTRAN_ENV
+
+! --- MODULE DEFINITIONS --------------------------------------------------
+!
+!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides 
+!        information about the run-time environment.
+!
+! -------------------------------------------------------------------------
 
       IMPLICIT NONE
       PRIVATE
+
+! --- VARIABLE DECLARATIONS -----------------------------------------------
 
       REAL, PUBLIC :: thetaX
       REAL, PUBLIC :: thetaY
       REAL, PUBLIC :: thetaZ
 
+! --- VARIABLE DEFINITIONS ------------------------------------------------
+!
+!     thetaX is a PUBLIC, REAL-valued variable that stores the rotation
+!        angle about the x-axis.
+!
+!     thetaY is a PUBLIC, REAL-valued variable that stores the rotation
+!        angle about the y-axis.
+!
+!     thetaZ is a PUBLIC, REAL-valued variable that stores the rotation
+!        angle about the z-axis.
+!      
+! --- ARRAY DECLARATIONS --------------------------------------------------
+
       REAL, DIMENSION ( 3 , 3 ), PUBLIC :: R
+
+! --- ARRAY DEFINITIONS ---------------------------------------------------
+!
+!     R is a PUBLIC, REAL-valued rank-two array that stores the 3-by-3 
+!        rotation matrix.
+!
+! --- FUNCTION DECLARATIONS -----------------------------------------------
 
       PUBLIC :: rot_rx
       PUBLIC :: rot_ry
       PUBLIC :: rot_rz
 
+! --- FUNCTION DEFINITIONS ------------------------------------------------
+!
+!     rot_rx is a PUBLIC FUNCTION that computes the elemental rotation 
+!        matrix about the x-axis of a Cartesian coordinate system.
+!
+!     rot_ry is a PUBLIC FUNCTION that computes the elemental rotation
+!        matrix about the y-axis of a Cartesian coordinate system.
+!
+!     rot_rz is a PUBLIC FUNCTION that computes the elemental rotation
+!        matrix about the z-axis of a Cartesian coordinate system.
+!
+! -------------------------------------------------------------------------
+
       CONTAINS
 
-         FUNCTION rot_rx ( theta )
+! -------------------------------------------------------------------------
 
-            IMPLICIT NONE
+      FUNCTION rot_rx ( theta )
 
-            REAL, INTENT ( IN ) :: theta
+      IMPLICIT NONE
 
-            REAL, DIMENSION ( 3 , 3 ) :: rot_rx
+      REAL, INTENT ( IN ) :: theta
 
-            rot_rx ( 1 , 1 ) = 1.0
-            rot_rx ( 2 , 1 ) = 0.0
-            rot_rx ( 3 , 1 ) = 0.0
-            rot_rx ( 1 , 2 ) = 0.0
-            rot_rx ( 2 , 2 ) = COS ( theta )
-            rot_rx ( 3 , 2 ) = SIN ( theta )
-            rot_rx ( 1 , 3 ) = 0.0 
-            rot_rx ( 2 , 3 ) = -SIN ( theta )
-            rot_rx ( 3 , 3 ) = COS ( theta )
+      REAL, DIMENSION ( 3 , 3 ) :: rot_rx
 
-            RETURN
+      rot_rx ( 1 , 1 ) = 1.0
+      rot_rx ( 2 , 1 ) = 0.0
+      rot_rx ( 3 , 1 ) = 0.0
+      rot_rx ( 1 , 2 ) = 0.0
+      rot_rx ( 2 , 2 ) = COS ( theta )
+      rot_rx ( 3 , 2 ) = SIN ( theta )
+      rot_rx ( 1 , 3 ) = 0.0 
+      rot_rx ( 2 , 3 ) = -SIN ( theta )
+      rot_rx ( 3 , 3 ) = COS ( theta )
 
-         END FUNCTION
+      RETURN
 
-         FUNCTION rot_ry ( theta )
+      END FUNCTION
 
-            IMPLICIT NONE
+! -------------------------------------------------------------------------
 
-            REAL, INTENT ( IN ) :: theta
+      FUNCTION rot_ry ( theta )
 
-            REAL, DIMENSION ( 3, 3 ) :: rot_ry
+      IMPLICIT NONE
 
-            rot_ry ( 1 , 1 ) = COS ( theta ) 
-            rot_ry ( 2 , 1 ) = 0.0
-            rot_ry ( 3 , 1 ) = -SIN ( theta )
-            rot_ry ( 1 , 2 ) = 0.0
-            rot_ry ( 2 , 2 ) = 1.0
-            rot_ry ( 3 , 2 ) = 0.0
-            rot_ry ( 1 , 3 ) = SIN ( theta )
-            rot_ry ( 2 , 3 ) = 0.0
-            rot_ry ( 3 , 3 ) = COS ( theta )
+      REAL, INTENT ( IN ) :: theta
 
-            RETURN
+      REAL, DIMENSION ( 3, 3 ) :: rot_ry
 
-         END FUNCTION 
+      rot_ry ( 1 , 1 ) = COS ( theta ) 
+      rot_ry ( 2 , 1 ) = 0.0
+      rot_ry ( 3 , 1 ) = -SIN ( theta )
+      rot_ry ( 1 , 2 ) = 0.0
+      rot_ry ( 2 , 2 ) = 1.0
+      rot_ry ( 3 , 2 ) = 0.0
+      rot_ry ( 1 , 3 ) = SIN ( theta )
+      rot_ry ( 2 , 3 ) = 0.0
+      rot_ry ( 3 , 3 ) = COS ( theta )
 
-         FUNCTION rot_rz ( theta )
+      RETURN
 
-            IMPLICIT NONE
+      END FUNCTION
 
-            REAL, INTENT ( IN ) :: theta
+! -------------------------------------------------------------------------
 
-            REAL, DIMENSION ( 3 , 3 ) :: rot_rz
+      FUNCTION rot_rz ( theta )
 
-            rot_rz ( 1 , 1 ) = COS ( theta )
-            rot_rz ( 2 , 1 ) = SIN ( theta )
-            rot_rz ( 3 , 1 ) = 0.0
-            rot_rz ( 1 , 2 ) = -SIN ( theta )
-            rot_rz ( 2 , 2 ) = COS ( theta )
-            rot_rz ( 3 , 2 ) = 0.0
-            rot_rz ( 1 , 3 ) = 0.0
-            rot_rz ( 2 , 3 ) = 0.0
-            rot_rz ( 3 , 3 ) = 1.0
+      IMPLICIT NONE
 
-            RETURN
+      REAL, INTENT ( IN ) :: theta
 
-         END FUNCTION
+      REAL, DIMENSION ( 3 , 3 ) :: rot_rz
+
+      rot_rz ( 1 , 1 ) = COS ( theta )
+      rot_rz ( 2 , 1 ) = SIN ( theta )
+      rot_rz ( 3 , 1 ) = 0.0
+      rot_rz ( 1 , 2 ) = -SIN ( theta )
+      rot_rz ( 2 , 2 ) = COS ( theta )
+      rot_rz ( 3 , 2 ) = 0.0
+      rot_rz ( 1 , 3 ) = 0.0
+      rot_rz ( 2 , 3 ) = 0.0
+      rot_rz ( 3 , 3 ) = 1.0
+
+      RETURN
+
+      END FUNCTION
+
+! -------------------------------------------------------------------------
 
       END MODULE
 
