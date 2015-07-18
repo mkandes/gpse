@@ -1,4 +1,4 @@
-! ==========================================================================
+! ==================================================================================================================================
 ! NAME
 !
 !     gpse [ jip-see ] - Gross-Pitaevskii and Schrodinger Equation Solver 
@@ -10,39 +10,28 @@
 !
 ! DESCRIPTION  
 !
-!     GPSE is a Fortran program created to numerically approximate 
-!        solutions of the time-dependent Gross-Pitaevskii equation (GPE) in 
-!        non-uniformly rotating frames of reference for a single component
-!        Bose-Einstein condensate (BEC) in three dimensions. It implements a 
-!        method-of-lines approach that combines an explicit, generalized 
-!        4th-order Runge-Kutta (GRK4) time-integration scheme* with 2nd- or 
-!        4th-order central differences (CD2/CD4) to discretize the spatial
-!        derivatives of the equation.
+!     GPSE is a Fortran program created to numerically approximate solutions of the time-dependent Gross-Pitaevskii equation (GPE) 
+!        in non-uniformly rotating frames of reference for a single component Bose-Einstein condensate (BEC) in three dimensions. 
+!        It implements a method-of-lines approach that combines an explicit, generalized 4th-order Runge-Kutta (GRK4) 
+!        time-integration scheme* with 2nd- or 4th-order central differences (CD2/CD4) to discretize the spatial derivatives of the
+!        equation.
 !
-!     Zero Dirichlet boundary conditions are assumed to apply at the 
-!        boundary of the computational domain at all times in any given 
-!        simulation. As a result, gpse is best suited for investigating 
-!        BECs confined within externally applied trapping potentials where
-!        the condensate density decreases to zero at the boundary of the 
-!        computational domain.
+!     Zero Dirichlet boundary conditions are assumed to apply at the boundary of the computational domain at all times in any given 
+!        simulation. As a result, gpse is best suited for investigating BECs confined within externally applied trapping potentials
+!        where the condensate density decreases to zero at the boundary of the computational domain.
 !
-!     The GRK4 + CDX algorithm is implemented in parallel using a 
-!        one-dimensional slab decomposition of the computational domain 
-!        embedded within a hybrid MPI + OpenMP framework to enable scalable, 
-!        high-resolution numerical simulations. A two-round communication
-!        pattern, where even- and odd-numbered MPI processes alternate
-!        between send and receive calls, is utilized to reduce communication
-!        overhead and improve message passing throughput.
+!     The GRK4 + CDX algorithm is implemented in parallel using a one-dimensional slab decomposition of the computational domain 
+!        embedded within a hybrid MPI + OpenMP framework to enable scalable, high-resolution numerical simulations. A two-round 
+!        communication pattern, where even- and odd-numbered MPI processes alternate between send and receive calls, is utilized to
+!        reduce communication overhead and improve message passing throughput.
 !
-!     * See 'On A General Formula of Fourth Order Runge-Kutta Method'
-!       by D. Tan and Z. Chen in the Journal of Mathematical Sciences & 
-!       Mathematics Education Vol. 7 No. 2 (2012).
+!     * See 'On A General Formula of Fourth Order Runge-Kutta Method' by D. Tan and Z. Chen in the Journal of Mathematical Sciences
+!        & Mathematics Education Vol. 7 No. 2 (2012).
 !
 ! OPTIONS
 !
-!     All runtime options available to the user, with the exception of the 
-!        number of MPI processes and OpenMP threads to run on, must be 
-!        specified within the input file gpse.input.
+!     All runtime options available to the user, with the exception of the number of MPI processes and OpenMP threads to run on, 
+!        must be specified within the input file gpse.input.
 !
 ! SEE ALSO
 !
@@ -90,13 +79,13 @@
 !
 ! LAST UPDATED
 !
-!     Monday, July 13th, 2015
+!     Saturday, July 18th, 2015
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       PROGRAM GPSE
 
-! --- MODULE DECLARATIONS -------------------------------------------------
+! --- MODULE DECLARATIONS ----------------------------------------------------------------------------------------------------------
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
       USE            :: MPI
@@ -109,71 +98,58 @@
       USE            :: ROT
       USE            :: VEX
 
-! --- MODULE DEFINITIONS --------------------------------------------------
+! --- MODULE DEFINITIONS -----------------------------------------------------------------------------------------------------------
 !
-!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides 
-!        information about the run-time environment.
+!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides information about the run-time environment.
 !
 !     MPI is the standard Message Passing Interface module.
 !
-!     EVUA is a custom Fortran module written to compute expectation values
-!        and other useful quantities, such as uncertainty relations, from 
-!        the wave functions generated during program execution. 
+!     EVUA is a custom Fortran module written to compute expectation values and other useful quantities, such as uncertainty 
+!        relations, from the wave functions generated during program execution. 
 !
-!     GRID is a custom Fortran module written to build the regular 
-!        Cartesian grid of points that defines the spatial computational 
-!        domain on which external potentials, wave functions and other
-!        physical quantities may be computed. 
+!     GRID is a custom Fortran module written to build the regular Cartesian grid of points that defines the spatial computational 
+!        domain on which external potentials, wave functions and other physical quantities may be computed. 
 !
-!     GRK4 is a custom Fortran module written to numerically approximate 
-!        solutions of the time-dependent, three-dimensional Gross-Pitaveskii
-!        equation for a single component Bose-Einstein condensate in a 
-!        rotating reference frame using the GRK4 + CDX algorithm.
+!     GRK4 is a custom Fortran module written to numerically approximate solutions of the time-dependent, three-dimensional 
+!        Gross-Pitaveskii equation for a single component Bose-Einstein condensate in a rotating reference frame using the 
+!        GRK4 + CDX algorithm.
 !
-!     IO is a custom Fortran module written to perform input-output 
-!       operations for gpse.
+!     IO is a custom Fortran module written to perform input-output operations for gpse.
 !
-!     MATH is a custom Fortran module written to define well-know
-!        mathematical constants and compute specialized functions. 
+!     MATH is a custom Fortran module written to define well-know mathematical constants and compute specialized functions. 
 !
-!     PSI is a custom Fortran module written to compute analytic solutions 
-!        of the Schrodinger and Gross-Pitaevskii equations, which may be 
-!        used as initial conditions for simulations.
+!     PSI is a custom Fortran module written to compute analytic solutions of the Schrodinger and Gross-Pitaevskii equations, which
+!        may be used as initial conditions for simulations.
 !
-!     ROT is a custom Fortran module written to compute the elemental 
-!        rotation matrices of a Cartesian coordinate system.
+!     ROT is a custom Fortran module written to compute the elemental rotation matrices of a Cartesian coordinate system.
 !
-!     VEX is a custom Fortran module written to compute analytic external 
-!        potentials.
+!     VEX is a custom Fortran module written to compute analytic external potentials.
 !     
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
       
       IMPLICIT NONE
 
 !      INCLUDE 'mpif.h' ! if MPI module is not supported, use header file.
 
-! --- PARAMETER DECLARATIONS  ---------------------------------------------
+! --- PARAMETER DECLARATIONS  ------------------------------------------------------------------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.5.0'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Monday, July 13th, 2015'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.5.1'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, July 18th, 2015'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
-! --- PARAMETER DEFINITIONS -----------------------------------------------
+! --- PARAMETER DEFINITIONS --------------------------------------------------------------------------------------------------------
 !
-!     GPSE_VERSION_NUMBER is a character-valued parameter that defines the
-!        current working version of the gpse's source code. It is to be 
-!        maintained manually by the author(s) of the program.
+!     GPSE_VERSION_NUMBER is a character-valued parameter that defines the current working version of the gpse's source code. It is
+!        to be maintained manually by the author(s) of the program.
 !
-!     GPSE_LAST_UPDATED is a character-valude parameter that defines the
-!        last date any portion of the current working version of the 
-!        gpse's source code was modified. It is to be maintained manually 
-!        by the author(s) of the program
+!     GPSE_LAST_UPDATED is a character-valude parameter that defines the last date any portion of the current working version of the 
+!        gpse's source code was modified. It is to be maintained manually by the author(s) of the program
 !
-!     MPI_MASTER is an integer-valued parameter that defines the default
-!        rank of the master MPI process when the program begins execution. 
+!     MPI_MASTER is an integer-valued parameter that defines the default rank of the master MPI process when the program begins 
+!        execution. 
 !
-! --- VARIABLE DECLARATIONS -----------------------------------------------
+! --- VARIABLE DECLARATIONS --------------------------------------------------------------------------------------------------------
 
       LOGICAL :: itpOn = .FALSE.
 
@@ -268,313 +244,221 @@
 
       COMPLEX :: dTz = CMPLX ( 0.0 , 0.0 ) 
 
-! --- VARIABLE DEFINITIONS ------------------------------------------------
+! --- VARIABLE DEFINITIONS ---------------------------------------------------------------------------------------------------------
 !
-!     itpOn is a LOGICAL input variable used as a flag to determine if
-!        imaginary time propagation will be performed.
+!     itpOn is a LOGICAL input variable used as a flag to determine if imaginary time propagation will be performed.
 !
-!     startDate is a CHARACTER variable that records the start date of
-!        program execution.
+!     startDate is a CHARACTER variable that records the start date of program execution.
 !
-!     startTime is a CHARACTER variable that records the start time of
-!        program execution.
+!     startTime is a CHARACTER variable that records the start time of program execution.
 !
-!     startZone is a CHARACTER variable that records the time zone of
-!        of the system.
+!     startZone is a CHARACTER variable that records the time zone of the system.
 !
-!     stopDate is a CHARACTER variable that records the date when program
-!        execution ends.
+!     stopDate is a CHARACTER variable that records the date when program execution ends.
 !
-!     stopTime is a CHARACTER variable that records the time when program
-!        execution ends.
+!     stopTime is a CHARACTER variable that records the time when program execution ends.
 !
-!     stopZone is a CHARACTER variable that records the time zone of the
-!        the system.
+!     stopZone is a CHARACTER variable that records the time zone of the system.
 !
-!     rk4Lambda is an INTEGER-valued input variable that selects the
-!        specific Runge-Kutta scheme used for the time-integration. 
-!        1 = Tan-Chen-1 ; 2 = Classical 4th-Order Runge-Kutta ; 
-!        3 = Tan-Chen Lambda-3 ; 4 = England ; 5 = Tan-Chen-5
+!     rk4Lambda is an INTEGER-valued input variable that selects the specific Runge-Kutta scheme used for the time-integration. 
+!        1 = Tan-Chen-1 ; 2 = Classical 4th-Order Runge-Kutta ; 3 = Tan-Chen Lambda-3 ; 4 = England ; 5 = Tan-Chen-5
 !
-!     fdOrder is an INTEGER-valued input variable that selects the
-!        order-of-accuracy of the central differences used to compute
+!     fdOrder is an INTEGER-valued input variable that selects the order-of-accuracy of the central differences used to compute
 !        approximations to the spatial derivatives in the GPE. 
 !
-!     quadRule is an INTEGER-valued variable that is intended to select
-!        which quadrature rule is used to perform numerical integration
-!        in the calculation of expectation values. This option has not
-!        been implemented yet.
+!     quadRule is an INTEGER-valued variable that is intended to select which quadrature rule is used to perform numerical 
+!        integration in the calculation of expectation values. This option has not been implemented yet.
 !
-!     nTsteps is an INTEGER-valued input variable that sets the total
-!        number of time steps to be performed in a simulation.
+!     nTsteps is an INTEGER-valued input variable that sets the total number of time steps to be performed in a simulation.
 !
-!     nTwrite is an INTEGER-valued input variable that sets the period
-!        with which data is written to disk during a simulation (in number
-!        of time steps).
+!     nTwrite is an INTEGER-valued input variable that sets the period with which data is written to disk during a simulation (in 
+!        number of time steps).
 !
-!     nX is an INTEGER-valued input variable that sets the number of grid
-!        points along the x-axis of the system.
+!     nX is an INTEGER-valued input variable that sets the number of grid points along the x-axis of the system.
 !
-!     nXa is an INTEGER-valued variable that sets the lower bound index of
-!        grid points along the x-axis.
+!     nXa is an INTEGER-valued variable that sets the lower bound index of grid points along the x-axis.
 !
-!     nXb is an INTEGER-valued variable that sets the upper bound index of
-!        grid points along the x-axis.
+!     nXb is an INTEGER-valued variable that sets the upper bound index of grid points along the x-axis.
 !
-!     nXbc is an INTEGER-valued variable that sets the number of grid points
-!        in the boundary condition along the x-axis required by the 
-!        order-of-accuracy of central differences to be used.
+!     nXbc is an INTEGER-valued variable that sets the number of grid points in the boundary condition along the x-axis required by
+!        the order-of-accuracy of central differences to be used.
 !
-!     nY is an INTEGER-valued input variable that sets the number of grid
-!        points along the y-axis of the system.
+!     nY is an INTEGER-valued input variable that sets the number of grid points along the y-axis of the system.
 !
-!     nYa is an INTEGER-valued variable that sets the lower bound index of
-!        grid points along the y-axis.
+!     nYa is an INTEGER-valued variable that sets the lower bound index of grid points along the y-axis.
 !
-!     nYb is an INTEGER-valued variable that sets the upper bound index of
-!        grid points along the y-axis.
+!     nYb is an INTEGER-valued variable that sets the upper bound index of grid points along the y-axis.
 !
-!     nYbc is an INTEGER-valued variable that sets the number of grid points
-!        in the boundary condition along the y-axis required by the 
-!        order-of-accuracy of central differences to be used.
+!     nYbc is an INTEGER-valued variable that sets the number of grid points in the boundary condition along the y-axis required by
+!        the order-of-accuracy of central differences to be used.
 !
-!     nZ is an INTEGER-valued input variable that sets the number of grid
-!        points along the z-axis of the system.
+!     nZ is an INTEGER-valued input variable that sets the number of grid points along the z-axis of the system.
 !
-!     nZa is an INTEGER-valued variable that sets the lower bound index of
-!        grid points along the z-axis.
+!     nZa is an INTEGER-valued variable that sets the lower bound index of grid points along the z-axis.
 !
-!     nZb is an INTEGER-valued variable that sets the upper bound index of
-!        grid points along the z-axis.
+!     nZb is an INTEGER-valued variable that sets the upper bound index of grid points along the z-axis.
 !
-!     nZbc is an INTEGER-valued variable that sets the number of grid points
-!        in the boundary condition along the z-axis required by the 
-!        order-of-accuracy of central differences to be used.
+!     nZbc is an INTEGER-valued variable that sets the number of grid points in the boundary condition along the z-axis required by
+!        the order-of-accuracy of central differences to be used.
 !
-!     nXpsi is an INTEGER-valued input variable that sets the degree of 
-!        Hermite polynomial used to define anisotropic SHO wave function
-!        along x-axis, if psiInit = 1.
+!     nXpsi is an INTEGER-valued input variable that sets the degree of Hermite polynomial used to define anisotropic SHO wave 
+!        function along x-axis, if psiInit = 1.
 !
-!     nYpsi is an INTEGER-valued input variable that sets the degree of 
-!        Hermite polynomial used to define anisotropic SHO wave function
-!        along y-axis, if psiInit = 1.
+!     nYpsi is an INTEGER-valued input variable that sets the degree of Hermite polynomial used to define anisotropic SHO wave 
+!        function along y-axis, if psiInit = 1.
 !
-!     nZpsi is an INTEGER-valued input variable that sets the degree of 
-!        Hermite polynomial used to define both the anisotropic and 
-!        axially-symmetric SHO wave functions along z-axis, if psiInit = 1
-!        or psiInit = 2.
+!     nZpsi is an INTEGER-valued input variable that sets the degree of Hermite polynomial used to define both the anisotropic and 
+!        axially-symmetric SHO wave functions along z-axis, if psiInit = 1 or psiInit = 2.
 !
-!     nRpsi is an INTEGER-valued input variable that sets the degree of 
-!        (associated) Laguerre polynomials used to define radial components
-!        of isotropic and axially-symmetric SHO wave functions, if
-!        psiInit = 0 or psiInit = 2.
+!     nRpsi is an INTEGER-valued input variable that sets the degree of (associated) Laguerre polynomials used to define radial 
+!        components of isotropic and axially-symmetric SHO wave functions, if psiInit = 0 or psiInit = 2.
 !
-!     mLpsi is an INTEGER-valued input variable that sets the orbital 
-!        angular momentum quantum number along the z-axis for an 
+!     mLpsi is an INTEGER-valued input variable that sets the orbital angular momentum quantum number along the z-axis for an 
 !        axially-symmetric SHO wave function, i.e., when psiInit = 2.
 !
-!     mpiCmplx is an INTEGER-valued variable that stores the default KIND 
-!        parameter for MPI COMPLEXs.
+!     mpiCmplx is an INTEGER-valued variable that stores the default KIND parameter for MPI COMPLEXs.
 !
-!     mpiError is an INTEGER-valued variable that stores MPI error codes
-!        returned by MPI subroutines.
+!     mpiError is an INTEGER-valued variable that stores MPI error codes returned by MPI subroutines.
 !
-!     mpiErrorCode is an INTEGER-valued variable that is used to return
-!        an MPI error code to invoking environment via MPI_ABORT.
+!     mpiErrorCode is an INTEGER-valued variable that is used to return an MPI error code to invoking environment via MPI_ABORT.
 !
-!     mpiInt is an INTEGER-valued variable that stores the default KIND
-!        parameter for MPI INTEGERs.
+!     mpiInt is an INTEGER-valued variable that stores the default KIND parameter for MPI INTEGERs.
 !
-!     mpiProcesses is an INTEGER-valued variable that stores the total
-!        number of MPI processes in use.
+!     mpiProcesses is an INTEGER-valued variable that stores the total number of MPI processes in use.
 !
-!     mpiProvided is an INTEGER-valued variable that stores the level of
-!        thread support that is provided by MPI.
+!     mpiProvided is an INTEGER-valued variable that stores the level of thread support that is provided by MPI.
 !
-!     mpiRank is an INTEGER-valued variable that stores the rank of an
-!        MPI process. 
+!     mpiRank is an INTEGER-valued variable that stores the rank of an MPI process. 
 !
-!     mpiSource is an INTEGER-valued variable that stores the rank of a
-!        source MPI process, where an MPI_SEND call originates.
+!     mpiSource is an INTEGER-valued variable that stores the rank of a source MPI process, where an MPI_SEND call originates.
 !
-!     mpiDestination is an INTEGER-valued variable that stores the rank of
-!        a destination MPI process, where an MPI_RECV call originates..
+!     mpiDestination is an INTEGER-valued variable that stores the rank of a destination MPI process, where an MPI_RECV call 
+!        originates.
 !
-!     mpiReal is an INTEGER-valued variable that stores the default KIND
-!        parameter for MPI REALs.
+!     mpiReal is an INTEGER-valued variable that stores the default KIND parameter for MPI REALs.
 !
-!     ompThreads is an INTEGER-valued variable that stores the total number
-!        of OpenMP threads in a PARALLEL region.
+!     ompThreads is an INTEGER-valued variable that stores the total number of OpenMP threads in a PARALLEL region.
 !
-!     j, k, l , m, and n are INTEGER-valued variables reserved for use as
-!        loop counters.
+!     j, k, l , m, and n are INTEGER-valued variables reserved for use as loop counters.
 !
-!     tN is a REAL-valued input variable that stores the running simulation 
-!        time.
+!     tN is a REAL-valued input variable that stores the running simulation time.
 !
-!     t0 is a REAL-valued input variable that stores the initial simulation
-!        time.
+!     t0 is a REAL-valued input variable that stores the initial simulation time.
 !
-!     tF is a REAL-valued input variable that stores the final simulation 
-!        time.
+!     tF is a REAL-valued input variable that stores the final simulation time.
 !
-!     xO is a REAL-valued input variable that stores the x-coordinate 
-!        of the centre of the computational domain.
+!     xO is a REAL-valued input variable that stores the x-coordinate of the centre of the computational domain.
 !
-!     yO is a REAL-valued input variable that stores the y-coordinate
-!        of the centre of the computational domain. 
+!     yO is a REAL-valued input variable that stores the y-coordinate of the centre of the computational domain. 
 !
-!     zO is a REAL-valued input variable that stores the z-coordinate
-!        of the centre of the computational domain.
+!     zO is a REAL-valued input variable that stores the z-coordinate of the centre of the computational domain.
 !
-!     dT is a REAL-valued input variable that stores the interval of a
-!        simulation time step.
+!     dT is a REAL-valued input variable that stores the interval of a simulation time step.
 !
-!     dX is a REAL-valued input variable that stores the distance between
-!        grid points along the x-axis of a regular grid. 
+!     dX is a REAL-valued input variable that stores the distance between grid points along the x-axis of a regular grid. 
 !
-!     dY is a REAL-valued input variable that stores the distance between
-!        grid points along the y-axis of a regular grid.
+!     dY is a REAL-valued input variable that stores the distance between grid points along the y-axis of a regular grid.
 !
-!     dZ is a REAL-valued input variable that stores the distance between
-!        grid points along the z-axis of a regular grid.
+!     dZ is a REAL-valued input variable that stores the distance between grid points along the z-axis of a regular grid.
 !
-!     xOrrf is a REAL-valued input variable that stores the x-coordinate
-!        of the origin of the rotating frame. 
+!     xOrrf is a REAL-valued input variable that stores the x-coordinate of the origin of the rotating frame. 
 !
-!     yOrrf is a REAL-valued input variable that stores the y-coordinate
-!        of the origin of the rotating frame.
+!     yOrrf is a REAL-valued input variable that stores the y-coordinate of the origin of the rotating frame.
 !
-!     zOrrf is a REAL-valued input variable that stores the z-coordinate
-!        of the origin of the rotating frame.
+!     zOrrf is a REAL-valued input variable that stores the z-coordinate of the origin of the rotating frame.
 !
-!     wXo is a REAL-valued variable that stores the initial rotation rate
-!        of the reference frame about the x-axis.
+!     wXo is a REAL-valued variable that stores the initial rotation rate of the reference frame about the x-axis.
 !
-!     wYo is a REAL-valued variable that stores the initial rotation rate
-!        of the reference frame about the y-axis.
+!     wYo is a REAL-valued variable that stores the initial rotation rate of the reference frame about the y-axis.
 !
-!     wZo is a REAL-valued variable that stores the initial rotation rate
-!        of the reference frame about the z-axis.
+!     wZo is a REAL-valued variable that stores the initial rotation rate of the reference frame about the z-axis.
 !
-!     wX is a REAL-valued input variable that sets the initial rotation
-!        rate of the reference frame about the x-axis as well as stores
-!        its time-varying value, if applicable.
+!     wX is a REAL-valued input variable that sets the initial rotation rate of the reference frame about the x-axis as well as 
+!        stores its time-varying value, if applicable.
 !
-!     wY is a REAL-valued input variable that sets the initial rotation
-!        rate of the reference frame about the y-axis as well as stores
-!        its time-varying value, if applicable. 
+!     wY is a REAL-valued input variable that sets the initial rotation rate of the reference frame about the y-axis as well as 
+!        stores its time-varying value, if applicable. 
 !
-!     wZ is a REAL-valued input variable that sets the initial rotation
-!        rate of the reference frame about the z-axis as well as stores
-!        its time-varying value, if applicable. 
+!     wZ is a REAL-valued input variable that sets the initial rotation rate of the reference frame about the z-axis as well as 
+!        stores its time-varying value, if applicable. 
 !
-!     gS is a REAL-valued input variable that determines the nonlinear, 
-!        mean-field coupling constant set by the strength of atom-atom
-!        interactions within a Bose-Einstein condensate.
+!     gS is a REAL-valued input variable that determines the nonlinear, mean-field coupling constant set by the strength of 
+!        atom-atom interactions within a Bose-Einstein condensate.
 !
-!     xOpsi is a REAL-valued input variable that sets the x-coordinate
-!        of the origin to define an initial wave function built using
+!     xOpsi is a REAL-valued input variable that sets the x-coordinate of the origin to define an initial wave function built using
 !        the psi_init subroutine.
 !
-!     yOpsi is a REAL-valued input variable that sets the y-coordinate
-!        of the origin to define an initial wave function built using
+!     yOpsi is a REAL-valued input variable that sets the y-coordinate of the origin to define an initial wave function built using
 !        the psi_init subroutine.
 !
-!     zOpsi is a REAL-valued input variable that sets the z-coordinate
-!        of the origin to define an initial wave function built using
+!     zOpsi is a REAL-valued input variable that sets the z-coordinate of the origin to define an initial wave function built using
 !        the psi_init subroutine. 
 !
-!     rOpsi is a REAL-valued input variable that sets the radius of the
-!        approximate analytic wave function for a simple harmonic
+!     rOpsi is a REAL-valued input variable that sets the radius of the approximate analytic wave function for a simple harmonic
 !        oscillator external potential. See psi_init for psiInit = 3.
 !
-!     wXpsi is a REAL-valued input variable that sets the angular 
-!        frequency of a simple harmonic oscillator potential along x-axis
-!        used to define an initial anisotropic simple harmonic oscillator 
-!        wave function built using the psi_init subroutine.
+!     wXpsi is a REAL-valued input variable that sets the angular frequency of a simple harmonic oscillator potential along x-axis
+!        used to define an initial anisotropic simple harmonic oscillator wave function built using the psi_init subroutine.
 !
-!     wYpsi is a REAL-valued input variable that sets the angular 
-!        frequency of a simple harmonic oscillator potential along y-axis
-!        used to define an initial anisotropic simple harmonic oscillator 
-!        wave function built using the psi_init subroutine.
+!     wYpsi is a REAL-valued input variable that sets the angular frequency of a simple harmonic oscillator potential along y-axis
+!        used to define an initial anisotropic simple harmonic oscillator wave function built using the psi_init subroutine.
 !
-!     wZpsi is a REAL-valued input variable that sets the angular 
-!        frequency of a simple harmonic oscillator potential along z-axis
-!        used to define an initial anisotropic simple harmonic oscillator 
-!        wave function built using the psi_init subroutine.
+!     wZpsi is a REAL-valued input variable that sets the angular frequency of a simple harmonic oscillator potential along z-axis
+!        used to define an initial anisotropic simple harmonic oscillator wave function built using the psi_init subroutine.
 !
-!     wRpsi is a REAL-valued input variable that sets the radial angular 
-!        frequency of used to define an initial axially-symmetric simple
-!        harmonic oscillator wave function or the approximate simple 
-!        harmonic oscillator ring wave function built using the psi_init
-!        subroutine.
+!     wRpsi is a REAL-valued input variable that sets the radial angular frequency of used to define an initial axially-symmetric 
+!        simple harmonic oscillator wave function or the approximate simple harmonic oscillator ring wave function built using the 
+!        psi_init subroutine.
 !
-!     pXpsi is a REAL-valued input variable that sets the magnitude and
-!        direction of an initial linear momentum boost to the wave 
+!     pXpsi is a REAL-valued input variable that sets the magnitude and direction of an initial linear momentum boost to the wave 
 !        function along the x-axis.
 !
-!     pYpsi is a REAL-valued input variable that sets the magnitude and
-!        direction of an initial linear momentum boost to the wave 
+!     pYpsi is a REAL-valued input variable that sets the magnitude and direction of an initial linear momentum boost to the wave 
 !        function along the y-axis.
 !
-!     pZpsi is a REAL-valued input variable that sets the magnitude and
-!        direction of an initial linear momentum boost to the wave 
+!     pZpsi is a REAL-valued input variable that sets the magnitude and direction of an initial linear momentum boost to the wave 
 !        function along the z-axis.
 !
-!     xOvex is a REAL-valued input variable that sets the x-coordinate
-!        of the external potential's origin.
+!     xOvex is a REAL-valued input variable that sets the x-coordinate of the external potential's origin.
 !
-!     yOvex is a REAL-valued input variable that sets the y-coordinate
-!        of the external potential's origin.
+!     yOvex is a REAL-valued input variable that sets the y-coordinate of the external potential's origin.
 !
-!     zOvex is a REAL-valued input variable that sets the z-coordinate
-!        of the external potential's origin.
+!     zOvex is a REAL-valued input variable that sets the z-coordinate of the external potential's origin.
 !
-!     rOvex is a REAL-valued input variable that sets the radius of a
-!        simple harmonic oscillator ring potential.
+!     rOvex is a REAL-valued input variable that sets the radius of a simple harmonic oscillator ring potential.
 !
-!     fXvex is a REAL-valued input variable that sets the magnitude and
-!        direction of a constant force along the x-axis.
+!     fXvex is a REAL-valued input variable that sets the magnitude and direction of a constant force along the x-axis.
 !
-!     fYvex is a REAL-valued input variable that sets the magnitude and
-!        direction of a constant force along the y-axis.
+!     fYvex is a REAL-valued input variable that sets the magnitude and direction of a constant force along the y-axis.
 !
-!     fZvex is a REAL-valued input variable that sets the magnitude and
-!        direction of a constant force along the z-axis.
+!     fZvex is a REAL-valued input variable that sets the magnitude and direction of a constant force along the z-axis.
 !
-!     wXvex is a REAL-valued input variable that sets the angular frequency
-!        of a simple harmonic oscillator potential along the x-axis.
-!
-!     wYvex is a REAL-valued input variable that sets the angular frequency
-!        of a simple harmonic oscillator potential along the y-axis.
-!
-!     wZvex is a REAL-valued input variable that sets the angular frequency
-!        of a simple harmonic oscillator potential along the z-axis.
-!
-!     wRvex is a REAL-valued input variable that sets the radial angular
-!        fequency of a simple harmonic oscillator ring potential.
-!
-!     thetaXo is a REAL-valued variable that sets the maximum angle the
-!        rotating frame's angular velocity vector is nutated about the
+!     wXvex is a REAL-valued input variable that sets the angular frequency of a simple harmonic oscillator potential along the 
 !        x-axis.
 !
-!     nu is a REAL-valued variable that sets the frequency at which the
-!        rotating frame's angular velocity vector is nutated about the 
-!        x-axis.
+!     wYvex is a REAL-valued input variable that sets the angular frequency of a simple harmonic oscillator potential along the 
+!        y-axis.
 !
-!     sigma is a REAL-valued variable that sets the rate at which the
-!        rotating frame's angular velocity vector is flipped 180 degrees
-!        about the x-axis. 
+!     wZvex is a REAL-valued input variable that sets the angular frequency of a simple harmonic oscillator potential along the 
+!        z-axis.
 !
-!     tSigma is a REAL-valued variable that sets the time at which the
-!        rotating frame's angular velocity vector is flipped 180 degrees
-!        about the x-axis.
+!     wRvex is a REAL-valued input variable that sets the radial angular fequency of a simple harmonic oscillator ring potential.
 !
-!     dTz is a COMPLEX_valued variable that determines the interval of a 
-!        simulation time.
+!     thetaXo is a REAL-valued variable that sets the maximum angle the rotating frame's angular velocity vector is nutated about 
+!        the x-axis.
 !
-! --- ARRAY DECLARATIONS --------------------------------------------------
+!     nu is a REAL-valued variable that sets the frequency at which the rotating frame's angular velocity vector is nutated about 
+!        the x-axis.
+!
+!     sigma is a REAL-valued variable that sets the rate at which the rotating frame's angular velocity vector is flipped 180 
+!        degrees about the x-axis. 
+!
+!     tSigma is a REAL-valued variable that sets the time at which the rotating frame's angular velocity vector is flipped 180 
+!        degrees about the x-axis.
+!
+!     dTz is a COMPLEX_valued variable that determines the interval of a simulation time.
+!
+! --- ARRAY DECLARATIONS -----------------------------------------------------------------------------------------------------------
 
       INTEGER, ALLOCATABLE, DIMENSION ( : ) :: StartValues
       INTEGER, ALLOCATABLE, DIMENSION ( : ) :: StopValues
@@ -594,82 +478,66 @@
       COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: Psi3a
       COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: Psi3b
 
-! --- ARRAY DEFINITIONS ---------------------------------------------------
+! --- ARRAY DEFINITIONS ------------------------------------------------------------------------------------------------------------
 !
-!     StartValues is an INTEGER-valued, rank-one array that stores the
-!        values returned by the real-time system clock when the 
-!        DATE_AND_TIME subroutine is called at the beginning of program
-!        execution.
+!     StartValues is an INTEGER-valued, rank-one array that stores the values returned by the real-time system clock when the 
+!        DATE_AND_TIME subroutine is called at the beginning of program execution.
 !
-!     StopValues is an INTEGER-valued, rank-one array that stores the
-!        values returned by the real-time system clock when the
-!        DATE_AND_TIME subroutine is called at the end of program
-!        execution.
+!     StopValues is an INTEGER-valued, rank-one array that stores the values returned by the real-time system clock when the
+!        DATE_AND_TIME subroutine is called at the end of program execution.
 !
-!     MpiStatus is an INTEGER-valued, rank-one array that stores the MPI
-!        status object.
+!     MpiStatus is an INTEGER-valued, rank-one array that stores the MPI status object. Replace usage with MPI_STATUS_IGNORE?
 !
-!     Xa is a REAL-valued, rank-one array that stores the x-coordinates
-!        of the grid points that define the computational domain.
+!     Xa is a REAL-valued, rank-one array that stores the x-coordinates of the grid points that define the computational domain.
 !
-!     Ya is a REAL-valued, rank-one array that stores the y-coordinates
-!        of the grid points that define the computational domain.
+!     Ya is a REAL-valued, rank-one array that stores the y-coordinates of the grid points that define the computational domain.
 !
-!     Za is a REAL-valued, rank-one array that stores the z-coordinates
-!        of the grid points that definte the computational domain.
+!     Za is a REAL-valued, rank-one array that stores the z-coordinates of the grid points that definte the computational domain.
 !
-!     Zb is a REAL-valued, rank-one array that stores the z-coordinates
-!        of the grid points that definte the computational domain.
+!     Zb is a REAL-valued, rank-one array that stores the z-coordinates of the grid points that definte the computational domain.
 !
-!     Omega is a REAL-valued, rank-one array that stores the computed
-!        values of the time-varying angular velocity vector of the
+!     Omega is a REAL-valued, rank-one array that stores the computed values of the time-varying angular velocity vector of the
 !        rotating frame.
 !
-!     Vex3a is a REAL-valued, rank-three array that stores the external 
-!        potential.
+!     Vex3a is a REAL-valued, rank-three array that stores the external potential.
 !
-!     K1 is a COMPLEX-valued, rank-three array that stores the first
-!        increment of the generalized 4th-order Runge-Kutta 
+!     K1 is a COMPLEX-valued, rank-three array that stores the first increment of the generalized 4th-order Runge-Kutta 
 !        time-integration scheme.
 !
-!     K2 is a COMPLEX-valued, rank-three array that stores the second
-!        increment of the generalized 4th-order Runge-Kutta 
+!     K2 is a COMPLEX-valued, rank-three array that stores the second increment of the generalized 4th-order Runge-Kutta 
 !        time-integration scheme.
 !
-!     K3 is a COMPLEX-valued, rank-three array that stores the third
-!        increment of the generalized 4th-order Runge-Kutta 
+!     K3 is a COMPLEX-valued, rank-three array that stores the third increment of the generalized 4th-order Runge-Kutta 
 !        time-integration scheme.
 !
-!     K4 is a COMPLEX-valued, rank-three array that stores the fourth
-!        increment of the generalized 4th-order Runge-Kutta 
+!     K4 is a COMPLEX-valued, rank-three array that stores the fourth increment of the generalized 4th-order Runge-Kutta 
 !        time-integration scheme.
 ! 
-!     Psi3a is a COMPLEX-valued, rank-three array that stores the wave
-!        function.
+!     Psi3a is a COMPLEX-valued, rank-three array that stores the wave function.
 !
-!     Psi3b is a COMPLEX-valued, rank-three array that stores the wave
-!        function.
+!     Psi3b is a COMPLEX-valued, rank-three array that stores the wave function.
 !
-! --- FUNCTION AND SUBROUTINE DECLARATIONS --------------------------------
+! --- FUNCTION AND SUBROUTINE DECLARATIONS -----------------------------------------------------------------------------------------
 
       INTEGER :: OMP_GET_NUM_THREADS
 
-! --- FUNCTION AND SUBROUTINE DEFINITIONS ---------------------------------
+! --- FUNCTION AND SUBROUTINE DEFINITIONS ------------------------------------------------------------------------------------------
 !
-!     OMP_GET_NUM_THREADS is an INTEGER scalar function that returns the
-!        total number of OpenMP threads executed in a parallel region
-!        during program execution.
+!     OMP_GET_NUM_THREADS is an INTEGER scalar function that returns the total number of OpenMP threads executed in a parallel 
+!        region during program execution.
 !
-! --- NAMELIST DECLARATIONS -----------------------------------------------
+! --- NAMELIST DECLARATIONS --------------------------------------------------------------------------------------------------------
 
-      NAMELIST /gpseIn/ itpOn , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , t0 , tF , xO , yO , zO , dT , dX , dY , dZ , xOrrf , yOrrf , zOrrf , wX , wY , wZ , gS , psiInput , psiOutput , psiFileNo , psiInit , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , rOpsi , wXpsi , wYpsi , wZpsi , wRpsi , pXpsi , pYpsi , pZpsi , vexInput , vexOutput , vexFileNo , vexInit , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex
+      NAMELIST /gpseIn/ itpOn , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , t0 , tF , xO , yO , zO , dT , dX , dY , &
+         & dZ , xOrrf , yOrrf , zOrrf , wX , wY , wZ , gS , psiInput , psiOutput , psiFileNo , psiInit , nXpsi , nYpsi , nZpsi , &
+         & nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , rOpsi , wXpsi , wYpsi , wZpsi , wRpsi , pXpsi , pYpsi , pZpsi , vexInput , &
+         & vexOutput , vexFileNo , vexInit , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex
 
-! --- NAMELIST DEFINITIONS ------------------------------------------------
+! --- NAMELIST DEFINITIONS ---------------------------------------------------------------------------------------------------------
 !
-!     gpseIn is the input variable namelist, which must be defined in the
-!        file gpse.input.
+!     gpseIn is the input variable namelist, which must be defined in the file gpse.input.
 !
-! --- BEGIN MAIN PROGRAM --------------------------------------------------
+! --- BEGIN MAIN PROGRAM -----------------------------------------------------------------------------------------------------------
 
       CALL MPI_INIT_THREAD ( MPI_THREAD_SINGLE , mpiProvided , mpiError )
       IF ( mpiError /= MPI_SUCCESS ) THEN
@@ -767,7 +635,8 @@
 
       IF ( psiInput == 0 ) THEN ! compute initial wave function from available analytic expression
 
-         CALL psi_init ( psiInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , rOpsi , wXpsi , wYpsi , wZpsi , wRpsi , Xa , Ya , Za , Psi3a )
+         CALL psi_init ( psiInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi ,&
+            & xOpsi , yOpsi , zOpsi , rOpsi , wXpsi , wYpsi , wZpsi , wRpsi , Xa , Ya , Za , Psi3a )
 
       ELSE IF ( psiInput == 1 ) THEN ! read initial wave function from binary file on MPI_MASTER
 
@@ -787,12 +656,13 @@
 
             END IF
 !           send read block from MPI_MASTER to mpiRank equal to mpiDestination
-            CALL mpi_copy_psi ( mpiRank , MPI_MASTER , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+            CALL mpi_copy_psi ( mpiRank , MPI_MASTER , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , &
+               & Psi3b )
 
          END DO
 
-         IF ( mpiRank /= MPI_MASTER ) THEN ! after all blocks have been sent, copy wave function values into Psi3a; MPI_MASTER block was read into Psi3a directly
-         
+         IF ( mpiRank /= MPI_MASTER ) THEN ! after all blocks have been sent, copy wave function values into Psi3a; 
+                                           ! MPI_MASTER block was read into Psi3a directly
             Psi3a = Psi3b
 
          END IF
@@ -808,11 +678,13 @@
 
       END IF
       CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3a )
-      CALL psi_boost ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOpsi , yOpsi , zOpsi , pXpsi , pYpsi , pZpsi , Xa , Ya , Za , Psi3a )
+      CALL psi_boost ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOpsi , yOpsi , zOpsi , pXpsi , pYpsi , pZpsi , &
+         & Xa , Ya , Za , Psi3a )
 
       IF ( vexInput == 0 ) THEN ! compute initial external potential from known analytic expression
 
-         CALL vex_init ( vexInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex , Xa , Ya , Za , Vex3a )
+         CALL vex_init ( vexInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOvex , yOvex , zOvex , rOvex , fXvex ,&
+            & fYvex , fZvex , wXvex , wYvex , wZvex , wRvex , Xa , Ya , Za , Vex3a )
 
       ELSE
 
@@ -828,7 +700,7 @@
       psiFileNo = 1000
       vexFileNo = 1000
 
-! --- BEGIN MAIN TIME PROPAGATION LOOP ------------------------------------
+! --- BEGIN MAIN TIME PROPAGATION LOOP ---------------------------------------------------------------------------------------------
 
       tN = t0 ! initialize simulation time
 
@@ -840,9 +712,14 @@
 !        relations to file from MPI_MASTER; write wave function and 
 !        external potential to file from MPI_MASTER
 
-            CALL evua_compute_base ( MPI_MASTER , mpiReal , mpiError , 1 , fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , dX , dY , dZ , gS , Xa , Ya , Za , Vex3a , Psi3a ) ! Compute partial base expectation values locally on each MPI process; reduce partial base expectation values from all MPI processes to MPI_MASTER to get full base expectation values
-            CALL evua_compute_derived ( mpiRank , MPI_MASTER , wX , wY , wZ ) ! Compute derived expectation values, uncertainties from base expectation values 
-            CALL evua_write_all ( mpiRank , MPI_MASTER , tN , wX , wY , wZ )  ! Write expectation values, undertainties and uncertainty relations to file from MPI_MASTER
+            ! Compute partial base expectation values locally on each MPI process; reduce partial base expectation values from all 
+            ! MPI processes to MPI_MASTER to get full base expectation values
+            CALL evua_compute_base ( MPI_MASTER , mpiReal , mpiError , 1 , fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , &
+               & nZb , nZbc , xO , yO , zO , dX , dY , dZ , gS , Xa , Ya , Za , Vex3a , Psi3a )
+            ! Compute derived expectation values, uncertainties from base expectation values
+            CALL evua_compute_derived ( mpiRank , MPI_MASTER , wX , wY , wZ )
+            ! Write expectation values, undertainties and uncertainty relations to file from MPI_MASTER
+            CALL evua_write_all ( mpiRank , MPI_MASTER , tN , wX , wY , wZ )
 
             IF ( psiOutput == 1 ) THEN ! Write wave function to file from MPI_MASTER using streaming I/O binary with partial reduce
 
@@ -850,21 +727,23 @@
                psiFilePos = 1 
                DO mpiSource = 0 , mpiProcesses - 1
 
-                  CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+                  CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , &
+                     & Psi3b )
                   IF ( mpiRank == MPI_MASTER ) THEN
 
-                     CALL io_write_bin_psi ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+                     CALL io_write_bin_psi ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , &
+                        & Psi3b )
 
                   END IF
 
                END DO
                psiFileNo = psiFileNo + 1
 
-            ELSE IF ( psiOutput == 2 ) THEN ! Write wave function to file from MPI_MASTER using streaming I/O vtk format with partial reduce
-
+            ELSE IF ( psiOutput == 2 ) THEN ! Write wave function to file from MPI_MASTER using streaming I/O vtk format with 
+                                            ! partial reduce
                Zb = Za
                Psi3b = Psi3a
-               psiFilePos = 1 ! initialize file position ; added in debugging a 32-bit integer index overflow when nX*nY*nZ >= 512^3, note in gpse_v0.4.6 changes
+               psiFilePos = 1 ! initialize file position
                IF ( mpiRank == MPI_MASTER ) THEN
 
                   CALL io_write_vtk_header ( 'psi-', psiFileNo , psiFilePos , nX , nY , nZ )
@@ -884,10 +763,12 @@
                END DO
                DO mpiSource = 0 , mpiProcesses - 1
 
-                  CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+                  CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , &
+                     & Psi3b )
                   IF ( mpiRank == MPI_MASTER ) THEN
 
-                     CALL io_write_vtk_repsi ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
+                     CALL io_write_vtk_repsi ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , &
+                        & nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
 
                   END IF
 
@@ -895,10 +776,12 @@
                Psi3b = Psi3a
                DO mpiSource = 0 , mpiProcesses - 1
 
-                  CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+                  CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , &
+                     & Psi3b )
                   IF ( mpiRank == MPI_MASTER ) THEN 
 
-                     CALL io_write_vtk_impsi ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
+                     CALL io_write_vtk_impsi ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , &
+                        & nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
 
                   END IF
 
@@ -912,16 +795,18 @@
          CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
 !        Compute 1st stage of generalized 4th-order Runge-Kutta (GRK4L): k_1 = f ( t_n , y_n )
-         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3a , K1 )
+         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , &
+            & dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3a , K1 )
 !        Compute the intermediate wave function for the 2nd stage of the GRK4L method: y_n + 0.5 * dT * k_1
 !        Note that the intermediate wave function is only computed on the interior grid points assigned to each MPI process.
-         CALL grk4_y_3d_stgx ( 1 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , Psi3a , Psi3b )
+         CALL grk4_y_3d_stgx ( 1 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , &
+            & Psi3a , Psi3b )
 !        Exchange boundary condition information among nearest neighbor processes
          CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
 !        Compute V ( x , t_n + dT / 2 ), W ( t_n + dT / 2)
          tN = t0 + ( REAL ( n ) + 0.5 ) * dT
 
-!   -----------------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 ! What time dependence do we want to explore with Omega ( t )? 
 !
 !         Omega ( 1 ) = wXo ! for now, always do absolute rotation from initial state
@@ -948,24 +833,32 @@
 !         wX = Omega ( 1 )
 !         wY = Omega ( 2 )
 !         wZ = Omega ( 3 ) 
-!    ----------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
-!        Compute 2nd stage of GRK4L: k_2 = f ( t_n + 0.5 * dT , y_n + 0.5 * dT * k_1 )
-         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K2 )
-!        Compute intermediate wave function for 3rd stage of GRK4L: y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( 1 / lambda ) * dT * k_2
-         CALL grk4_y_3d_stgx ( 2 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , Psi3a , Psi3b )
+!        Compute 2nd stage of GRK4: 
+!        k_2 = f ( t_n + 0.5 * dT , y_n + 0.5 * dT * k_1 )
+         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , &
+            & dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K2 )
+!        Compute intermediate wave function for 3rd stage of GRK4: 
+!        y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( 1 / lambda ) * dT * k_2
+         CALL grk4_y_3d_stgx ( 2 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , &
+            & Psi3a , Psi3b )
 !        Exchange boundary condition information among nearest neighbor processes
          CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
-!        Compute stage three ... k_3 = f ( t_n + 0.5 * dT , y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( 1 / lambda ) * dT * k_2
-         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K3 )
-!        Compute intermediate wave function for 4th stage of GRK4L: y_n + ( 1 - lambda / 2 ) * dT * k_2 + ( lambda / 2 ) * dT * k_3
-         CALL grk4_y_3d_stgx ( 3 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , Psi3a , Psi3b )
+!        Compute stage three of GRK4:
+!        k_3 = f ( t_n + 0.5 * dT , y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( 1 / lambda ) * dT * k_2
+         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , &
+            & dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K3 )
+!        Compute intermediate wave function for 4th stage of GRK4: 
+!        y_n + ( 1 - lambda / 2 ) * dT * k_2 + ( lambda / 2 ) * dT * k_3
+         CALL grk4_y_3d_stgx ( 3 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , &
+            & Psi3a , Psi3b )
 !        Exchange boundary condition information among nearest neighbor processes
          CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
 !        Calculate V ( x , t_n + dT ), W ( t_n + dT )
          tN = t0 + REAL ( n + 1 ) * dT
 
-!   -----------------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 ! What time dependence do we want to explore with Omega ( t )? 
 !
 !         Omega ( 1 ) = wXo ! for now, always do absolute rotation from initial state
@@ -988,12 +881,16 @@
 !         wX = Omega ( 1 )
 !         wY = Omega ( 2 )
 !         wZ = Omega ( 3 )  
-!    ----------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
-!        Compute the fourth stage ... k_4 = f ( t_n + dT , y_n + ( 1 - lamda / 2 ) * dT * k_2 + ( lamda / 2) * dT * k_3 
-         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K4 )
-!        Compute wave function at nth+1 time step ... y_{ n + 1 } = y_n + ( dT / 6 ) * [ k_1 + ( 4 - lambda ) * k_2 + lambda * k_3 + k_4 ]
-         CALL grk4_y_3d_stgx ( 4 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , Psi3a , Psi3b )
+!        Compute the fourth stage of GRK4:
+!        k_4 = f ( t_n + dT , y_n + ( 1 - lamda / 2 ) * dT * k_2 + ( lamda / 2) * dT * k_3 
+         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , &
+            & dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K4 )
+!        Compute wave function at nth+1 time step:
+!        y_{ n + 1 } = y_n + ( dT / 6 ) * [ k_1 + ( 4 - lambda ) * k_2 + lambda * k_3 + k_4 ]
+         CALL grk4_y_3d_stgx ( 4 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , &
+            & Psi3a , Psi3b )
 !        Exchange boundary condition information among nearest neighbor processes
          CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
 !        Update wave function each time step: y_{ n + 1 } ---> y_n        
@@ -1001,7 +898,8 @@
 !        If running in ITP mode, then also renormalize condensate wave function each time step
          IF ( itpOn .EQV. .TRUE. ) THEN
 
-             CALL evua_normalize ( MPI_MASTER , mpiReal , mpiError , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3a )
+             CALL evua_normalize ( MPI_MASTER , mpiReal , mpiError , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , &
+                & dY , dZ , Psi3a )
 
          END IF
 
@@ -1009,7 +907,7 @@
 
       CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
-! --- END MAIN TIME PROPAGATION LOOP / BEGIN CLEAN UP TO STOP -------------
+! --- END MAIN TIME PROPAGATION LOOP / BEGIN CLEAN UP TO STOP ----------------------------------------------------------------------
 
       CALL DATE_AND_TIME ( stopDate , stopTime , stopZone , StopValues )
       IF ( mpiRank == MPI_MASTER ) THEN
@@ -1037,11 +935,11 @@
 
       STOP
 
-! --- END MAIN PROGRAM ----------------------------------------------------
+! --- END MAIN PROGRAM -------------------------------------------------------------------------------------------------------------
 
       CONTAINS
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       SUBROUTINE gpse_read_stdin ( fileName , fileUnit )
 
@@ -1061,7 +959,7 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       SUBROUTINE gpse_write_stdout_header ( )
 
@@ -1163,7 +1061,18 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wZvex     = ', wZvex
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wRvex     = ', wRvex
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     BROADCASTING INPUT PARAMETERS TO ALL MPI PROCESSES ... '
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# 1 : tN , 2 : wX , 3 : wY , 4 : wZ , 5 : evuaL2Norm , 6 : evuaEa , 7 : evuaEb , 8 : evuaMuA , 9 : evuaMuB , 10 : evuaL2a , 11 : evuaL2b , 12 : evuaTx , 13 : evuaTy , 14 : evuaTz , 15 : evuaVex , 16 : evuaVmf , 17 : evuaX , 18 : evuaX2a , 19 : evuaSigXa , 20 : evuaX2b , 21 : evuaSigXb , 22 : evuaPx , 23 : evuaPx2 , 24 : evuaSigPx , 25 : evuaLxA , 26 : evuaLx2a , 27 : evuaSigLxA , 28 : evuaLxB , 29 : evuaLx2b , 30 : evuaSigLxB , 31 : evuaFx , 32 : evuaTauXa , 33 : evuaTauXb , 34 : evuaY , 35 : evuaY2a , 36 : evuaSigYa , 37 : evuaY2b , 38 : evuaSigYb , 39 : evuaPy , 40 : evuaPy2 , 41 : evuaSigPy , 42 : evuaLyA , 43 : evuaLy2a , 44 : evuaSigLyA , 45 : evuaLyB , 46 : evuaLy2b , 47 : evuaSigLyB , 48 : evuaFy , 49 : evuaTauYa , 50 : evuaTauYb , 51 : evuaZ , 52 : evuaZ2a , 53 : evuaSigZa , 54 : evuaZ2b , 55 : evuaSigZb , 56 : evuaPz , 57 : evuaPz2 , 58 : evuaSigPz , 59 : evuaLzA , 60 : evuaLz2a , 61 : evuaSigLzA , 62 : evuaLzB , 63 : evuaLz2b , 64 : evuaSigLzB , 65 : evuaFz , 66 : evuaTauZa , 67 : evuaTauZb , 68 : evuaR , 69 : evuaR2a , 70 : evuaR2b , 71 : evuaIxxA , 72 : evuaIxyA , 73 : evuaIxzA , 74 : evuaIyyA , 75 : evuaIyzA , 76 : evuaIzzA , 77 : evuaIxxB , 78 : evuaIxyB , 79 : evuaIxzB , 80 : evuaIyyB , 81 : evuaIyzB , 82 : evuaIzzB'
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# 1 : tN , 2 : wX , 3 : wY , 4 : wZ , 5 : evuaL2Norm , 6 : evuaEa , 7 : evuaEb , &
+            & 8 : evuaMuA , 9 : evuaMuB , 10 : evuaL2a , 11 : evuaL2b , 12 : evuaTx , 13 : evuaTy , 14 : evuaTz , 15 : evuaVex , &
+            & 16 : evuaVmf , 17 : evuaX , 18 : evuaX2a , 19 : evuaSigXa , 20 : evuaX2b , 21 : evuaSigXb , 22 : evuaPx , &
+            & 23 : evuaPx2 , 24 : evuaSigPx , 25 : evuaLxA , 26 : evuaLx2a , 27 : evuaSigLxA , 28 : evuaLxB , 29 : evuaLx2b , &
+            & 30 : evuaSigLxB , 31 : evuaFx , 32 : evuaTauXa , 33 : evuaTauXb , 34 : evuaY , 35 : evuaY2a , 36 : evuaSigYa , &
+            & 37 : evuaY2b , 38 : evuaSigYb , 39 : evuaPy , 40 : evuaPy2 , 41 : evuaSigPy , 42 : evuaLyA , 43 : evuaLy2a , &
+            & 44 : evuaSigLyA , 45 : evuaLyB , 46 : evuaLy2b , 47 : evuaSigLyB , 48 : evuaFy , 49 : evuaTauYa , 50 : evuaTauYb , &
+            & 51 : evuaZ , 52 : evuaZ2a , 53 : evuaSigZa , 54 : evuaZ2b , 55 : evuaSigZb , 56 : evuaPz , 57 : evuaPz2 , &
+            & 58 : evuaSigPz , 59 : evuaLzA , 60 : evuaLz2a , 61 : evuaSigLzA , 62 : evuaLzB , 63 : evuaLz2b , 64 : evuaSigLzB , &
+            & 65 : evuaFz , 66 : evuaTauZa , 67 : evuaTauZb , 68 : evuaR , 69 : evuaR2a , 70 : evuaR2b , 71 : evuaIxxA , &
+            & 72 : evuaIxyA , 73 : evuaIxzA , 74 : evuaIyyA , 75 : evuaIyzA , 76 : evuaIzzA , 77 : evuaIxxB , 78 : evuaIxyB , &
+            & 79 : evuaIxzB , 80 : evuaIyyB , 81 : evuaIyzB , 82 : evuaIzzB'
 
       END IF
 
@@ -1171,7 +1080,7 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       SUBROUTINE mpi_select_default_kinds ( )
 
@@ -1245,7 +1154,7 @@
 
        END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       SUBROUTINE mpi_bcast_inputs ( mpiMaster , mpiInt , mpiReal , mpiCmplx , mpiError )
 
@@ -1321,7 +1230,7 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       SUBROUTINE mpi_copy_q ( mpiRank , mpiSource , mpiDestination , nQ , nQa , nQb , nQbc , Q )
 
@@ -1363,7 +1272,7 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       SUBROUTINE mpi_copy_vex ( mpiRank , mpiSource , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex3 ) 
 
@@ -1396,7 +1305,7 @@
 
                   CALL MPI_RECV ( Vex3 ( j , k , l ) , 1 , mpiReal , mpiSource , mpiSource , MPI_COMM_WORLD , MpiStatus , mpiError )
 
-               END DO ! possible alternative: no loop over j; call MPI_RECV ( Real3b ( nXa , nYa , l ) , nXb - nXa + 1 , mpiReal ... )
+               END DO ! possible alternative: no loop over j; call MPI_RECV ( Real3b ( nXa , nYa , l ) , nXb - nXa + 1 , ... )
 
             END DO
 
@@ -1412,7 +1321,7 @@
 
                   CALL MPI_SSEND ( Vex3 ( j , k , l ) , 1 , mpiReal , mpiDestination , mpiRank , MPI_COMM_WORLD , mpiError )
 
-               END DO ! possible alternative: no loop over j; call MPI_SSEND ( Real3a ( nXa , nYa , l ) , nXb - nXa + 1 , mpiReal ... )
+               END DO ! possible alternative: no loop over j; call MPI_SSEND ( Real3a ( nXa , nYa , l ) , nXb - nXa + 1 , ... )
 
             END DO
 
@@ -1426,7 +1335,7 @@
  
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       SUBROUTINE mpi_copy_psi ( mpiRank , mpiSource , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
 
@@ -1459,7 +1368,7 @@
 
                   CALL MPI_RECV ( Psi3 ( j , k , l ) , 1 , mpiCmplx , mpiSource , mpiSource , MPI_COMM_WORLD , MpiStatus , mpiError )
 
-               END DO ! possible alternative: no loop over j; call MPI_RECV ( Real3b ( nXa , nYa , l ) , nXb - nXa + 1 , mpiReal ... )
+               END DO ! possible alternative: no loop over j; call MPI_RECV ( Real3b ( nXa , nYa , l ) , nXb - nXa + 1 , ... )
 
             END DO
 
@@ -1475,7 +1384,7 @@
 
                   CALL MPI_SSEND ( Psi3 ( j , k , l ) , 1 , mpiCmplx , mpiDestination , mpiRank , MPI_COMM_WORLD , mpiError )
 
-               END DO ! possible alternative: no loop over j; call MPI_SSEND ( Real3a ( nXa , nYa , l ) , nXb - nXa + 1 , mpiReal ... )
+               END DO ! possible alternative: no loop over j; call MPI_SSEND ( Real3a ( nXa , nYa , l ) , nXb - nXa + 1 , ... )
 
             END DO
 
@@ -1489,7 +1398,7 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       SUBROUTINE mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3 ) 
 
@@ -1514,23 +1423,27 @@
 
          IF ( mpiRank /= mpiProcesses - 1 ) THEN 
 
-            CALL MPI_SEND ( Psi3 ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 0 , MPI_COMM_WORLD, mpiError )
+            CALL MPI_SEND ( Psi3 ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 0 , MPI_COMM_WORLD, &
+               & mpiError )
 
          END IF
 
          IF ( mpiRank /= MPI_MASTER ) THEN 
 
-            CALL MPI_RECV ( Psi3 ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 1 , MPI_COMM_WORLD , MpiStatus , mpiError )
+            CALL MPI_RECV ( Psi3 ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 1 , MPI_COMM_WORLD , &
+               & MpiStatus , mpiError )
 
          END IF
 
       ELSE 
 
-         CALL MPI_RECV ( Psi3 ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 0 , MPI_COMM_WORLD , MpiStatus , mpiError )
+         CALL MPI_RECV ( Psi3 ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 0 , MPI_COMM_WORLD , &
+            & MpiStatus , mpiError )
 
          IF ( mpiRank /= mpiProcesses - 1 ) THEN 
 
-            CALL MPI_SEND ( Psi3 ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 1 , MPI_COMM_WORLD , mpiError )
+            CALL MPI_SEND ( Psi3 ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 1 , MPI_COMM_WORLD , &
+               & mpiError )
 
          END IF
 
@@ -1546,7 +1459,8 @@
 
          IF ( mpiRank /= mpiProcesses - 1 ) THEN
 
-            CALL MPI_RECV ( Psi3 ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 3 , MPI_COMM_WORLD , MpiStatus , mpiError )
+            CALL MPI_RECV ( Psi3 ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 3 , MPI_COMM_WORLD , &
+               & MpiStatus , mpiError )
 
          END IF
 
@@ -1554,7 +1468,8 @@
 
          IF ( mpiRank /= mpiProcesses - 1 ) THEN
 
-            CALL MPI_RECV ( Psi3 ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 2 , MPI_COMM_WORLD , MpiStatus , mpiError )
+            CALL MPI_RECV ( Psi3 ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 2 , MPI_COMM_WORLD , &
+               & MpiStatus , mpiError )
 
          END IF
 
@@ -1566,8 +1481,8 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       END PROGRAM
 
-! =========================================================================
+! ==================================================================================================================================

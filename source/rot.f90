@@ -1,4 +1,4 @@
-! ==========================================================================
+! ==================================================================================================================================
 ! NAME
 !
 !     rot [ rot ] - Rotation Module
@@ -9,8 +9,7 @@
 !
 ! DESCRIPTION  
 !
-!     ROT is a custom Fortran module written to compute the elemental 
-!        rotation matrices of a Cartesian coordinate system.
+!     ROT is a custom Fortran module written to compute the elemental rotation matrices of a Cartesian coordinate system.
 !
 ! OPTIONS
 !
@@ -34,74 +33,66 @@
 !
 ! LAST UPDATED
 !
-!     Friday, July 10th, 2015
+!     Saturday, July 18th, 2015
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       MODULE rot
 
-! --- MODULE DECLARATIONS -------------------------------------------------
+! --- MODULE DECLARATIONS ----------------------------------------------------------------------------------------------------------
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
 
-! --- MODULE DEFINITIONS --------------------------------------------------
+! --- MODULE DEFINITIONS -----------------------------------------------------------------------------------------------------------
 !
-!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides 
-!        information about the run-time environment.
+!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides information about the run-time environment.
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       IMPLICIT NONE
       PRIVATE
 
-! --- VARIABLE DECLARATIONS -----------------------------------------------
+! --- VARIABLE DECLARATIONS --------------------------------------------------------------------------------------------------------
 
       REAL, PUBLIC :: thetaX
       REAL, PUBLIC :: thetaY
       REAL, PUBLIC :: thetaZ
 
-! --- VARIABLE DEFINITIONS ------------------------------------------------
+! --- VARIABLE DEFINITIONS ---------------------------------------------------------------------------------------------------------
 !
-!     thetaX is a PUBLIC, REAL-valued variable that stores the rotation
-!        angle about the x-axis.
+!     thetaX is a PUBLIC, REAL-valued variable that stores the rotation angle about the x-axis.
 !
-!     thetaY is a PUBLIC, REAL-valued variable that stores the rotation
-!        angle about the y-axis.
+!     thetaY is a PUBLIC, REAL-valued variable that stores the rotation angle about the y-axis.
 !
-!     thetaZ is a PUBLIC, REAL-valued variable that stores the rotation
-!        angle about the z-axis.
+!     thetaZ is a PUBLIC, REAL-valued variable that stores the rotation angle about the z-axis.
 !      
-! --- ARRAY DECLARATIONS --------------------------------------------------
+! --- ARRAY DECLARATIONS -----------------------------------------------------------------------------------------------------------
 
       REAL, DIMENSION ( 3 , 3 ), PUBLIC :: R
 
-! --- ARRAY DEFINITIONS ---------------------------------------------------
+! --- ARRAY DEFINITIONS ------------------------------------------------------------------------------------------------------------
 !
-!     R is a PUBLIC, REAL-valued rank-two array that stores the 3-by-3 
-!        rotation matrix.
+!     R is a PUBLIC, REAL-valued rank-two array that stores the 3-by-3 rotation matrix.
 !
-! --- FUNCTION DECLARATIONS -----------------------------------------------
+! --- FUNCTION DECLARATIONS --------------------------------------------------------------------------------------------------------
 
       PUBLIC :: rot_rx
       PUBLIC :: rot_ry
       PUBLIC :: rot_rz
 
-! --- FUNCTION DEFINITIONS ------------------------------------------------
+! --- FUNCTION DEFINITIONS ---------------------------------------------------------------------------------------------------------
 !
-!     rot_rx is a PUBLIC FUNCTION that computes the elemental rotation 
-!        matrix about the x-axis of a Cartesian coordinate system.
+!     rot_rx is a PUBLIC FUNCTION that computes the elemental rotation matrix about the x-axis of a Cartesian coordinate system.
 !
-!     rot_ry is a PUBLIC FUNCTION that computes the elemental rotation
-!        matrix about the y-axis of a Cartesian coordinate system.
+!     rot_ry is a PUBLIC FUNCTION that computes the elemental rotation matrix about the y-axis of a Cartesian coordinate system.
 !
-!     rot_rz is a PUBLIC FUNCTION that computes the elemental rotation
-!        matrix about the z-axis of a Cartesian coordinate system.
+!     rot_rz is a PUBLIC FUNCTION that computes the elemental rotation matrix about the z-axis of a Cartesian coordinate system.
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       CONTAINS
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       FUNCTION rot_rx ( theta )
 
@@ -125,7 +116,7 @@
 
       END FUNCTION
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       FUNCTION rot_ry ( theta )
 
@@ -149,7 +140,7 @@
 
       END FUNCTION
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       FUNCTION rot_rz ( theta )
 
@@ -173,8 +164,8 @@
 
       END FUNCTION
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       END MODULE
 
-! =========================================================================
+! ==================================================================================================================================

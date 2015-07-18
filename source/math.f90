@@ -1,4 +1,4 @@
-! ==========================================================================
+! ==================================================================================================================================
 ! NAME
 !
 !     math [ maTH ] - Math Module
@@ -9,8 +9,7 @@
 !
 ! DESCRIPTION  
 !
-!     MATH is a custom Fortran module written to define well-know
-!        mathematical constants and compute specialized functions. 
+!     MATH is a custom Fortran module written to define well-know mathematical constants and compute specialized functions. 
 !
 ! OPTIONS
 !
@@ -34,27 +33,26 @@
 !
 ! LAST UPDATED
 !
-!     Friday, July 10th, 2015
+!     Saturday, July 18th, 2015
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       MODULE MATH
 
-! --- MODULE DECLARATIONS -------------------------------------------------
+! --- MODULE DECLARATIONS ----------------------------------------------------------------------------------------------------------
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
 
-! --- MODULE DEFINITIONS --------------------------------------------------
+! --- MODULE DEFINITIONS -----------------------------------------------------------------------------------------------------------
 !
-!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides 
-!        information about the run-time environment.
+!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides information about the run-time environment.
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       IMPLICIT NONE
       PRIVATE
 
-! --- PARAMETER DECLARATIONS ----------------------------------------------
+! --- PARAMETER DECLARATIONS -------------------------------------------------------------------------------------------------------
 
       INTEGER, PARAMETER, PUBLIC :: INT_DEFAULT_KIND   = KIND ( 0 ) 
       INTEGER, PARAMETER, PUBLIC :: INT_8              = SELECTED_INT_KIND ( 2 ) 
@@ -72,51 +70,40 @@
 
       COMPLEX, PARAMETER, PUBLIC :: I = CMPLX ( 0.0 , 1.0 )
 
-! --- PARAMETER DEFINITIONS -----------------------------------------------
+! --- PARAMETER DEFINITIONS --------------------------------------------------------------------------------------------------------
 !
-!     INT_DEFAULT_KIND is a PUBLIC, INTEGER-valued PARAMETER that stores 
-!        the default KIND parameter for INTEGERs at runtime. 
+!     INT_DEFAULT_KIND is a PUBLIC, INTEGER-valued PARAMETER that stores the default KIND parameter for INTEGERs at runtime. 
 !
-!     INT_8 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND
-!        parameter for 8-bit INTEGERs, if if they are supported by the 
+!     INT_8 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND parameter for 8-bit INTEGERs, if if they are supported by the 
 !        compiler and system runtime environment. 
 !
-!     INT_16 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND
-!        parameter for 16-bit INTEGERs, if if they are supported by the 
+!     INT_16 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND parameter for 16-bit INTEGERs, if if they are supported by 
+!        the compiler and system runtime environment.
+!
+!     INT_32 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND parameter for 32-bit INTEGERs, if if they are supported by 
+!        the compiler and system runtime environment. 
+!
+!     INT_64 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND parameter for 64-bit INTEGERs, if if they are supported by 
+!        the compiler and system runtime environment. 
+!
+!     INT_128 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND parameter for 128-bit INTEGERs, if if they are supported 
+!        by the compiler and system runtime environment.
+!
+!     REAL_DEFAULT KIND is a PUBLIC, INTEGER-valued PARAMTER that stores the default KIND parameter for REALs at runtime.
+!
+!     REAL_32 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND parameter for 32-bit REALs, if they are supported by the 
 !        compiler and system runtime environment.
 !
-!     INT_32 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND
-!        parameter for 32-bit INTEGERs, if if they are supported by the 
-!        compiler and system runtime environment. 
-!
-!     INT_64 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND
-!        parameter for 64-bit INTEGERs, if if they are supported by the 
-!        compiler and system runtime environment. 
-!
-!     INT_128 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND
-!        parameter for 128-bit INTEGERs, if if they are supported by the 
+!     REAL_64 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND parameter for 64-bit REALs, if they are supported by the 
 !        compiler and system runtime environment.
 !
-!     REAL_DEFAULT KIND is a PUBLIC, INTEGER-valued PARAMTER that stores
-!        the default KIND parameter for REALs at runtime.
-!
-!     REAL_32 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND
-!        parameter for 32-bit REALs, if they are supported by the 
+!     REAL_128 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND parameter for 128-bit REALs, if they are supported by the 
 !        compiler and system runtime environment.
 !
-!     REAL_64 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND
-!        parameter for 64-bit REALs, if they are supported by the 
-!        compiler and system runtime environment.
+!      CMPLX_DEFAULT_KIND is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND parameter for COMPLEXs at runtime. It should 
+!         always have the same value as REAL_DEFAULT_KIND. 
 !
-!     REAL_128 is a PUBLIC, INTEGER-valued PARAMETER that stores the KIND
-!        parameter for 128-bit REALs, if they are supported by the 
-!        compiler and system runtime environment.
-!
-!      CMPLX_DEFAULT_KIND is a PUBLIC, INTEGER-valued PARAMETER that stores
-!         the KIND parameter for COMPLEXs at runtime. It should always have
-!         the same value as REAL_DEFAULT_KIND. 
-!
-! --- FUNCTION DECLARATIONS -----------------------------------------------
+! --- FUNCTION DECLARATIONS --------------------------------------------------------------------------------------------------------
 
       PUBLIC :: factorial
       PUBLIC :: alaguerre
@@ -128,20 +115,18 @@
       PUBLIC :: hankel
       PUBLIC :: chebyshev
 
-! --- FUNCTION DEFINITIONS ------------------------------------------------
+! --- FUNCTION DEFINITIONS ---------------------------------------------------------------------------------------------------------
 !
-!     factorial is an PUBLIC, INTEGER scalar function that recursively 
-!        computes the value of the factorial of integer n.
+!     factorial is an PUBLIC, INTEGER scalar function that recursively computes the value of the factorial of integer n.
 !
-!     alaguerre is a PUBLIC, REAL scalar function that recursively computes
-!        the value of the associated Laguerre polynomial of degree n and
-!        order k at the point x.
+!     alaguerre is a PUBLIC, REAL scalar function that recursively computes the value of the associated Laguerre polynomial of 
+!        degree n and order k at the point x.
 !
-!     hermite is a PUBLIC, REAL scalar function that recursively computes
-!        the value of the Hermite polynomial of degree n at the point x.
+!     hermite is a PUBLIC, REAL scalar function that recursively computes the value of the Hermite polynomial of degree n at the 
+!        point x.
 !
-!     laguerre is a PUBLIC, REAL scalar function that recursively computes
-!        the value of the Laguerre polynomial of degree n at the point x.
+!     laguerre is a PUBLIC, REAL scalar function that recursively computes the value of the Laguerre polynomial of degree n at the 
+!        point x.
 !
 !     legendre is not yet implemented.
 !
@@ -153,11 +138,11 @@
 !
 !     chebyshev is not yet implemented.
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       CONTAINS
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       INTEGER RECURSIVE FUNCTION factorial ( n ) RESULT ( nFactorial )
    
@@ -180,7 +165,8 @@
          ELSE
 
             nFactorial = -1
-            WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - n must be an integer greater than or equal to 0, but less than or equal to 12 because KIND ( n ) = INT32.'
+            WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - n must be an integer greater than or equal to 0, &
+               & but less than or equal to 12 because KIND ( n ) = INT32.'
             STOP
 
          END IF
@@ -198,7 +184,8 @@
          ELSE
 
             nFactorial = -1
-            WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - n must be an integer greater than or equal to 0, but less than or equal to 20 because KIND ( n ) = INT64.'
+            WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'math : factorial :: ERROR - n must be an integer greater than or equal to 0, &
+               & but less than or equal to 20 because KIND ( n ) = INT64.'
             STOP
 
          END IF
@@ -215,7 +202,7 @@
 
       END FUNCTION
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       REAL RECURSIVE FUNCTION alaguerre ( n , k , x ) RESULT ( alaguerreNK ) 
 
@@ -259,7 +246,7 @@
 
       END FUNCTION
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       REAL RECURSIVE FUNCTION hermite ( n , x ) RESULT ( hermiteN )
 
@@ -293,7 +280,7 @@
 
       END FUNCTION
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       REAL RECURSIVE FUNCTION laguerre ( n , x ) RESULT ( laguerreN )
 
@@ -328,7 +315,7 @@
 
       END FUNCTION
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       REAL FUNCTION legendre ( ) RESULT ( legendreN )
 
@@ -340,7 +327,7 @@
 
       END FUNCTION
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       REAL FUNCTION lambert ( ) RESULT ( lambertW )
 
@@ -352,7 +339,7 @@
 
       END FUNCTION
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       REAL FUNCTION bessel ( ) RESULT ( besselJ ) 
 
@@ -364,7 +351,7 @@
 
       END FUNCTION
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       REAL FUNCTION hankel ( ) RESULT ( hankelN )
 
@@ -376,7 +363,7 @@
 
       END FUNCTION
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       REAL FUNCTION chebyshev ( ) RESULT ( cheb )
 
@@ -388,8 +375,8 @@
 
       END FUNCTION
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       END MODULE
 
-! =========================================================================
+! ==================================================================================================================================

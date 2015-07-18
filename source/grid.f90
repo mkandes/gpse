@@ -1,4 +1,4 @@
-! ==========================================================================
+! ==================================================================================================================================
 ! NAME
 !
 !     grid [ grid ] - Grid Module
@@ -9,10 +9,8 @@
 !
 ! DESCRIPTION  
 !
-!     GRID is a custom Fortran module written to build the regular 
-!        Cartesian grid of points that defines the spatial computational 
-!        domain on which external potentials, wave functions and other
-!        physical quantities may be computed. The module only has 
+!     GRID is a custom Fortran module written to build the regular Cartesian grid of points that defines the spatial computational 
+!        domain on which external potentials, wave functions and other physical quantities may be computed. The module only has 
 !        dependency on the ISO_FORTRAN_ENV module.
 !
 ! OPTIONS
@@ -37,51 +35,46 @@
 !
 ! LAST UPDATED
 !
-!     Friday, July 10th, 2015
+!     Friday, July 17th, 2015
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       MODULE GRID
 
-! --- MODULE DECLARATIONS -------------------------------------------------
+! --- MODULE DECLARATIONS ----------------------------------------------------------------------------------------------------------
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
 
-! --- MODULE DEFINITIONS --------------------------------------------------
+! --- MODULE DEFINITIONS -----------------------------------------------------------------------------------------------------------
 !
-!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides 
-!        information about the run-time environment.
+!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides information about the run-time environment.
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       IMPLICIT NONE
       PRIVATE
 
-! --- SUBROUTINE DECLARATIONS --------------------------------------------- 
+! --- SUBROUTINE DECLARATIONS ------------------------------------------------------------------------------------------------------
 
       PUBLIC :: grid_boundary_condition_size
       PUBLIC :: grid_regular
       PUBLIC :: grid_regular_axis
 
-! --- SUBROUTINE DEFINITIONS ----------------------------------------------
+! --- SUBROUTINE DEFINITIONS -------------------------------------------------------------------------------------------------------
 !
-!     grid_boundary_condition_size is a PUBLIC SUBROUTINE that sets the
-!        width of the grid boundaries (in number of grid points) by that 
-!        required for the order-of-accuracy of the finite difference 
-!        operators in use. 
+!     grid_boundary_condition_size is a PUBLIC SUBROUTINE that sets the width of the grid boundaries (in number of grid points) by 
+!        that required for the order-of-accuracy of the finite difference operators in use. 
 !
-!     grid_regular is a PUBLIC SUBROUTINE that builds a
-!         three-dimensional, regular Cartesian grid. 
+!     grid_regular is a PUBLIC SUBROUTINE that builds a  three-dimensional, regular Cartesian grid.
 !
-!     grid_regular_axis is a PUBLIC SUBROUTINE that sets the position
-!        of each grid point along a linear coordinate axis with a fixed
+!     grid_regular_axis is a PUBLIC SUBROUTINE that sets the position of each grid point along a linear coordinate axis with a fixed
 !        distance between each pair of points.  
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       CONTAINS
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       SUBROUTINE grid_boundary_condition_size ( fdOrder , nXbc , nYbc , nZbc )
 
@@ -127,9 +120,10 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE grid_regular ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , xO , yO , zO , dX , dY , dZ , X , Y , Z )
+      SUBROUTINE grid_regular ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , xO , yO , zO , dX , dY , &
+         & dZ , X , Y , Z )
 
       IMPLICIT NONE
 
@@ -165,7 +159,7 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       SUBROUTINE grid_regular_axis ( nQ , nQa , nQb , nQbc , qO , dQ , Q )
 
@@ -205,8 +199,8 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       END MODULE
 
-! =========================================================================
+! ==================================================================================================================================

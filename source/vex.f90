@@ -1,4 +1,4 @@
-! ==========================================================================
+! ==================================================================================================================================
 ! NAME
 !
 !     vex [ veks ] - External Potential Module
@@ -9,8 +9,7 @@
 !
 ! DESCRIPTION  
 !
-!     VEX is a custom Fortran module written to compute analytic external 
-!       potentials.
+!     VEX is a custom Fortran module written to compute analytic external potentials.
 !
 ! OPTIONS
 !
@@ -34,55 +33,48 @@
 !
 ! LAST UPDATED
 !
-!     Friday, July 10th, 2015
+!     Saturday, July 18th, 2015
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       MODULE VEX
 
-! --- MODULE DECLARATIONS -------------------------------------------------
+! --- MODULE DECLARATIONS ----------------------------------------------------------------------------------------------------------
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
 
-! --- MODULE DEFINITIONS --------------------------------------------------
+! --- MODULE DEFINITIONS -----------------------------------------------------------------------------------------------------------
 !
-!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides 
-!        information about the run-time environment.
+!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides information about the run-time environment.
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       IMPLICIT NONE
       PRIVATE
 
-! --- VARIABLE DECLARATIONS -----------------------------------------------
+! --- VARIABLE DECLARATIONS --------------------------------------------------------------------------------------------------------
 
       INTEGER, PUBLIC :: vexInput  = -1
       INTEGER, PUBLIC :: vexOutput = -1
       INTEGER, PUBLIC :: vexFileNo = -1
       INTEGER, PUBLIC :: vexInit = -1
 
-! --- VARIABLE DEFINITIONS ------------------------------------------------
+! --- VARIABLE DEFINITIONS ---------------------------------------------------------------------------------------------------------
 !
-!     vexInput is a PUBLIC, INTEGER-valued input variable intended to 
-!       designate the file format of the initial external potential to be 
-!       read in at the start of program execution. THIS HAS NOT BEEN
-!       IMPLEMENTED YET. 0 = No input external potential.
+!     vexInput is a PUBLIC, INTEGER-valued input variable intended to designate the file format of the initial external potential to
+!       be read in at the start of program execution. THIS HAS NOT BEEN IMPLEMENTED YET. 0 = No input external potential.
 !
-!     vexOutput is a PUBLIC, INTEGER-valued input variable intented to
-!        designate the file format of the external potentials to be written
-!        out to disk during program execution. THE HAS NOT BEEN IMPLEMENTED
-!        YET. 0 = No output external potential.
+!     vexOutput is a PUBLIC, INTEGER-valued input variable intented to designate the file format of the external potentials to be 
+!        written out to disk during program execution. THE HAS NOT BEEN IMPLEMENTED YET. 0 = No output external potential.
 !       
-!     vexFileNo is a PUBLIC, INTEGER-valued input variable intented to
-!        designate the unit number of the file to be read in as the initial
-!        external potential file. THIS HAS NOT BEEN IMPLEMENTED YET. 
+!     vexFileNo is a PUBLIC, INTEGER-valued input variable intented to designate the unit number of the file to be read in as the 
+!        initial external potential file. THIS HAS NOT BEEN IMPLEMENTED YET. 
 !
-!     vexInit is a PUBLIC, INTEGER-valued input variable that determines
-!        which time-independent external potential is applied throughout
-!        the course of a simulation when no input external potential is 
-!        provided by the user. 0 =  Linear ; 1 = SHO ; 2 = SHOR.
+!     vexInit is a PUBLIC, INTEGER-valued input variable that determines which time-independent external potential is applied 
+!        throughout the course of a simulation when no input external potential is provided by the user. 0 =  Linear ; 1 = SHO ; 
+!        2 = SHOR.
 !
-! --- SUBROUTINE DECLARATIONS --------------------------------------------- 
+! --- SUBROUTINE DECLARATIONS ------------------------------------------------------------------------------------------------------
 
       PUBLIC :: vex_init
 
@@ -90,29 +82,27 @@
       PRIVATE :: vex_3d_sho
       PRIVATE :: vex_3d_shor
 
-! --- SUBROUTINE DEFINITIONS ----------------------------------------------
+! --- SUBROUTINE DEFINITIONS -------------------------------------------------------------------------------------------------------
 !
-!     vex_init is a PUBLIC SUBROUTINE that selects which time-independent,
-!        external potential will be applied throughout the course of a
-!        simulation if no input external poential is provided by the user
-!        at the beginning of program execution.
+!     vex_init is a PUBLIC SUBROUTINE that selects which time-independent, external potential will be applied throughout the course
+!        of a simulation if no input external poential is provided by the user at the beginning of program execution.
 !
-!     vex_3d_lin is a PRIVATE SUBROUTINE that computes the analytic form 
-!        of a three-dimensional, linear external potential.
+!     vex_3d_lin is a PRIVATE SUBROUTINE that computes the analytic form of a three-dimensional, linear external potential.
 !
-!     vex_3d_sho is a PRIVATE SUBROUTINE that computes the analytic form of
-!        a three-dimensional, simple harmonic oscillator potential.
+!     vex_3d_sho is a PRIVATE SUBROUTINE that computes the analytic form of a three-dimensional, simple harmonic oscillator 
+!        potential.
 !
-!     vex_3d_shor is a PRIVATE SUBROUTINE that computes the analytic form
-!        of a three-dimensional, simple harmonic oscillator ring potential.
-
-! -------------------------------------------------------------------------
+!     vex_3d_shor is a PRIVATE SUBROUTINE that computes the analytic form of a three-dimensional, simple harmonic oscillator ring 
+!        potential.
+!
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       CONTAINS
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE vex_init ( vexInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , rO , fX , fY , fZ , wX , wY , wZ , wR , X , Y , Z , Vex3 )
+      SUBROUTINE vex_init ( vexInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , rO , fX , fY , fZ , &
+         & wX , wY , wZ , wR , X , Y , Z , Vex3 )
 
       IMPLICIT NONE
 
@@ -154,7 +144,8 @@
 
       ELSE IF ( vexInit == 2 ) THEN 
 
-         CALL vex_3d_shor ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , rO , wR , wZ , X , Y , Z , Vex3 )
+         CALL vex_3d_shor ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , rO , wR , wZ , X , Y , Z , &
+            & Vex3 )
 
       ELSE 
 
@@ -166,9 +157,10 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE vex_3d_lin ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , fX , fY , fZ , X , Y , Z , Vex3 )
+      SUBROUTINE vex_3d_lin ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , fX , fY , fZ , X , Y , Z , &
+         & Vex3 )
 
       IMPLICIT NONE
 
@@ -218,9 +210,10 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE vex_3d_sho ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , wX , wY , wZ , X , Y , Z , Vex3 )
+      SUBROUTINE vex_3d_sho ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , wX , wY , wZ , X , Y , Z , &
+         & Vex3 )
 
       IMPLICIT NONE
 
@@ -256,7 +249,8 @@
 
             DO j = nXa , nXb
 
-               Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + 0.5 * ( ( wX * ( X ( j ) - xO ) )**2 + ( wY * ( Y ( k ) - yO ) )**2 + ( wZ * ( Z ( l ) - zO ) )**2 )
+               Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + 0.5 * ( ( wX * ( X ( j ) - xO ) )**2 + ( wY * ( Y ( k ) - yO ) )**2 + &
+                  & ( wZ * ( Z ( l ) - zO ) )**2 )
 
             END DO
 
@@ -270,9 +264,10 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE vex_3d_shor ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , rO , wR , wZ , X , Y , Z , Vex3 )
+      SUBROUTINE vex_3d_shor ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , rO , wR , wZ , X , Y , Z , &
+         & Vex3 )
 
       IMPLICIT NONE
 
@@ -308,7 +303,8 @@
 
             DO j = nXa , nXb
 
-               Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + 0.5 * ( wR * ( SQRT ( ( X ( j ) - xO )**2 + ( Y ( k ) - yO )**2 ) - rO )**2 + ( wZ * ( Z ( l ) - zO ) )**2 )
+               Vex3 ( j , k , l ) = Vex3 ( j , k , l ) + 0.5 * ( wR * ( SQRT ( ( X ( j ) - xO )**2 + &
+                  & ( Y ( k ) - yO )**2 ) - rO )**2 + ( wZ * ( Z ( l ) - zO ) )**2 )
 
             END DO
                  
@@ -322,8 +318,8 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       END MODULE
 
-! =========================================================================
+! ==================================================================================================================================

@@ -1,4 +1,4 @@
-! ==========================================================================
+! ==================================================================================================================================
 ! NAME
 !
 !     psi [ (p)sī ] - Psi Module
@@ -9,9 +9,8 @@
 !
 ! DESCRIPTION  
 !
-!     PSI is a custom Fortran module written to compute analytic solutions
-!        of the Schrodinger and Gross-Pitaevskii equations, which may be
-!        used as initial conditions for simulations.
+!     PSI is a custom Fortran module written to compute analytic solutions of the Schrodinger and Gross-Pitaevskii equations, which
+!        may be used as initial conditions for simulations.
 !
 ! OPTIONS
 !
@@ -35,32 +34,30 @@
 !
 ! LAST UPDATED
 !
-!     Friday, July 10th, 2015
+!     Saturday, July 18th, 2015
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       MODULE PSI
 
-! --- MODULE DECLARATIONS -------------------------------------------------
+! --- MODULE DECLARATIONS ----------------------------------------------------------------------------------------------------------
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
       USE            :: MATH
 
-! --- MODULE DEFINITIONS --------------------------------------------------
+! --- MODULE DEFINITIONS -----------------------------------------------------------------------------------------------------------
 !
-!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides 
-!        information about the run-time environment.
+!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides information about the run-time environment.
 !
-!     MATH is a custom Fortran module written to define well-know
-!        mathematical constants and compute specialized functions. The
+!     MATH is a custom Fortran module written to define well-know mathematical constants and compute specialized functions. The
 !        module only has dependency on the ISO_FORTRAN_ENV module. 
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       IMPLICIT NONE
       PRIVATE
 
-! --- VARIABLE DECLARATIONS -----------------------------------------------
+! --- VARIABLE DECLARATIONS --------------------------------------------------------------------------------------------------------
 
       INTEGER, PUBLIC :: psiInput  = -1
       INTEGER, PUBLIC :: psiOutput = -1
@@ -68,35 +65,28 @@
       INTEGER ( KIND = 8 ), PUBLIC :: psiFilePos = -1
       INTEGER, PUBLIC :: psiInit   = -1
 
-! --- VARIABLE DEFINITIONS ------------------------------------------------
+! --- VARIABLE DEFINITIONS ---------------------------------------------------------------------------------------------------------
 !
-!     psiInput is a PUBLIC, INTEGER-valued variable that sets the file 
-!        format of the initial wave function to be read in at the start of
-!        program execution. 0 = No input wave function; 1 = Read wave 
-!        function from .bin file; 2 = Read wave function from .vtk file.
-!        NOTE: VTK READER NOT AVAILABLE YET.
+!     psiInput is a PUBLIC, INTEGER-valued variable that sets the file format of the initial wave function to be read in at the 
+!        start of program execution. 0 = No input wave function; 1 = Read wave function from .bin file; 2 = Read wave function 
+!        from .vtk file. NOTE: VTK READER NOT AVAILABLE YET.
 !
-!     psiOutput is a PUBLIC, INTEGER-valued variable that sets the file
-!        format of the wave functions to be written out to disk during
-!        program execution. 0 = No output wave function; 1 = Write wave 
-!        function to .bin file; 2 = Write wave function to .vtk file.
+!     psiOutput is a PUBLIC, INTEGER-valued variable that sets the file format of the wave functions to be written out to disk 
+!        during program execution. 0 = No output wave function; 1 = Write wave function to .bin file; 2 = Write wave function to 
+!        .vtk file.
 !   
-!     psiFileNo is a PUBLIC, INTEGER-valued variable that sets the unit
-!        number of the file to be read as the initial wave function file.
+!     psiFileNo is a PUBLIC, INTEGER-valued variable that sets the unit number of the file to be read as the initial wave function 
+!        file.
 !
-!     psiFilePos is a PUBLIC, INTEGER-valued variable that tracks the file
-!        position when reading and writing the input and output wave 
-!        function files, respectively. NOTE: THIS POSITION VARIABLE IS 
-!        CURRENTLY HARD-CODED WITH KIND = 8 TO AVOID INTEGER OVERFLOWS WHEN
-!        WRITING OUT LARGE FILES.
+!     psiFilePos is a PUBLIC, INTEGER-valued variable that tracks the file position when reading and writing the input and output 
+!        wave function files, respectively. NOTE: THIS POSITION VARIABLE IS CURRENTLY HARD-CODED WITH KIND = 8 TO AVOID INTEGER 
+!        OVERFLOWS WHEN WRITING OUT LARGE FILES.
 !
-!     psiInit is a PUBLIC, INTEGER-valued variable that determines which
-!        analytical wave function to use as an initial condition to the
-!        simulation when no input wave function file is used. 0 = Isotropic
-!        3D SHO; 1 = Anisotropic 3D SHO; 2 = Axisymmetric 3D SHO; 
-!        3 = Approx 3D SHOR.
+!     psiInit is a PUBLIC, INTEGER-valued variable that determines which analytical wave function to use as an initial condition to
+!        the simulation when no input wave function file is used. 0 = Isotropic 3D SHO; 1 = Anisotropic 3D SHO; 2 = Axisymmetric 3D
+!        SHO; 3 = Approx 3D SHOR.
 ! 
-! --- SUBROUTINE DECLARATIONS --------------------------------------------- 
+! --- SUBROUTINE DECLARATIONS ------------------------------------------------------------------------------------------------------
 
       PUBLIC :: psi_init
       PUBLIC :: psi_normalize
@@ -107,43 +97,35 @@
       PRIVATE :: psi_3d_se_shor_axi
       PRIVATE :: psi_3d_se_sho_iso
 
-! --- SUBROUTINE DEFINITIONS ----------------------------------------------
+! --- SUBROUTINE DEFINITIONS -------------------------------------------------------------------------------------------------------
 !
-!     psi_init is a PUBLIC SUBROUTINE that selects which analytic wave
-!        wave function will be used as an initial condition to the
+!     psi_init is a PUBLIC SUBROUTINE that selects which analytic wave wave function will be used as an initial condition to the
 !        simulation if no input wave function file is provided.
 !
 !     psi_normalize is NOT IMPLEMENTED YET.
 !
-!     psi_boost is a PUBLIC SUBROUTINE that applies a linear momentum 
-!        boost to a three-dimensional wave function defined on a regular
-!        grid. It is currently used to provide an initial linear momentum 
-!        to the initial wave function of the simulation.
+!     psi_boost is a PUBLIC SUBROUTINE that applies a linear momentum boost to a three-dimensional wave function defined on a 
+!        regular grid. It is currently used to provide an initial linear momentum to the initial wave function of the simulation.
 !
-!     psi_3d_se_sho_ani is a PRIVATE SUBROUTINE that computes the analytic
-!        solution of the time-independent Schrodinger equation for a 
-!        three-dimensional, anisotropic simple harmonic oscillator 
-!        potential.
+!     psi_3d_se_sho_ani is a PRIVATE SUBROUTINE that computes the analytic solution of the time-independent Schrodinger equation 
+!        for a three-dimensional, anisotropic simple harmonic oscillator potential.
 !
-!     psi_3d_se_sho_axi is a PRIVATE SUBROUTINE that computes the analytic
-!        solution of the time-independent Schrodinger equation for a 
-!        three-dimensional, axisymmetric simple harmonic oscillator 
-!        potential. 
+!     psi_3d_se_sho_axi is a PRIVATE SUBROUTINE that computes the analytic solution of the time-independent Schrodinger equation 
+!        for a three-dimensional, axisymmetric simple harmonic oscillator potential. 
 !        
-!     psi_3d_se_shor_axi is a PRIVATE SUBROUTINE that computes an analytic
-!        approximation to the solution of the time-dependent Schrodinger
-!        equation for a three-dimensional, simple harmonic oscillator ring
-!        potential.
+!     psi_3d_se_shor_axi is a PRIVATE SUBROUTINE that computes an analytic approximation to the solution of the time-dependent 
+!        Schrodinger equation for a three-dimensional, simple harmonic oscillator ring potential.
 !
 !     psi_3d_se_sho_iso is NOT IMPLEMENTED YET.
 !
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       CONTAINS
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE psi_init ( psiInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nX , nY , nZ , nR , mL , xO , yO , zO , rO , wX , wY , wZ , wR , X , Y , Z , Psi3 )
+      SUBROUTINE psi_init ( psiInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nX , nY , nZ , nR , mL , xO , yO , &
+         & zO , rO , wX , wY , wZ , wR , X , Y , Z , Psi3 )
 
       IMPLICIT NONE
 
@@ -184,15 +166,18 @@
 
       ELSE IF ( psiInit == 1 ) THEN 
 
-         CALL psi_3d_se_sho_ani ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nX , nY , nZ , xO , yO , zO , wX , wY , wZ , X , Y , Z , Psi3 )
+         CALL psi_3d_se_sho_ani ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nX , nY , nZ , xO , yO , zO , wX , wY , &
+            & wZ , X , Y , Z , Psi3 )
 
       ELSE IF ( psiInit == 2 ) THEN 
 
-         CALL psi_3d_se_sho_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nR , mL , nZ , xO , yO , zO , wR , wZ , X , Y , Z , Psi3 )
+         CALL psi_3d_se_sho_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nR , mL , nZ , xO , yO , zO , wR , wZ , &
+            & X , Y , Z , Psi3 )
 
       ELSE IF ( psiInit == 3 ) THEN
 
-         CALL psi_3d_se_shor_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nR , mL , nZ , xO , yO , zO , rO , wR , wZ , X , Y , Z , Psi3 )
+         CALL psi_3d_se_shor_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nR , mL , nZ , xO , yO , zO , rO , wR ,&
+            & wZ , X , Y , Z , Psi3 )
 
       ELSE 
 
@@ -205,9 +190,10 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE psi_3d_se_sho_ani ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nX , nY , nZ , xO , yO , zO , wX , wY , wZ , X , Y , Z , Psi3 )
+      SUBROUTINE psi_3d_se_sho_ani ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nX , nY , nZ , xO , yO , zO , wX , &
+         & wY , wZ , X , Y , Z , Psi3 )
  
       IMPLICIT NONE
 
@@ -267,9 +253,10 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE psi_3d_se_sho_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nR , mL , nZ , xO , yO , zO , wR , wZ , X , Y , Z , Psi3 )
+      SUBROUTINE psi_3d_se_sho_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nR , mL , nZ , xO , yO , zO , wR , &
+         & wZ , X , Y , Z , Psi3 )
 
       IMPLICIT NONE
 
@@ -330,9 +317,10 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE psi_3d_se_shor_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nR , mL , nZ , xO , yO , zO , rO , wR , wZ , X , Y , Z , Psi3 )
+      SUBROUTINE psi_3d_se_shor_axi ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nR , mL , nZ , xO , yO , zO , rO , &
+         & wR , wZ , X , Y , Z , Psi3 )
 
       IMPLICIT NONE
 
@@ -394,7 +382,7 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       SUBROUTINE psi_3d_se_sho_iso ( )
 
@@ -404,7 +392,7 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       SUBROUTINE psi_normalize ( ) 
 
@@ -414,9 +402,10 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE psi_boost ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , pX , pY , pZ , X , Y , Z , Psi3 )
+      SUBROUTINE psi_boost ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xO , yO , zO , pX , pY , pZ , X , Y , Z , &
+         & Psi3 )
 
       IMPLICIT NONE
 
@@ -453,7 +442,8 @@
 
             DO j = nXa - nXbc , nXb + nXbc
 
-               Psi3 ( j , k , l ) = Psi3 ( j , k , l ) * EXP ( CMPLX ( 0.0 , pX * ( X ( j ) - xO ) + pY * ( Y ( k ) - yO ) + pZ * ( Z ( l ) - zO ) ) )
+               Psi3 ( j , k , l ) = Psi3 ( j , k , l ) * EXP ( CMPLX ( 0.0 , pX * ( X ( j ) - xO ) + pY * ( Y ( k ) - yO ) + &
+                  & pZ * ( Z ( l ) - zO ) ) )
 
             END DO
 
@@ -467,8 +457,8 @@
 
       END SUBROUTINE
 
-! -------------------------------------------------------------------------
+! ----------------------------------------------------------------------------------------------------------------------------------
 
       END MODULE
 
-! =========================================================================
+! ==================================================================================================================================
