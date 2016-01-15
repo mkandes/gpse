@@ -75,11 +75,11 @@
 !
 ! COPYRIGHT
 !     
-!     Copyright (c) 2014, 2015 Martin Charles Kandes
+!     Copyright (c) 2014, 2015, 2016 Martin Charles Kandes
 !
 ! LAST UPDATED
 !
-!     Saturday, July 18th, 2015
+!     Wednesday, January 14th, 2016
 !
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -133,8 +133,8 @@
 
 ! --- PARAMETER DECLARATIONS  ------------------------------------------------------------------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.5.1'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Saturday, July 18th, 2015'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.5.2'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Wednesday, January 14th, 2016'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -169,14 +169,17 @@
       INTEGER :: nXa            = -1 
       INTEGER :: nXb            = -1 
       INTEGER :: nXbc           = -1
+      INTEGER :: dNx            = -1
       INTEGER :: nY             = -1 
       INTEGER :: nYa            = -1 
       INTEGER :: nYb            = -1
       INTEGER :: nYbc           = -1
+      INTEGER :: dNy            = -1
       INTEGER :: nZ             = -1
       INTEGER :: nZa            = -1
       INTEGER :: nZb            = -1
       INTEGER :: nZbc           = -1
+      INTEGER :: dNz            = -1
       INTEGER :: nXpsi          = -1
       INTEGER :: nYpsi          = -1
       INTEGER :: nZpsi          = -1
@@ -528,10 +531,11 @@
 !
 ! --- NAMELIST DECLARATIONS --------------------------------------------------------------------------------------------------------
 
-      NAMELIST /gpseIn/ itpOn , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , t0 , tF , xO , yO , zO , dT , dX , dY , &
-         & dZ , xOrrf , yOrrf , zOrrf , wX , wY , wZ , gS , psiInput , psiOutput , psiFileNo , psiInit , nXpsi , nYpsi , nZpsi , &
-         & nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , rOpsi , wXpsi , wYpsi , wZpsi , wRpsi , pXpsi , pYpsi , pZpsi , vexInput , &
-         & vexOutput , vexFileNo , vexInit , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , wZvex , wRvex
+      NAMELIST /gpseIn/ itpOn , rk4Lambda , fdOrder , nTsteps , nTwrite , nX , nY , nZ , dNx , dNy , dNz , t0 , tF , xO , yO , zO ,&
+         & dT , dX , dY , dZ , xOrrf , yOrrf , zOrrf , wX , wY , wZ , gS , psiInput , psiOutput , psiFileNo , psiInit , nXpsi , &
+         & nYpsi , nZpsi , nRpsi , mLpsi , xOpsi , yOpsi , zOpsi , rOpsi , wXpsi , wYpsi , wZpsi , wRpsi , pXpsi , pYpsi , pZpsi ,& 
+         & vexInput , vexOutput , vexFileNo , vexInit , xOvex , yOvex , zOvex , rOvex , fXvex , fYvex , fZvex , wXvex , wYvex , & 
+         & wZvex , wRvex
 
 ! --- NAMELIST DEFINITIONS ---------------------------------------------------------------------------------------------------------
 !
@@ -746,9 +750,9 @@
                psiFilePos = 1 ! initialize file position
                IF ( mpiRank == MPI_MASTER ) THEN
 
-                  CALL io_write_vtk_header ( 'psi-', psiFileNo , psiFilePos , nX , nY , nZ )
-                  CALL io_write_vtk_xcoordinates ( 'psi-' , psiFileNo , psiFilePos , nX , nXa , nXb , nXbc , Xa )
-                  CALL io_write_vtk_ycoordinates ( 'psi-' , psiFileNo , psiFilePos , nY , nYa , nYb , nYbc , Ya )
+                  CALL io_write_vtk_header ( 'psi-', psiFileNo , psiFilePos , nX , nY , nZ , dNx , dNy , dNz )
+                  CALL io_write_vtk_xcoordinates ( 'psi-' , psiFileNo , psiFilePos , nX , nXa , nXb , nXbc , dNx , Xa )
+                  CALL io_write_vtk_ycoordinates ( 'psi-' , psiFileNo , psiFilePos , nY , nYa , nYb , nYbc , dNy , Ya )
 
                END IF
                DO mpiSource = 0 , mpiProcesses - 1
@@ -756,7 +760,7 @@
                   CALL mpi_copy_q ( mpiRank , mpiSource , MPI_MASTER , nZ , nZa , nZb , nZbc , Zb )
                   IF ( mpiRank == MPI_MASTER ) THEN
 
-                     CALL io_write_vtk_zcoordinates ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nZ , nZa , nZb , nZbc , Zb )
+                     CALL io_write_vtk_zcoordinates ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nZ , nZa , nZb , nZbc , dNz , Zb )
 
                   END IF
 
@@ -767,8 +771,8 @@
                      & Psi3b )
                   IF ( mpiRank == MPI_MASTER ) THEN
 
-                     CALL io_write_vtk_repsi ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , &
-                        & nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
+                     CALL io_write_vtk_repsi ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , dNx , nY , &
+                        & nYa , nYb , nYbc , dNy , nZ , nZa , nZb , nZbc , dNz , Psi3b )
 
                   END IF
 
@@ -780,8 +784,8 @@
                      & Psi3b )
                   IF ( mpiRank == MPI_MASTER ) THEN 
 
-                     CALL io_write_vtk_impsi ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , &
-                        & nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
+                     CALL io_write_vtk_impsi ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , dNx , nY , &
+                        & nYa , nYb , nYbc , dNy , nZ , nZa , nZb , nZbc , dNz , Psi3b )
 
                   END IF
 

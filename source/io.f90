@@ -33,7 +33,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, July 18th, 2015
+!     Thursday, December 24th, 2015
 !
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -295,7 +295,7 @@
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE io_write_vtk_header ( fileName , fileUnit , filePosition , nX , nY , nZ )
+      SUBROUTINE io_write_vtk_header ( fileName , fileUnit , filePosition , nX , nY , nZ , dNx , dNy , dNz )
 
       IMPLICIT NONE
 
@@ -306,6 +306,9 @@
       INTEGER, INTENT ( IN ) :: nX
       INTEGER, INTENT ( IN ) :: nY
       INTEGER, INTENT ( IN ) :: nZ
+      INTEGER, INTENT ( IN ) :: dNx
+      INTEGER, INTENT ( IN ) :: dNy
+      INTEGER, INTENT ( IN ) :: dNz
 
       CHARACTER ( LEN = 4 ) :: fileUnitChar
 
@@ -317,7 +320,8 @@
          WRITE ( UNIT = fileUnit , FMT = '(A26)' ) 'STANDARD LEGACY VTK FORMAT' ! VTK file header; 256 characters maximum
          WRITE ( UNIT = fileUnit , FMT = '(A5)'  ) 'ASCII'                      ! VTK file format: ASCII or BINARY
          WRITE ( UNIT = fileUnit , FMT = '(A24)' ) 'DATASET RECTILINEAR_GRID'   ! VTK dataset structure
-         WRITE ( UNIT = fileUnit , FMT = '(A10,1X,I4.1,1X,I4.1,1X,I4.1)' ) 'DIMENSIONS' , nX , nY , nZ
+         WRITE ( UNIT = fileUnit , FMT = '(A10,1X,I4.1,1X,I4.1,1X,I4.1)' ) 'DIMENSIONS' , nX / dNx + MODULO ( nX , dNx ), &
+            & nY / dNy + MODULO ( nY , dNy ), nZ / dNz + MODULO ( nZ , dNz )
          INQUIRE ( UNIT = fileUnit , POS = filePosition )
 
       CLOSE ( UNIT = fileUnit , STATUS = 'KEEP' )
@@ -327,7 +331,7 @@
       END SUBROUTINE
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE io_write_vtk_xcoordinates ( fileName , fileUnit , filePosition , nX , nXa , nXb , nXbc , X )
+      SUBROUTINE io_write_vtk_xcoordinates ( fileName , fileUnit , filePosition , nX , nXa , nXb , nXbc , dNx , X )
 
       IMPLICIT NONE
 
@@ -339,6 +343,7 @@
       INTEGER, INTENT ( IN ) :: nXa
       INTEGER, INTENT ( IN ) :: nXb
       INTEGER, INTENT ( IN ) :: nXbc
+      INTEGER, INTENT ( IN ) :: dNx
      
       REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
 
@@ -350,8 +355,8 @@
       OPEN  ( UNIT = fileUnit , FILE = TRIM ( fileName//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , &
          & FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
 
-         WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(A13,1X,I4.1,1X,A6)' ) 'X_COORDINATES' , nX , 'double'
-         DO j = nXa , nXb
+         WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(A13,1X,I4.1,1X,A6)' ) 'X_COORDINATES' , nX / dNx + MODULO ( nX , dNx ) , 'double'
+         DO j = nXa , nXb, dNx
 
             WRITE ( UNIT = fileUnit , FMT = * ) X ( j )
 
@@ -366,7 +371,7 @@
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE io_write_vtk_ycoordinates ( fileName , fileUnit , filePosition , nY , nYa , nYb , nYbc , Y )
+      SUBROUTINE io_write_vtk_ycoordinates ( fileName , fileUnit , filePosition , nY , nYa , nYb , nYbc , dNy , Y )
 
       IMPLICIT NONE
 
@@ -379,6 +384,7 @@
       INTEGER, INTENT ( IN ) :: nYa
       INTEGER, INTENT ( IN ) :: nYb
       INTEGER, INTENT ( IN ) :: nYbc
+      INTEGER, INTENT ( IN ) :: dNy
 
       REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
 
@@ -390,8 +396,8 @@
       OPEN  ( UNIT = fileUnit , FILE = TRIM ( fileName//fileUnitChar//'.vtk' )  , ACCESS = 'STREAM' , ACTION = 'WRITE' , &
          & FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
 
-         WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(A13,1X,I4.1,1X,A6)' ) 'Y_COORDINATES' , nY , 'double'
-         DO k = nYa , nYb
+         WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(A13,1X,I4.1,1X,A6)' ) 'Y_COORDINATES' , nY / dNy + MODULO ( nY , dNy ) , 'double'
+         DO k = nYa , nYb , dNy
 
             WRITE ( UNIT = fileUnit , FMT = * ) Y ( k )
 
@@ -406,7 +412,7 @@
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE io_write_vtk_zcoordinates ( fileName , fileUnit , filePosition , mpiSource , nZ , nZa , nZb , nZbc , Z )
+      SUBROUTINE io_write_vtk_zcoordinates ( fileName , fileUnit , filePosition , mpiSource , nZ , nZa , nZb , nZbc , dNz , Z )
 
       IMPLICIT NONE
 
@@ -419,6 +425,7 @@
       INTEGER, INTENT ( IN ) :: nZa 
       INTEGER, INTENT ( IN ) :: nZb 
       INTEGER, INTENT ( IN ) :: nZbc
+      INTEGER, INTENT ( IN ) :: dNz
 
       REAL, DIMENSION ( nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Z
 
@@ -432,8 +439,8 @@
 
          IF ( mpiSource == 0 ) THEN ! i.e., if mpiSource == MPI_MASTER
 
-            WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(A13,1X,I4.1,1X,A6)' ) 'Z_COORDINATES' , nZ , 'double'
-            DO l = nZa , nZb
+            WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(A13,1X,I4.1,1X,A6)' ) 'Z_COORDINATES' , nZ / dNz + MODULO ( nZ , dNz ) , 'double'
+            DO l = nZa , nZb , dNz
 
                WRITE ( UNIT = fileUnit , FMT = * ) Z ( l )
 
@@ -442,7 +449,7 @@
          ELSE
 
             WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(F23.15)' ) Z ( nZa )
-            DO l = nZa + 1 , nZb
+            DO l = nZa + dNz , nZb , dNz
 
                WRITE ( UNIT = fileUnit , FMT = * ) Z ( l )
 
@@ -459,8 +466,8 @@
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE io_write_vtk_repsi ( fileName , fileUnit , filePosition , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , &
-         & nYbc , nZ , nZa , nZb , nZbc , Psi3 )
+      SUBROUTINE io_write_vtk_repsi ( fileName , fileUnit , filePosition , mpiSource , nX , nXa , nXb , nXbc , dNx , nY , nYa , &
+         & nYb , nYbc , dNy , nZ , nZa , nZb , nZbc , dNz , Psi3 )
 
       IMPLICIT NONE
 
@@ -473,14 +480,17 @@
       INTEGER, INTENT ( IN ) :: nXa
       INTEGER, INTENT ( IN ) :: nXb
       INTEGER, INTENT ( IN ) :: nXbc
+      INTEGER, INTENT ( IN ) :: dNx
       INTEGER, INTENT ( IN ) :: nY
       INTEGER, INTENT ( IN ) :: nYa
       INTEGER, INTENT ( IN ) :: nYb
       INTEGER, INTENT ( IN ) :: nYbc
+      INTEGER, INTENT ( IN ) :: dNy
       INTEGER, INTENT ( IN ) :: nZ
       INTEGER, INTENT ( IN ) :: nZa
       INTEGER, INTENT ( IN ) :: nZb
       INTEGER, INTENT ( IN ) :: nZbc
+      INTEGER, INTENT ( IN ) :: dNz
 
       COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -494,14 +504,14 @@
  
          IF ( mpiSource == 0 ) THEN
 
-            WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(A10,1X,I19.1)' ) 'POINT_DATA' , nX * nY * nZ 
+            WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(A10,1X,I19.1)' ) 'POINT_DATA' , ( nX / dNx + MODULO ( nX , dNx ) ) * ( nY / dNy + MODULO ( nY , dNy ) ) * ( nZ / dNz + MODULO ( nZ , dNz ) ) 
             WRITE ( UNIT = fileUnit , FMT = '(A24)'          ) 'SCALARS RePsi double 1'
             WRITE ( UNIT = fileUnit , FMT = '(A20)'          ) 'LOOKUP_TABLE default'
-            DO l = nZa , nZb
+            DO l = nZa , nZb , dNz
 
-               DO k = nYa , nYb
+               DO k = nYa , nYb , dNy 
 
-                  DO j = nXa , nXb
+                  DO j = nXa , nXb , dNx
 
                      WRITE ( UNIT = fileUnit , FMT = * ) REAL ( Psi3 ( j , k , l ) )
 
@@ -513,11 +523,11 @@
 
          ELSE
 
-            DO l = nZa , nZb
+            DO l = nZa , nZb , dNz
 
-               DO k = nYa , nYb
+               DO k = nYa , nYb , dNy
 
-                  DO j = nXa , nXb
+                  DO j = nXa , nXb , dNx
                         
                      WRITE ( UNIT = fileUnit , POS = filePosition , FMT = * ) REAL ( Psi3 ( j , k , l ) )
                      INQUIRE ( UNIT = fileUnit , POS = filePosition )
@@ -539,8 +549,8 @@
 
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
-      SUBROUTINE io_write_vtk_impsi ( fileName , fileUnit , filePosition , mpiSource , nX , nXa , nXb , nXbc , nY , nYa , nYb , &
-         & nYbc , nZ , nZa , nZb , nZbc , Psi3 )
+      SUBROUTINE io_write_vtk_impsi ( fileName , fileUnit , filePosition , mpiSource , nX , nXa , nXb , nXbc , dNx , nY , nYa , &
+         & nYb , nYbc , dNy , nZ , nZa , nZb , nZbc , dNz , Psi3 )
 
       IMPLICIT NONE
 
@@ -553,14 +563,17 @@
       INTEGER, INTENT ( IN ) :: nXa
       INTEGER, INTENT ( IN ) :: nXb
       INTEGER, INTENT ( IN ) :: nXbc
+      INTEGER, INTENT ( IN ) :: dNx
       INTEGER, INTENT ( IN ) :: nY
       INTEGER, INTENT ( IN ) :: nYa
       INTEGER, INTENT ( IN ) :: nYb
       INTEGER, INTENT ( IN ) :: nYbc
+      INTEGER, INTENT ( IN ) :: dNy
       INTEGER, INTENT ( IN ) :: nZ
       INTEGER, INTENT ( IN ) :: nZa
       INTEGER, INTENT ( IN ) :: nZb
       INTEGER, INTENT ( IN ) :: nZbc
+      INTEGER, INTENT ( IN ) :: dNz
 
       COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
 
@@ -577,11 +590,11 @@
             WRITE ( UNIT = fileUnit , POS = filePosition , FMT = '(A24)' ) 'SCALARS ImPsi double 1'
             WRITE ( UNIT = fileUnit , FMT = '(A20)' ) 'LOOKUP_TABLE default'
 
-            DO l = nZa , nZb
+            DO l = nZa , nZb , dNz
 
-               DO k = nYa , nYb
+               DO k = nYa , nYb , dNy
 
-                  DO j = nXa , nXb
+                  DO j = nXa , nXb , dNx
 
                      WRITE ( UNIT = fileUnit , FMT = * ) AIMAG ( Psi3 ( j , k , l ) )
 
@@ -593,14 +606,13 @@
 
          ELSE
 
-            DO l = nZa , nZb
+            DO l = nZa , nZb , dNz
 
-               DO k = nYa , nYb
+               DO k = nYa , nYb , dNy
 
-                  DO j = nXa , nXb
+                  DO j = nXa , nXb , dNx
 
                      WRITE ( UNIT = fileUnit , POS = filePosition , FMT = * ) AIMAG ( Psi3 ( j , k , l ) )
-
                      INQUIRE ( UNIT = fileUnit , POS = filePosition )
 
                   END DO

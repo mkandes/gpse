@@ -4,18 +4,21 @@
    fdOrder   = 2           ! 2 = 2nd-Order Central Differences ( CD ); 4 = 4th-Order CD ; 6 = 6th-Order CD; 8 = 8th-Order CD
    nTsteps   = 1024        ! Total number of time steps in simulation
    nTwrite   = 128         ! Period of IO writes to disk; i.e., number of time steps between writes to disk
-   nX        = 128         ! Number of grid points along the x-axis
-   nY        = 128         ! Number of grid points along the y-axis
-   nZ        = 128         ! Number of grid points along the z-axis
+   nX        = 200         ! Number of grid points along the x-axis
+   nY        = 200         ! Number of grid points along the y-axis
+   nZ        = 200         ! Number of grid points along the z-axis
+   dNx       = 5           !
+   dNy       = 5           !
+   dNz       = 5           !
    t0        = 0.0         ! Time at the beginning of the simulation
    tF        = 20.0        ! Time at the end of the simulation; only use for compton generator
    xO        = 0.0         ! X-coordinate of the centre of the grid
    yO        = 0.0         ! Y-coordinate of the centre of the grid
    zO        = 0.0         ! Z-coordinate of the centre of the grid
    dT        = 9.765625e-4 ! Interval of a time step
-   dX        = 0.125       ! Distance between grid points along the x-axis
-   dY        = 0.125       ! Distance between grid points along the y-axis
-   dZ        = 0.125       ! Distance between grid points along the z-axis
+   dX        = 0.1       ! Distance between grid points along the x-axis
+   dY        = 0.1       ! Distance between grid points along the y-axis
+   dZ        = 0.1       ! Distance between grid points along the z-axis
    xOrrf     = 0.0         ! X-coordinate of the rotating reference frame's origin
    yOrrf     = 0.0         ! Y-coordinate of the rotating reference frame's origin
    zOrrf     = 0.0         ! Z-coordinate of the rotating reference frame's origin
