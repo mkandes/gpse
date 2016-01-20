@@ -30,11 +30,11 @@
 !
 ! COPYRIGHT
 !     
-!     Copyright (c) 2014, 2015 Martin Charles Kandes
+!     Copyright (c) 2014, 2015, 2016 Martin Charles Kandes
 !
 ! LAST UPDATED
 !
-!     Friday, July 17th, 2015
+!     Saturday, January 16th, 2016
 !
 ! ----------------------------------------------------------------------------------------------------------------------------------
 

@@ -4,12 +4,12 @@
    fdOrder   = 2           ! 2 = 2nd-Order Central Differences ( CD ); 4 = 4th-Order CD ; 6 = 6th-Order CD; 8 = 8th-Order CD
    nTsteps   = 1024        ! Total number of time steps in simulation
    nTwrite   = 128         ! Period of IO writes to disk; i.e., number of time steps between writes to disk
-   nX        = 200         ! Number of grid points along the x-axis
-   nY        = 200         ! Number of grid points along the y-axis
-   nZ        = 200         ! Number of grid points along the z-axis
-   dNx       = 5           !
-   dNy       = 5           !
-   dNz       = 5           !
+   nX        = 128         ! Number of grid points along the x-axis
+   nY        = 128         ! Number of grid points along the y-axis
+   nZ        = 128         ! Number of grid points along the z-axis
+   dNx       = 2           !
+   dNy       = 2           !
+   dNz       = 2           !
    t0        = 0.0         ! Time at the beginning of the simulation
    tF        = 20.0        ! Time at the end of the simulation; only use for compton generator
    xO        = 0.0         ! X-coordinate of the centre of the grid
@@ -27,7 +27,7 @@
    wZ        = 0.0         ! Z-component of the rotating reference frame's angular velocity vector
    gS        = 0.0         ! Nonlinear atom-atom interaction coupling constant
    psiInput  = 0           ! 0 = No input wave function; 1 = Read wave function from .bin file; 2 = Read wave function from .vtk file ( not available yet )
-   psiOutput = 2           ! 0 = No output wave function; 1 = Write wave function to .bin file; 2 = Write wave function to .vtk file
+   psiOutput = 3           ! 0 = No output wave function; 1 = Write wave function to .bin file; 2 = Write wave function to .vtk file; 3 = Write int den to .splot
    psiFileNo = 500         ! Set psiFileNo to input wave function file number 
    psiInit   = 2           ! 0 = Isotropic 3D SHO ; 1 = Anisotropic 3D SHO ; 2 = Axisymmetric 3D SHO ; 3 = Approx 3D SHOR
    nXpsi     = 0           ! Degree of Hermite polynomial used to define anisotropic SHO wave function along x-axis

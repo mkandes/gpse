@@ -79,7 +79,7 @@
 !
 ! LAST UPDATED
 !
-!     Wednesday, January 14th, 2016
+!     Tuesday, January 19th, 2016
 !
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -133,8 +133,8 @@
 
 ! --- PARAMETER DECLARATIONS  ------------------------------------------------------------------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.5.2'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Wednesday, January 14th, 2016'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.5.3'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Tuesday, January 19th, 2016'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -471,8 +471,11 @@
       REAL, ALLOCATABLE, DIMENSION ( : ) :: Ya
       REAL, ALLOCATABLE, DIMENSION ( : ) :: Za
       REAL, ALLOCATABLE, DIMENSION ( : ) :: Zb
+      REAL, ALLOCATABLE, DIMENSION ( : ) :: Zc
       REAL, ALLOCATABLE, DIMENSION ( : ) :: Omega
       REAL, ALLOCATABLE, DIMENSION ( : , : , : ) :: Vex3a
+      REAL, ALLOCATABLE, DIMENSION ( : , : ) :: Psi2a
+      REAL, ALLOCATABLE, DIMENSION ( : , : ) :: Psi2b
 
       COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: K1
       COMPLEX, ALLOCATABLE, DIMENSION ( : , : , : ) :: K2
@@ -611,6 +614,7 @@
       ALLOCATE ( Ya ( nYa - nYbc : nYb + nYbc ) )
       ALLOCATE ( Za ( nZa - nZbc : nZb + nZbc ) )
       ALLOCATE ( Zb ( nZa - nZbc : nZb + nZbc ) )
+      ALLOCATE ( Zc ( 1 - nZbc : nZ + nZbc ) )
       ALLOCATE ( Omega ( 3 ) )
       ALLOCATE ( Vex3a ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
       ALLOCATE ( K1 ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
@@ -624,6 +628,7 @@
       Ya = 0.0
       Za = 0.0
       Zb = 0.0
+      Zc = 0.0
       Omega = 0.0
       Vex3a = 0.0
       K1 = CMPLX ( 0.0 , 0.0 )
@@ -635,7 +640,8 @@
 
       CALL grid_regular_axis ( nX , nXa , nXb , nXbc , xO , dX , Xa ) 
       CALL grid_regular_axis ( nY , nYa , nYb , nYbc , yO , dY , Ya ) 
-      CALL grid_regular_axis ( nZ , nZa , nZb , nZbc , zO , dZ , Za ) 
+      CALL grid_regular_axis ( nZ , nZa , nZb , nZbc , zO , dZ , Za )
+      CALL grid_regular_axis ( nZ , 1 , nZ , nZbc , zO , dZ , Zc )
 
       IF ( psiInput == 0 ) THEN ! compute initial wave function from available analytic expression
 
@@ -792,6 +798,103 @@
                END DO
                psiFileNo = psiFileNo + 1
 
+            ELSE IF ( psiOutput == 3 ) THEN
+
+               ALLOCATE ( Psi2a ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc ) )
+               ALLOCATE ( Psi2b ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc ) )
+
+               Psi3b = Psi3a
+               Psi2a = 0.0
+               Psi2b = 0.0
+               DO l = nZa , nZb
+
+                  DO k = nYa , nYb
+
+                     DO j = nXa , nXb
+
+                        Psi2b ( j , k ) = Psi2b ( j , k ) + ABS ( Psi3b ( j , k , l ) )**2
+
+                     END DO
+
+                  END DO
+
+               END DO
+               Psi2b = Psi2b * dZ
+               CALL MPI_REDUCE ( Psi2b , Psi2a , ( nXb - nXa + 1 ) * ( nYb - nYa + 1 ), mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+ 
+               IF ( mpiRank == MPI_MASTER ) THEN
+
+                  CALL io_write_splot_psi2 ( 'psi2xy-' , psiFileNo , nXa , nXb , nXbc , nYa , nYb , nYbc , Xa , Ya , Psi2a )
+
+               END IF
+
+               DEALLOCATE ( Psi2b )
+               DEALLOCATE ( Psi2a )
+
+               ALLOCATE ( Psi2a ( nXa - nXbc : nXb + nXbc , 1 - nZbc : nZ + nZbc ) )
+               ALLOCATE ( Psi2b ( nXa - nXbc : nXb + nXbc , 1 - nZbc : nZ + nZbc ) )
+
+               Psi3b = Psi3a
+               Psi2a = 0.0
+               Psi2b = 0.0
+               DO l = nZa , nZb
+
+                  DO k = nYa , nYb
+
+                     DO j = nXa , nXb
+
+                        Psi2b ( j , l ) = Psi2b ( j , l ) + ABS ( Psi3b ( j , k , l ) )**2 
+
+                     END DO
+
+                  END DO
+
+               END DO
+               Psi2b = Psi2b * dY
+               CALL MPI_REDUCE ( Psi2b , Psi2a , ( nXb - nXa + 1 ) * nZ , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+ 
+               IF ( mpiRank == MPI_MASTER ) THEN 
+
+                  CALL io_write_splot_psi2 ( 'psi2xz-' , psiFileNo , nXa , nXb , nXbc , 1 , nZ , nZbc , Xa , Zc , Psi2a )
+
+               END IF
+
+               DEALLOCATE ( Psi2b )
+               DEALLOCATE ( Psi2a )
+
+               ALLOCATE ( Psi2a ( nYa - nYbc : nYb + nYbc , 1 - nZbc : nZ + nZbc ) )
+               ALLOCATE ( Psi2b ( nYa - nYbc : nYb + nYbc , 1 - nZbc : nZ + nZbc ) )
+
+               Psi3b = Psi3a
+               Psi2a = 0.0
+               Psi2b = 0.0
+               DO l = nZa , nZb
+
+                  DO k = nYa , nYb
+
+                     DO j = nXa , nXb
+
+                        Psi2b ( k , l ) = Psi2b ( k , l ) + ABS ( Psi3b ( j , k , l ) )**2 
+
+                     END DO
+
+                  END DO
+
+               END DO
+               Psi2b = Psi2b * dX 
+               CALL MPI_REDUCE ( Psi2b , Psi2a , ( nYb - nYa + 1 ) * nZ , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
+ 
+               IF ( mpiRank == MPI_MASTER ) THEN 
+
+                  CALL io_write_splot_psi2 ( 'psi2yz-' , psiFileNo , nYa , nYb , nYbc , 1 , nZ , nZbc , Ya , Zc , Psi2a )
+
+               END IF
+
+               DEALLOCATE ( Psi2b )
+               DEALLOCATE ( Psi2a )
+
+               psiFileNo = psiFileNo + 1
+
             END IF
 
          END IF
@@ -926,8 +1029,12 @@
       DEALLOCATE ( K3 )
       DEALLOCATE ( K2 )
       DEALLOCATE ( K1 )
+      DEALLOCATE ( Psi2b )
+      DEALLOCATE ( Psi2a )
       DEALLOCATE ( Vex3a )
       DEALLOCATE ( Omega )
+      DEALLOCATE ( Zc )
+      DEALLOCATE ( Zb )
       DEALLOCATE ( Za )
       DEALLOCATE ( Ya )
       DEALLOCATE ( Xa )

@@ -29,11 +29,11 @@
 !
 ! COPYRIGHT
 !     
-!     Copyright (c) 2014, 2015 Martin Charles Kandes
+!     Copyright (c) 2014, 2015, 2016 Martin Charles Kandes
 !
 ! LAST UPDATED
 !
-!     Thursday, December 24th, 2015
+!     Tuesday, January 19th, 2016
 !
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -58,6 +58,7 @@
       PUBLIC :: io_read_bin_vex
       PUBLIC :: io_write_bin_psi
       PUBLIC :: io_write_bin_vex
+      PUBLIC :: io_write_splot_psi2
       PUBLIC :: io_write_vtk_header
       PUBLIC :: io_write_vtk_xcoordinates
       PUBLIC :: io_write_vtk_ycoordinates
@@ -284,6 +285,51 @@
                END DO
 
             END DO
+
+         END DO
+
+      CLOSE ( UNIT = fileUnit , STATUS = 'KEEP' )
+
+      RETURN
+
+      END SUBROUTINE
+
+! ----------------------------------------------------------------------------------------------------------------------------------
+
+      SUBROUTINE io_write_splot_psi2 ( fileName, fileUnit , nXa , nXb , nXbc , nYa , nYb , nYbc , X , Y , Psi2 )
+
+      IMPLICIT NONE
+
+      CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
+
+      INTEGER, INTENT ( IN ) :: fileUnit
+      INTEGER, INTENT ( IN ) :: nXa
+      INTEGER, INTENT ( IN ) :: nXb
+      INTEGER, INTENT ( IN ) :: nXbc
+      INTEGER, INTENT ( IN ) :: nYa
+      INTEGER, INTENT ( IN ) :: nYb
+      INTEGER, INTENT ( IN ) :: nYbc
+
+      REAL, DIMENSION ( nXa - nXbc : nXb + nXbc ), INTENT ( IN ) :: X
+      REAL, DIMENSION ( nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Y
+      REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc ), INTENT ( IN ) :: Psi2
+
+      CHARACTER ( LEN = 4 ) :: fileUnitChar
+
+      INTEGER :: j , k
+
+      WRITE ( UNIT = fileUnitChar , FMT = '(I4.4)' ) fileUnit
+      OPEN  ( UNIT = fileUnit , FILE = TRIM ( fileName//fileUnitChar//'.splot' )  , ACCESS = 'SEQUENTIAL' , ACTION = 'WRITE' , &
+         & FORM = 'FORMATTED' , STATUS = 'UNKNOWN' )
+
+         DO k = nYa , nYb
+
+            DO j = nXa , nXb
+
+               WRITE ( UNIT = fileUnit , FMT = * ) Y ( k ) , X ( j ) , Psi2 ( j , k )
+
+            END DO
+            WRITE ( UNIT = fileUnit , FMT = * ) ' '
 
          END DO
 
