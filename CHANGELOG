@@ -1,0 +1,22 @@
+CHANGELOG : GPSE
+
+dev
+
+    * testing simple parallel I/O implementation; developing alternative
+      MPI-I/O parallel I/O (psiOutput) option, where the wave function 
+      output file remains intact as one file, but is written to 
+      simultanesouly from all MPI processes using the MPI-I/O protocol
+
+2016/10/17 v0.5.4
+
+    + implemented first version of a simple parallel I/O (psiOutput)
+      option, where a complete wave function is simultaneously written 
+      out to many small, individual files only containing the portion of
+      the wave function overseen by an MPI process
+
+2016/01/19 v0.5.3
+
+    + GPSE from M. C. Kandes, "Modeling the Effects of Inertial Forces 
+      on Bose-Einstein Condensates in Rotating Frames of Reference", 
+      Ph.D. dissertation, Claremont Graduate University and San Diego 
+      State University (2015).

@@ -1,0 +1,74 @@
+README : GPSE
+
+DESCRIPTION
+
+    GPSE is a Fortran program created to numerically approximate 
+    solutions of the time-dependent Gross-Pitaevskii equation (GPE) in 
+    non-uniformly rotating frames of reference for a single component 
+    Bose-Einstein condensate (BEC) in three dimensions. It implements a
+    method-of-lines approach that combines an explicit, generalized 
+    4th-order Runge-Kutta (GRK4) time-integration scheme* with 2nd- or 
+    4th-order central differences (CD2/CD4) to discretize the spatial 
+    derivatives of the equation.
+
+    Zero Dirichlet boundary conditions are assumed to apply at the 
+    boundary of the computational domain at all times in any given 
+    simulation. As a result, gpse is best suited for investigating BECs
+    confined within externally applied trapping potentials where the 
+    condensate density decreases to zero at the boundary of the 
+    computational domain.
+
+    The GRK4 + CDX algorithm is implemented in parallel using a 
+    one-dimensional slab decomposition of the computational domain 
+    embedded within a hybrid MPI + OpenMP framework to enable scalable,
+    high-resolution numerical simulations. A two-round communication 
+    pattern, where even- and odd-numbered MPI processes alternate 
+    between send and receive calls, is utilized to reduce communication
+    overhead and improve message passing throughput.
+
+    * See 'On A General Formula of Fourth Order Runge-Kutta Method' by 
+      D. Tan and Z. Chen in the Journal of Mathematical Sciences & 
+      Mathematics Education Vol. 7 No. 2 (2012).
+
+USAGE
+
+    make
+    export OMP_NUM_THREADS=X
+    mpirun -np Y ./gpse.x > gpse.output
+
+DEPENDENCIES
+
+    GPSE depends on the standard Message Passing Interface (MPI) module. 
+    If USE :: MPI module is not supported, then INCLUDE 'mpif.h' header
+    file. 
+
+CITATION
+
+    To cite the use of this work in a scientific publication, please use
+    the following reference:
+
+    @phdthesis{kandesmc:2015,
+        author = "Kandes, M. C.",
+        title = "Modeling the Effects of Inertial Forces on 
+                Bose-Einstein Condensates in Rotating Frames of 
+                Reference",
+        school = "Claremont Graduate University \& San Diego State 
+                 University",
+        year = "2015",
+    }
+
+AUTHOR
+
+    Marty Kandes, Ph.D.
+
+COPYRIGHT
+     
+    Copyright (c) 2014, 2015, 2016 Martin Charles Kandes
+
+LICENSE
+
+    The MIT License (MIT)
+
+LAST UPDATED
+
+    Monday, October 17th, 2016

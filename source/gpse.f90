@@ -79,7 +79,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, January 19th, 2016
+!     Monday, October 17th, 2016
 !
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -133,8 +133,8 @@
 
 ! --- PARAMETER DECLARATIONS  ------------------------------------------------------------------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.5.3'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Tuesday, January 19th, 2016'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.5.4'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Monday, October 17th, 2016'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -565,7 +565,7 @@
 
 !$OMP PARALLEL DEFAULT ( SHARED )
 
-      ompThreads = OMP_GET_NUM_THREADS ( )
+      !ompThreads = OMP_GET_NUM_THREADS ( )
 
 !$OMP END PARALLEL
 
@@ -749,8 +749,8 @@
                END DO
                psiFileNo = psiFileNo + 1
 
-            ELSE IF ( psiOutput == 2 ) THEN ! Write wave function to file from MPI_MASTER using streaming I/O vtk format with 
-                                            ! partial reduce
+            ELSE IF ( psiOutput == 2 ) THEN ! Write the wave function to a legacy VTK file from MPI_MASTER using streaming I/O
+                                            ! with partial reduce
                Zb = Za
                Psi3b = Psi3a
                psiFilePos = 1 ! initialize file position
@@ -798,7 +798,18 @@
                END DO
                psiFileNo = psiFileNo + 1
 
-            ELSE IF ( psiOutput == 3 ) THEN
+            ELSE IF ( psiOutput == 3 ) THEN ! Use simple parallel I/O to write out the complete wave function simultaneously to many
+                                            ! legacy VTK files that only contain a single, one-dimensional slab of the wave function
+                                            ! overseen by an MPI process
+
+               CALL io_write_vtk ( 'psi-' , psiFileNo , mpiRank , nX , nXa , nXb , nXbc , dNx , nY , nYa , nYb , nYbc , dNy , nZ , nZa , nZb , nZbc , dNz , Xa , Ya, Za , Psi3a )
+               psiFileNo = psiFileNo + 1
+
+            ELSE IF ( psiOutput == 4 ) THEN ! Use MPI-I/O to write the wave function out to a single legacy VTK file in parallel
+
+            ELSE IF ( psiOutput == 5 ) THEN ! Compute the integrated, two-dimensional density profiles of the wave function in the 
+                                            ! (x,y)-, (x,z)-, and (y,z)-planes and then write each density profile to its own 
+                                            ! gnuplot (.splot) formatted file 
 
                ALLOCATE ( Psi2a ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc ) )
                ALLOCATE ( Psi2b ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc ) )
@@ -1029,8 +1040,6 @@
       DEALLOCATE ( K3 )
       DEALLOCATE ( K2 )
       DEALLOCATE ( K1 )
-      DEALLOCATE ( Psi2b )
-      DEALLOCATE ( Psi2a )
       DEALLOCATE ( Vex3a )
       DEALLOCATE ( Omega )
       DEALLOCATE ( Zc )
@@ -1284,10 +1293,13 @@
       CALL MPI_BCAST ( nTwrite   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( nX        , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( nXbc      , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( dNx       , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( nY        , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( nYbc      , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( dNy       , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( nZ        , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( nZbc      , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST ( dNz       , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( t0        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( tF        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
       CALL MPI_BCAST ( xO        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
