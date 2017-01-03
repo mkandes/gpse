@@ -1,4 +1,4 @@
-! ==================================================================================================================================
+! =====================================================================
 ! NAME
 !
 !     gpse [ jip-see ] - Gross-Pitaevskii and Schrodinger Equation Solver 
@@ -67,19 +67,18 @@
 !
 ! AUTHOR(S)
 !
-!     Marty Kandes
-!     Computational Science Research Center
-!     San Diego State University
-!     5500 Campanile Drive
-!     San Diego, California 92182
+!     Marty Kandes, Ph.D.
+!     Distributed High-Throughput Computing Group
+!     San Diego Supercomputer Center
+!     University of California, San Diego
 !
 ! COPYRIGHT
 !     
-!     Copyright (c) 2014, 2015, 2016 Martin Charles Kandes
+!     Copyright (c) 2014, 2015, 2016, 2017 Martin Charles Kandes
 !
 ! LAST UPDATED
 !
-!     Monday, October 17th, 2016
+!     Tuesday, January 3rd, 2017
 !
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -133,8 +132,8 @@
 
 ! --- PARAMETER DECLARATIONS  ------------------------------------------------------------------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.5.4'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Monday, October 17th, 2016'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.5.5'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Tuesday, January 3rd, 2017'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -153,12 +152,13 @@
 
       LOGICAL :: itpOn = .FALSE.
 
-      CHARACTER ( LEN = 8  ) :: startDate = 'NONE'
-      CHARACTER ( LEN = 10 ) :: startTime = 'NONE'
-      CHARACTER ( LEN = 5  ) :: startZone = 'NONE'
-      CHARACTER ( LEN = 8  ) :: stopDate  = 'NONE'
-      CHARACTER ( LEN = 10 ) :: stopTime  = 'NONE'
-      CHARACTER ( LEN = 5  ) :: stopZone  = 'NONE'
+      CHARACTER ( LEN = 8  ) :: startDate     = 'NONE'
+      CHARACTER ( LEN = 10 ) :: startTime     = 'NONE'
+      CHARACTER ( LEN = 5  ) :: startZone     = 'NONE'
+      CHARACTER ( LEN = 8  ) :: stopDate      = 'NONE'
+      CHARACTER ( LEN = 10 ) :: stopTime      = 'NONE'
+      CHARACTER ( LEN = 5  ) :: stopZone      = 'NONE'
+      CHARACTER ( LEN = 4 )  :: fileUnitChar  = 'None'
 
       INTEGER :: rk4Lambda      = -1 
       INTEGER :: fdOrder        = -1 
@@ -194,7 +194,9 @@
       INTEGER :: mpiRank        = -1
       INTEGER :: mpiSource      = -1
       INTEGER :: mpiDestination = -1
-      INTEGER :: mpiReal        = -1 
+      INTEGER :: mpiReal        = -1
+      INTEGER ( KIND = MPI_OFFSET_KIND ) :: mpiOffset = -1
+      INTEGER :: mpiFileHandle  = -1
       INTEGER :: ompThreads     = -1  
       INTEGER :: j , k , l , m , n 
       
@@ -802,10 +804,28 @@
                                             ! legacy VTK files that only contain a single, one-dimensional slab of the wave function
                                             ! overseen by an MPI process
 
-               CALL io_write_vtk ( 'psi-' , psiFileNo , mpiRank , nX , nXa , nXb , nXbc , dNx , nY , nYa , nYb , nYbc , dNy , nZ , nZa , nZb , nZbc , dNz , Xa , Ya, Za , Psi3a )
+               CALL io_write_vtk ( 'psi-', psiFileNo, mpiRank, nX, nXa,&
+                  & nXb, nXbc, dNx, nY, nYa, nYb, nYbc, dNy, nZ, nZa,  &
+                  & nZb, nZbc, dNz, Xa, Ya, Za, Psi3a )
                psiFileNo = psiFileNo + 1
 
-            ELSE IF ( psiOutput == 4 ) THEN ! Use MPI-I/O to write the wave function out to a single legacy VTK file in parallel
+            ELSE IF ( psiOutput == 4 ) THEN ! Use MPI-I/O to write the wave function out to a single binary file in parallel
+
+               WRITE ( UNIT = fileUnitChar, FMT = '(I4.4)' ) psiFileNo
+               CALL MPI_FILE_OPEN ( MPI_COMM_WORLD, &
+                  & TRIM ( 'psi-'//fileUnitChar//'.bin' ), &
+                  & MPI_MODE_CREATE + MPI_MODE_WRONLY, MPI_INFO_NULL, &
+                  & mpiFileHandle, mpiError )
+               DO l = nZa, nZb
+                  DO k = nYa, nYb
+                     mpiOffset = 2*CMPLX_DEFAULT_KIND*nX*((k-1)+nY*(l-1))
+                     CALL MPI_FILE_WRITE_AT ( mpiFileHandle, mpiOffset, &
+                        & Psi3a(nXa,k,l), nX, mpiCmplx, mpiStatus, &
+                        & mpiError )
+                  ENDDO
+               ENDDO
+               CALL MPI_FILE_CLOSE ( mpiFileHandle, mpiError )
+               psiFileNo = psiFileNo + 1
 
             ELSE IF ( psiOutput == 5 ) THEN ! Compute the integrated, two-dimensional density profiles of the wave function in the 
                                             ! (x,y)-, (x,z)-, and (y,z)-planes and then write each density profile to its own 
@@ -1095,15 +1115,11 @@
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     AUTHOR(S)'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#         Marty Kandes'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#         Computational Science Research Center'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#         San Diego State University'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#         5500 Campanile Drive'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#         San Diego, California 92182'
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#         Marty Kandes, Ph.D.'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     COPYRIGHT'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'     
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#         Copyright (c) 2014, 2015 Martin Charles Kandes'
+         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#         Copyright (c) 2014, 2015, 2016, 2017 Martin Charles Kandes'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     LAST UPDATED'
          WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'

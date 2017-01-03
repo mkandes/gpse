@@ -27,7 +27,7 @@
    wZ        = 0.0         ! Z-component of the rotating reference frame's angular velocity vector
    gS        = 0.0         ! Nonlinear atom-atom interaction coupling constant
    psiInput  = 0           ! 0 = No input wave function; 1 = Read wave function from .bin file; 2 = Read wave function from .vtk file ( not available yet )
-   psiOutput = 3           ! 0 = No output wave function; 1 = Write wave function to .bin file; 2 = Write wave function to .vtk file; 5 = Write int den to .splot
+   psiOutput = 1           ! 0 = No output wave function; 1 = Write wave function to .bin file; 2 = Write wave function to .vtk file; 5 = Write int den to .splot
    psiFileNo = 500         ! Set psiFileNo to input wave function file number 
    psiInit   = 2           ! 0 = Isotropic 3D SHO ; 1 = Anisotropic 3D SHO ; 2 = Axisymmetric 3D SHO ; 3 = Approx 3D SHOR
    nXpsi     = 0           ! Degree of Hermite polynomial used to define anisotropic SHO wave function along x-axis

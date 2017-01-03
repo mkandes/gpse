@@ -22,19 +22,18 @@
 !
 ! AUTHOR(S)
 !
-!     Marty Kandes
-!     Computational Science Research Center
-!     San Diego State University
-!     5500 Campanile Drive
-!     San Diego, California 92182
+!     Marty Kandes, Ph.D.
+!     Distributed High-Throughput Computing Group
+!     San Diego Supercomputer Center
+!     University of California, San Diego
 !
 ! COPYRIGHT
 !     
-!     Copyright (c) 2014, 2015 Martin Charles Kandes
+!     Copyright (c) 2014, 2015, 2016, 2017 Martin Charles Kandes
 !
 ! LAST UPDATED
 !
-!     Saturday, July 18th, 2015
+!     Tuesday, January 3rd, 2017
 !
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
