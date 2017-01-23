@@ -131,7 +131,7 @@
 
 ! --- PARAMETER DECLARATIONS  ------------------------------------------------------------------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.5.6'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.5.7'
       CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Sunday, January 22nd, 2017'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
@@ -1044,19 +1044,16 @@
 
       CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
-      ! Checkpoint last wave function in a binary file
-      Psi3b = Psi3a
-      psiFilePos = 1
-      DO mpiSource = 0 , mpiProcesses - 1
-
-         CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
-         IF ( mpiRank == MPI_MASTER ) THEN
-
-            CALL io_write_bin_psi ( 501 , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
-
-         END IF
-
-      END DO
+      ! Checkpoint wave function in a binary file using MPI/IO
+      CALL MPI_FILE_OPEN ( MPI_COMM_WORLD, TRIM ( 'psi-'//fileUnitChar//'.bin' ), MPI_MODE_CREATE + MPI_MODE_WRONLY, &
+                         & MPI_INFO_NULL, mpiFileHandle, mpiError )
+      DO l = nZa, nZb
+         DO k = nYa, nYb
+            mpiOffset = 2*CMPLX_DEFAULT_KIND*nX*((k-1)+nY*(l-1))
+            CALL MPI_FILE_WRITE_AT(mpiFileHandle, mpiOffset, Psi3a(nXa,k,l), nX, mpiCmplx, mpiStatus, mpiError)
+         ENDDO
+      ENDDO
+      CALL MPI_FILE_CLOSE ( mpiFileHandle, mpiError )
 
       CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 

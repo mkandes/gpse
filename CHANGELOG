@@ -2,10 +2,24 @@ CHANGELOG : GPSE
 
 dev
 
-    * testing simple parallel I/O implementation; developing alternative
-      MPI-I/O parallel I/O (psiOutput) option, where the wave function 
-      output file remains intact as one file, but is written to 
-      simultanesouly from all MPI processes using the MPI-I/O protocol
+    * MPI-I/O (psiInput) option to read in initial wave function from
+      single binary file in parallel
+
+2017/01/22 v0.5.7
+
+    + replaced serial version of new wave function checkpoint with one
+      that uses MPI-I/O
+
+2017/01/22 v0.5.6
+
+    + implemented checkpoint; last wave function is now written out to a
+     binary file in order to provide a checkpoint from where a new
+     simulation may be started to continue where the last one left off
+
+2017/01/03 v0.5.5
+
+    + implemented MPI-I/O (psiOutput) option with explicit-offsets to
+      write each wave function out to a single binary file
 
 2016/10/17 v0.5.4
 
