@@ -5,6 +5,10 @@ dev
     * MPI-I/O (psiInput) option to read in initial wave function from
       single binary file in parallel
 
+2017/01/22 v0.5.8
+
+    + set checkpoint wave function file to 'psi-501.bin'
+
 2017/01/22 v0.5.7
 
     + replaced serial version of new wave function checkpoint with one
