@@ -21,7 +21,7 @@
 !
 ! HISTORY
 !
-! AUTHOR(S)
+! AUTHOR
 !
 !     Marty Kandes, Ph.D.
 !     Distributed High-Throughput Computing Group
@@ -34,7 +34,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, January 3rd, 2017
+!     Sunday, January 22nd, 2017
 !
 ! ----------------------------------------------------------------------------------------------------------------------------------
 

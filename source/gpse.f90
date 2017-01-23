@@ -63,9 +63,8 @@
 !     20. Segment limited I/O output into multiple files, e.g. one file per expectation value.
 !     21. Support Cartesian, regular, rectilinear and curvilinear grids.
 !     22. Compare performance of array functions vs. passing by reference to subroutines, e.g. in computing potentials
-!     23. Compare performance of record and stream I/O, if both are supported by MPI-I/O.
 !
-! AUTHOR(S)
+! AUTHOR
 !
 !     Marty Kandes, Ph.D.
 !     Distributed High-Throughput Computing Group
@@ -78,7 +77,7 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, January 3rd, 2017
+!     Sunday, January 22nd, 2017
 !
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -132,8 +131,8 @@
 
 ! --- PARAMETER DECLARATIONS  ------------------------------------------------------------------------------------------------------
 
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.5.5'
-      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Tuesday, January 3rd, 2017'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_VERSION_NUMBER = '0.5.6'
+      CHARACTER ( LEN = * ), PARAMETER :: GPSE_LAST_UPDATED = 'Sunday, January 22nd, 2017'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -1038,6 +1037,22 @@
 
              CALL evua_normalize ( MPI_MASTER , mpiReal , mpiError , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , &
                 & dY , dZ , Psi3a )
+
+         END IF
+
+      END DO
+
+      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+
+      ! Checkpoint last wave function in a binary file
+      Psi3b = Psi3a
+      psiFilePos = 1
+      DO mpiSource = 0 , mpiProcesses - 1
+
+         CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+         IF ( mpiRank == MPI_MASTER ) THEN
+
+            CALL io_write_bin_psi ( 501 , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
 
          END IF
 
