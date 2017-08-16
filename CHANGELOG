@@ -2,8 +2,21 @@ CHANGELOG : GPSE
 
 dev
 
-    * MPI-I/O (psiInput) option to read in initial wave function from
-      single binary file in parallel
+    * support for large file sizes (> 2GB) with MPI-I/O 
+
+2017/08/16 v0.5.9
+
+    + initial wave fuctions computed with psi_init when psiInput == 0 
+      are now also normalized numerically; this provides proper 
+      normalization to initial wave functions where analytic 
+      normalizations constants are not known; e.g. see psiInt == 3 for
+      the approximate ground state wave function of a 3D simple harmonic 
+      oscillator ring potential
+    - commented out MPI-I/O-based wave function checkpoint that occurs 
+      at the end of a completed simulation; MPI-I/O files are currently
+      limited to a maximum size of approximately 2GB for some unknow 
+      reason; further investigation required
+    + reverted to serialized binary checkpoint from v0.5.6
 
 2017/01/22 v0.5.8
 
