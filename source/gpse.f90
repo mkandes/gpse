@@ -67,7 +67,8 @@
 ! AUTHOR
 !
 !     Marty Kandes, Ph.D.
-!     Distributed High-Throughput Computing Group
+!     Computational & Data Science Research Specialist
+!     User Services Group
 !     San Diego Supercomputer Center
 !     University of California, San Diego
 !
@@ -77,7 +78,7 @@
 !
 ! LAST UPDATED
 !
-!     Sunday, January 22nd, 2017
+!     Wednesday, August 16th, 2017
 !
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -648,6 +649,7 @@
 
          CALL psi_init ( psiInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi ,&
             & xOpsi , yOpsi , zOpsi , rOpsi , wXpsi , wYpsi , wZpsi , wRpsi , Xa , Ya , Za , Psi3a )
+         CALL evua_normalize ( MPI_MASTER , mpiReal , mpiError , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3a )
 
       ELSE IF ( psiInput == 1 ) THEN ! read initial wave function from binary file on MPI_MASTER
 
@@ -1045,14 +1047,28 @@
       CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
       ! Write last wave function to a binary file using MPI/IO
-      CALL MPI_FILE_OPEN ( MPI_COMM_WORLD, 'psi-501.bin', MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, mpiFileHandle, mpiError )
-      DO l = nZa, nZb
-         DO k = nYa, nYb
-            mpiOffset = 2*CMPLX_DEFAULT_KIND*nX*((k-1)+nY*(l-1))
-            CALL MPI_FILE_WRITE_AT ( mpiFileHandle, mpiOffset, Psi3a(nXa,k,l), nX, mpiCmplx, mpiStatus, mpiError )
-         ENDDO
-      ENDDO
-      CALL MPI_FILE_CLOSE ( mpiFileHandle, mpiError )
+      !CALL MPI_FILE_OPEN ( MPI_COMM_WORLD, 'psi-501.bin', MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, mpiFileHandle, mpiError )
+      !DO l = nZa, nZb
+      !   DO k = nYa, nYb
+      !      mpiOffset = 2*CMPLX_DEFAULT_KIND*nX*((k-1)+nY*(l-1))
+      !      CALL MPI_FILE_WRITE_AT ( mpiFileHandle, mpiOffset, Psi3a(nXa,k,l), nX, mpiCmplx, mpiStatus, mpiError )
+      !   ENDDO
+      !ENDDO
+      !CALL MPI_FILE_CLOSE ( mpiFileHandle, mpiError )
+
+      ! Checkpoint last wave function in a binary file
+      Psi3b = Psi3a
+      psiFilePos = 1
+      DO mpiSource = 0 , mpiProcesses - 1
+
+         CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+         IF ( mpiRank == MPI_MASTER ) THEN
+
+            CALL io_write_bin_psi ( 501 , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
+
+         END IF
+
+      END DO
 
       CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
