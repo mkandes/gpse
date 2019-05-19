@@ -2,7 +2,17 @@ CHANGELOG : GPSE
 
 dev
 
+    * support for probability mass-current analysis
     * support for large file sizes (> 2GB) with MPI-I/O 
+
+2019/05/19 v0.6.0
+
+    + implemented VTK reader function (io_read_vtk) to allow simple 
+      parallel I/O read of input wave function
+    + added logical flag (chkptOn) to control whether or not checkpoint
+      wave function is written out at the end of each simulation.
+    + started reformatting source code to be more compactly written; 
+      intended to follow 72 character wide, pep8-like format
 
 2017/08/16 v0.5.9
 
