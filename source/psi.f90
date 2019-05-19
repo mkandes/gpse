@@ -1,4 +1,4 @@
-! ==================================================================================================================================
+! ======================================================================
 ! NAME
 !
 !     psi [ (p)sī ] - Psi Module
@@ -9,8 +9,9 @@
 !
 ! DESCRIPTION  
 !
-!     PSI is a custom Fortran module written to compute analytic solutions of the Schrodinger and Gross-Pitaevskii equations, which
-!        may be used as initial conditions for simulations.
+!     PSI is a custom Fortran module written to compute analytic 
+!     solutions of the Schrodinger and Gross-Pitaevskii equations, which
+!     may be used as initial conditions for simulations.
 !
 ! OPTIONS
 !
@@ -24,69 +25,86 @@
 !
 !     Marty Kandes, Ph.D.
 !     Computational & Data Science Research Specialist
-!     User Services Group
+!     High-Performance Computing User Services Group
 !     San Diego Supercomputer Center
 !     University of California, San Diego
 !
 ! COPYRIGHT
 !     
-!     Copyright (c) 2014, 2015, 2016, 2017 Martin Charles Kandes
+!     Copyright (c) 2014, 2015, 2016, 2017, 2018, 2019 Martin Charles Kandes
 !
 ! LAST UPDATED
 !
-!     Wednesday, August 16th, 2017
+!     Saturday, May 18th, 2019
 !
-! ----------------------------------------------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------
 
       MODULE PSI
 
-! --- MODULE DECLARATIONS ----------------------------------------------------------------------------------------------------------
+! --- MODULE DECLARATIONS ----------------------------------------------
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
       USE            :: MATH
 
-! --- MODULE DEFINITIONS -----------------------------------------------------------------------------------------------------------
+! --- MODULE DEFINITIONS -----------------------------------------------
 !
-!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides information about the run-time environment.
+!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides 
+!        information about the run-time environment.
 !
-!     MATH is a custom Fortran module written to define well-know mathematical constants and compute specialized functions. The
+!     MATH is a custom Fortran module written to define well-know 
+!        mathematical constants and compute specialized functions. The
 !        module only has dependency on the ISO_FORTRAN_ENV module. 
 !
-! ----------------------------------------------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------
 
       IMPLICIT NONE
       PRIVATE
 
-! --- VARIABLE DECLARATIONS --------------------------------------------------------------------------------------------------------
+! --- VARIABLE DECLARATIONS --------------------------------------------
 
       INTEGER, PUBLIC :: psiInput  = -1
       INTEGER, PUBLIC :: psiOutput = -1
       INTEGER, PUBLIC :: psiFileNo = -1
-      INTEGER ( KIND = 8 ), PUBLIC :: psiFilePos = -1
-      INTEGER, PUBLIC :: psiInit   = -1
+      INTEGER, PUBLIC :: psiFileNoChkpt = -1
+      INTEGER(KIND=8), PUBLIC :: psiFilePos = -1
+      INTEGER, PUBLIC :: psiInit = -1
 
-! --- VARIABLE DEFINITIONS ---------------------------------------------------------------------------------------------------------
+! --- VARIABLE DEFINITIONS ---------------------------------------------
 !
-!     psiInput is a PUBLIC, INTEGER-valued variable that sets the file format of the initial wave function to be read in at the 
-!        start of program execution. 0 = No input wave function; 1 = Read wave function from .bin file; 2 = Read wave function 
-!        from .vtk file. NOTE: VTK READER NOT AVAILABLE YET.
+!     psiInput is a PUBLIC, INTEGER-valued variable that sets the file 
+!        format of the initial wave function to be read in at the start
+!        of program execution. 0 = No input wave function; 1 = Read wave
+!        function from .bin file; 2 = Read wave function from .vtk file. 
+!        NOTE: VTK READER NOT AVAILABLE YET.
 !
-!     psiOutput is a PUBLIC, INTEGER-valued variable that sets the file format of the wave functions to be written out to disk 
-!        during program execution. 0 = No output wave function; 1 = Write wave function to .bin file; 2 = Write wave function to 
-!        .vtk file.
+!     psiOutput is a PUBLIC, INTEGER-valued variable that sets the file
+!        format of the wave functions to be written out to disk during 
+!        program execution. 0 = No output wave function; 1 = Write wave
+!        function to .bin file; 2 = Write wave function to .vtk file.
 !   
-!     psiFileNo is a PUBLIC, INTEGER-valued variable that sets the unit number of the file to be read as the initial wave function 
-!        file.
+!     psiFileNo is a PUBLIC, INTEGER-valued variable that sets the unit
+!        number of the file to be read as the initial wave function 
+!        file. It is then utilized as the iterator to track the current
+!        output wave function file to be written out.
 !
-!     psiFilePos is a PUBLIC, INTEGER-valued variable that tracks the file position when reading and writing the input and output 
-!        wave function files, respectively. NOTE: THIS POSITION VARIABLE IS CURRENTLY HARD-CODED WITH KIND = 8 TO AVOID INTEGER 
-!        OVERFLOWS WHEN WRITING OUT LARGE FILES.
+!     psiFileNoChkpt is a PUBLIC, INTEGER-valued variable that sets the 
+!        unit number of the file where the binary checkpoint wave 
+!        function is to be written out at the end of a simulation, if 
+!        chkptOn == .TRUE.
 !
-!     psiInit is a PUBLIC, INTEGER-valued variable that determines which analytical wave function to use as an initial condition to
-!        the simulation when no input wave function file is used. 0 = Isotropic 3D SHO; 1 = Anisotropic 3D SHO; 2 = Axisymmetric 3D
-!        SHO; 3 = Approx 3D SHOR.
+!     psiFilePos is a PUBLIC, INTEGER-valued variable that tracks the 
+!       file position when reading and writing the input and output wave
+!       function files, respectively. NOTE: THIS POSITION VARIABLE IS 
+!       CURRENTLY HARD-CODED WITH KIND = 8 TO AVOID INTEGER OVERFLOWS 
+!       WHEN WRITING OUT LARGE FILES.
+!
+!     psiInit is a PUBLIC, INTEGER-valued variable that determines which
+!        analytical wave function to use as an initial condition to the
+!        simulation when no input wave function file is used. 
+!        0 = Isotropic 3D SHO; 1 = Anisotropic 3D SHO; 
+!        2 = Axisymmetric 3D SHO; 3 = Approx 3D SHOR.
 ! 
-! --- SUBROUTINE DECLARATIONS ------------------------------------------------------------------------------------------------------
+! --- SUBROUTINE DECLARATIONS ------------------------------------------
 
       PUBLIC :: psi_init
       PUBLIC :: psi_normalize

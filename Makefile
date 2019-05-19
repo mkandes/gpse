@@ -1,19 +1,9 @@
 # =========================================================================
 # Makefile : GPSE
 #
-# TESTED
-#
-#    GNU Make 3.81
-#    GNU Fortran (Homebrew gcc 5.3.0) 5.3.0
-#
-#    GNU Make 3.81
-#    GNU Fortran (GCC) 4.4.7 20120313 (Red Hat 4.4.7-17)
-#
 # LAST TESTED
 #
-#    GNU Make 3.81
-#    GNU Fortran (Homebrew gcc 5.3.0) 5.3.0
-#    Monday, October 17th, 2016
+#    Sunday, May 19th, 2019
 #
 # -------------------------------------------------------------------------
 #
@@ -55,6 +45,19 @@ ifeq ($(COMPILER),gfortran)
                            -Wline-truncation -Wconversion-extra \
                            -Wimplicit-interface -Wimplicit-procedure \
                            -Wunderflow -Wextra -Wuninitialized
+
+endif
+
+ifeq ($(COMPILER),ifort)
+
+   STANDARD_OPTIONS     := -implicitnone -free -stand none -module build
+   INTEGER_OPTIONS      := # -fdefault-integer-8
+   REAL_OPTIONS         := -real-size 64
+   OPTIMIZATION_OPTIONS := -ipo -O3 -no-prec-div -fp-model fast=2 -xHost
+   OPENMP_OPTIONS       := -qopenmp
+   CHECK_OPTIONS        := -check all
+   DEBUG_OPTIONS        := -debug all
+   WARNING_OPTIONS      := -warn all
 
 endif
 

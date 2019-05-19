@@ -25,17 +25,17 @@
 !
 !     Marty Kandes, Ph.D.
 !     Computational & Data Science Research Specialist
-!     User Services Group
+!     High-Performance Computing User Services Group
 !     San Diego Supercomputer Center
 !     University of California, San Diego
 !
 ! COPYRIGHT
 !     
-!     Copyright (c) 2014, 2015, 2016, 2017 Martin Charles Kandes
+!     Copyright (c) 2014, 2015, 2016, 2017, 2018, 2019 Martin Charles Kandes
 !
 ! LAST UPDATED
 !
-!     Wednesday, August 16th, 2017
+!     Tuesday, April 2nd, 2019
 !
 ! ----------------------------------------------------------------------------------------------------------------------------------
 
