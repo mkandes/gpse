@@ -1,10 +1,11 @@
  &gpseIn
    itpOn     = .FALSE.     ! Perform imaginary time propagation? .TRUE. = Yes; .FALSE. = No
    chkptOn   = .FALSE.     ! Write checkpoint wave function at end of simulation? .TRUE. = Yes; .FALSE. = No
+   pmcaOn    = .TRUE.      ! Perfom probability/mass current density analysis? .TRUE. = Yes; .FALSE. = No
    rk4Lambda = 2           ! 1 = Tan-Chen-1; 2 = Classical 4th-Order Runge-Kutta; 3 = Tan-Chen Lambda-3; 4 = England; 5 = Tan-Chen-5
    fdOrder   = 2           ! 2 = 2nd-Order Central Differences(CD); 4 = 4th-Order CD; 6 = 6th-Order CD; 8 = 8th-Order CD
-   nTsteps   = 1024        ! Total number of time steps in simulation
-   nTwrite   = 256         ! Period of IO writes to disk; i.e., number of time steps between writes to disk
+   nTsteps   = 0           ! Total number of time steps in simulation
+   nTwrite   = 1           ! Period of IO writes to disk; i.e., number of time steps between writes to disk
    nX        = 256         ! Number of grid points along the x-axis
    nY        = 256         ! Number of grid points along the y-axis
    nZ        = 128         ! Number of grid points along the z-axis
@@ -12,7 +13,7 @@
    dNy       = 1           ! Write out wave function only every dNy grid points along the y-axis
    dNz       = 1           ! Write out wave function only every dNz grid points along the z-axis
    t0        = 0.0         ! Time at the beginning of the simulation
-   tF        = 20.0        ! Time at the end of the simulation; only use for compton generator
+   tF        = 1.0        ! Time at the end of the simulation; only use for compton generator
    xO        = 0.0         ! X-coordinate of the centre of the grid
    yO        = 0.0         ! Y-coordinate of the centre of the grid
    zO        = 0.0         ! Z-coordinate of the centre of the grid

@@ -3,7 +3,7 @@
 #
 # LAST TESTED
 #
-#    Sunday, May 19th, 2019
+#    Thursday, July 4th, 2019
 #
 # -------------------------------------------------------------------------
 #
@@ -120,6 +120,10 @@ $(BUILD_DIR)/io.o $(BUILD_DIR)/io.mod: $(SOURCE_DIR)/io.f90
 $(BUILD_DIR)/math.o $(BUILD_DIR)/math.mod: $(SOURCE_DIR)/math.f90
 	@mkdir -p $(BUILD_DIR)
 	$(MPIF90) -J$(BUILD_DIR) $(COMPILER_OPTIONS) -c $(SOURCE_DIR)/math.f90 -o $(BUILD_DIR)/math.o
+
+$(BUILD_DIR)/pmca.o $(BUILD_DIR)/pmca.mod: $(SOURCE_DIR)/pmca.f90 $(BUILD_DIR)/grid.mod
+	@mkdir -p $(BUILD_DIR)
+	$(MPIF90) -J$(BUILD_DIR) $(COMPILER_OPTIONS) -c $(SOURCE_DIR)/pmca.f90 -o $(BUILD_DIR)/pmca.o
 
 $(BUILD_DIR)/psi.o $(BUILD_DIR)/psi.mod: $(SOURCE_DIR)/psi.f90 $(BUILD_DIR)/math.mod
 	@mkdir -p $(BUILD_DIR)

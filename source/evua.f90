@@ -1,4 +1,4 @@
-! ==================================================================================================================================
+! ======================================================================
 ! NAME
 !
 !     evua [ evua ] - Expectation Value and Uncertainty Analysis Module
@@ -9,8 +9,9 @@
 !
 ! DESCRIPTION  
 !
-!     EVUA is a custom Fortran module written to compute expectation values and other useful quantities, such as uncertainty 
-!        relations, from the wave functions generated during program execution.
+!     EVUA is a custom Fortran module written to compute expectation 
+!     values and other useful quantities, such as uncertainty relations,
+!     from the wave functions generated during program execution.
 !
 ! OPTIONS
 !
@@ -34,27 +35,29 @@
 !
 ! LAST UPDATED
 !
-!     Tuesday, April 2nd, 2019
+!     Sunday, May 19th, 2019
 !
-! ----------------------------------------------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------
 
       MODULE EVUA
 
-! --- MODULE DECLARATIONS ----------------------------------------------------------------------------------------------------------
+! --- MODULE DECLARATIONS ----------------------------------------------
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
-      USE            :: MPI
-      USE            :: MATH
+      USE :: MPI
+      USE :: MATH
 
-! --- MODULE DEFINITIONS -----------------------------------------------------------------------------------------------------------
+! --- MODULE DEFINITIONS -----------------------------------------------
 !
-!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides information about the run-time environment.
+!     ISO_FORTRAN_ENV is the intrinsic Fortran module that provides 
+!        information about the run-time environment.
 !
 !     MPI is the standard Message Passing Interface module.
 !
-!     MATH is a custom Fortran module written to define well-know mathematical constants and compute specialized functions. 
+!     MATH is a custom Fortran module written to define well-know 
+!        mathematical constants and compute specialized functions. 
 !
-! ----------------------------------------------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------
 
       IMPLICIT NONE
 
@@ -62,80 +65,80 @@
 
       PRIVATE
 
-! --- VARIABLE DECLARATIONS --------------------------------------------------------------------------------------------------------
+! --- VARIABLE DECLARATIONS --------------------------------------------
 
       REAL, PRIVATE :: evuaL2Norm = 0.0 
-      REAL, PRIVATE :: evuaX      = 0.0
-      REAL, PRIVATE :: evuaY      = 0.0
-      REAL, PRIVATE :: evuaZ      = 0.0
-      REAL, PRIVATE :: evuaR      = 0.0
-      REAL, PRIVATE :: evuaX2a    = 0.0
-      REAL, PRIVATE :: evuaX2b    = 0.0 
-      REAL, PRIVATE :: evuaY2a    = 0.0 
-      REAL, PRIVATE :: evuaY2b    = 0.0 
-      REAL, PRIVATE :: evuaZ2a    = 0.0 
-      REAL, PRIVATE :: evuaZ2b    = 0.0 
-      REAL, PRIVATE :: evuaR2a    = 0.0 
-      REAL, PRIVATE :: evuaR2b    = 0.0 
-      REAL, PRIVATE :: evuaIxxA   = 0.0 
-      REAL, PRIVATE :: evuaIxxB   = 0.0 
-      REAL, PRIVATE :: evuaIxyA   = 0.0 
-      REAL, PRIVATE :: evuaIxyB   = 0.0 
-      REAL, PRIVATE :: evuaIxzA   = 0.0 
-      REAL, PRIVATE :: evuaIxzB   = 0.0 
-      REAL, PRIVATE :: evuaIyyA   = 0.0 
-      REAL, PRIVATE :: evuaIyyB   = 0.0 
-      REAL, PRIVATE :: evuaIyzA   = 0.0 
-      REAL, PRIVATE :: evuaIyzB   = 0.0 
-      REAL, PRIVATE :: evuaIzzA   = 0.0 
-      REAL, PRIVATE :: evuaIzzB   = 0.0 
-      REAL, PRIVATE :: evuaVex    = 0.0 
-      REAL, PRIVATE :: evuaVmf    = 0.0 
-      REAL, PRIVATE :: evuaPx     = 0.0 
-      REAL, PRIVATE :: evuaPy     = 0.0 
-      REAL, PRIVATE :: evuaPz     = 0.0 
-      REAL, PRIVATE :: evuaPx2    = 0.0 
-      REAL, PRIVATE :: evuaPy2    = 0.0 
-      REAL, PRIVATE :: evuaPz2    = 0.0 
-      REAL, PRIVATE :: evuaLxA    = 0.0 
-      REAL, PRIVATE :: evuaLxB    = 0.0 
-      REAL, PRIVATE :: evuaLyA    = 0.0 
-      REAL, PRIVATE :: evuaLyB    = 0.0 
-      REAL, PRIVATE :: evuaLzA    = 0.0 
-      REAL, PRIVATE :: evuaLzB    = 0.0 
-      REAL, PRIVATE :: evuaLx2a   = 0.0 
-      REAL, PRIVATE :: evuaLx2b   = 0.0 
-      REAL, PRIVATE :: evuaLy2a   = 0.0 
-      REAL, PRIVATE :: evuaLy2b   = 0.0
-      REAL, PRIVATE :: evuaLz2a   = 0.0 
-      REAL, PRIVATE :: evuaLz2b   = 0.0 
-      REAL, PRIVATE :: evuaFx     = 0.0 
-      REAL, PRIVATE :: evuaFy     = 0.0 
-      REAL, PRIVATE :: evuaFz     = 0.0 
-      REAL, PRIVATE :: evuaTauXa  = 0.0 
-      REAL, PRIVATE :: evuaTauXb  = 0.0 
-      REAL, PRIVATE :: evuaTauYa  = 0.0 
-      REAL, PRIVATE :: evuaTauYb  = 0.0 
-      REAL, PRIVATE :: evuaTauZa  = 0.0 
-      REAL, PRIVATE :: evuaTauZb  = 0.0 
-      REAL, PRIVATE :: evuaEa     = 0.0 
-      REAL, PRIVATE :: evuaEb     = 0.0 
-      REAL, PRIVATE :: evuaMuA    = 0.0 
-      REAL, PRIVATE :: evuaMuB    = 0.0 
-      REAL, PRIVATE :: evuaL2a    = 0.0 
-      REAL, PRIVATE :: evuaL2b    = 0.0 
-      REAL, PRIVATE :: evuaTx     = 0.0 
-      REAL, PRIVATE :: evuaTy     = 0.0 
-      REAL, PRIVATE :: evuaTz     = 0.0 
-      REAL, PRIVATE :: evuaSigXa  = 0.0 
-      REAL, PRIVATE :: evuaSigXb  = 0.0 
-      REAL, PRIVATE :: evuaSigYa  = 0.0 
-      REAL, PRIVATE :: evuaSigYb  = 0.0
-      REAL, PRIVATE :: evuaSigZa  = 0.0 
-      REAL, PRIVATE :: evuaSigZb  = 0.0 
-      REAL, PRIVATE :: evuaSigPx  = 0.0 
-      REAL, PRIVATE :: evuaSigPy  = 0.0 
-      REAL, PRIVATE :: evuaSigPz  = 0.0 
+      REAL, PRIVATE :: evuaX = 0.0
+      REAL, PRIVATE :: evuaY = 0.0
+      REAL, PRIVATE :: evuaZ = 0.0
+      REAL, PRIVATE :: evuaR = 0.0
+      REAL, PRIVATE :: evuaX2a = 0.0
+      REAL, PRIVATE :: evuaX2b = 0.0 
+      REAL, PRIVATE :: evuaY2a = 0.0 
+      REAL, PRIVATE :: evuaY2b = 0.0 
+      REAL, PRIVATE :: evuaZ2a = 0.0 
+      REAL, PRIVATE :: evuaZ2b = 0.0 
+      REAL, PRIVATE :: evuaR2a = 0.0 
+      REAL, PRIVATE :: evuaR2b = 0.0 
+      REAL, PRIVATE :: evuaIxxA = 0.0 
+      REAL, PRIVATE :: evuaIxxB = 0.0 
+      REAL, PRIVATE :: evuaIxyA = 0.0 
+      REAL, PRIVATE :: evuaIxyB = 0.0 
+      REAL, PRIVATE :: evuaIxzA = 0.0 
+      REAL, PRIVATE :: evuaIxzB = 0.0 
+      REAL, PRIVATE :: evuaIyyA = 0.0 
+      REAL, PRIVATE :: evuaIyyB = 0.0 
+      REAL, PRIVATE :: evuaIyzA = 0.0 
+      REAL, PRIVATE :: evuaIyzB = 0.0 
+      REAL, PRIVATE :: evuaIzzA = 0.0 
+      REAL, PRIVATE :: evuaIzzB = 0.0 
+      REAL, PRIVATE :: evuaVex = 0.0 
+      REAL, PRIVATE :: evuaVmf = 0.0 
+      REAL, PRIVATE :: evuaPx = 0.0 
+      REAL, PRIVATE :: evuaPy = 0.0 
+      REAL, PRIVATE :: evuaPz = 0.0 
+      REAL, PRIVATE :: evuaPx2 = 0.0 
+      REAL, PRIVATE :: evuaPy2 = 0.0 
+      REAL, PRIVATE :: evuaPz2 = 0.0 
+      REAL, PRIVATE :: evuaLxA = 0.0 
+      REAL, PRIVATE :: evuaLxB = 0.0 
+      REAL, PRIVATE :: evuaLyA = 0.0 
+      REAL, PRIVATE :: evuaLyB = 0.0 
+      REAL, PRIVATE :: evuaLzA = 0.0 
+      REAL, PRIVATE :: evuaLzB = 0.0 
+      REAL, PRIVATE :: evuaLx2a = 0.0 
+      REAL, PRIVATE :: evuaLx2b = 0.0 
+      REAL, PRIVATE :: evuaLy2a = 0.0 
+      REAL, PRIVATE :: evuaLy2b = 0.0
+      REAL, PRIVATE :: evuaLz2a = 0.0 
+      REAL, PRIVATE :: evuaLz2b = 0.0 
+      REAL, PRIVATE :: evuaFx = 0.0 
+      REAL, PRIVATE :: evuaFy = 0.0 
+      REAL, PRIVATE :: evuaFz = 0.0 
+      REAL, PRIVATE :: evuaTauXa = 0.0 
+      REAL, PRIVATE :: evuaTauXb = 0.0 
+      REAL, PRIVATE :: evuaTauYa = 0.0 
+      REAL, PRIVATE :: evuaTauYb = 0.0 
+      REAL, PRIVATE :: evuaTauZa = 0.0 
+      REAL, PRIVATE :: evuaTauZb = 0.0 
+      REAL, PRIVATE :: evuaEa = 0.0 
+      REAL, PRIVATE :: evuaEb = 0.0 
+      REAL, PRIVATE :: evuaMuA = 0.0 
+      REAL, PRIVATE :: evuaMuB = 0.0 
+      REAL, PRIVATE :: evuaL2a = 0.0 
+      REAL, PRIVATE :: evuaL2b = 0.0 
+      REAL, PRIVATE :: evuaTx = 0.0 
+      REAL, PRIVATE :: evuaTy = 0.0 
+      REAL, PRIVATE :: evuaTz = 0.0 
+      REAL, PRIVATE :: evuaSigXa = 0.0 
+      REAL, PRIVATE :: evuaSigXb = 0.0 
+      REAL, PRIVATE :: evuaSigYa = 0.0 
+      REAL, PRIVATE :: evuaSigYb = 0.0
+      REAL, PRIVATE :: evuaSigZa = 0.0 
+      REAL, PRIVATE :: evuaSigZb = 0.0 
+      REAL, PRIVATE :: evuaSigPx = 0.0 
+      REAL, PRIVATE :: evuaSigPy = 0.0 
+      REAL, PRIVATE :: evuaSigPz = 0.0 
       REAL, PRIVATE :: evuaSigLxA = 0.0 
       REAL, PRIVATE :: evuaSigLxB = 0.0 
       REAL, PRIVATE :: evuaSigLyA = 0.0 
@@ -143,252 +146,367 @@
       REAL, PRIVATE :: evuaSigLzA = 0.0 
       REAL, PRIVATE :: evuaSigLzB = 0.0 
 
-! --- VARIABLE DEFINITIONS ---------------------------------------------------------------------------------------------------------
+! --- VARIABLE DEFINITIONS ---------------------------------------------
 !
-!     evuaL2norm is a REAL, PRIVATE variable used to store the L^2-norm of the condensate wave function.
+!     evuaL2norm is a REAL, PRIVATE variable used to store the L^2-norm
+!        of the condensate wave function.
 !
-!     evuaX is a REAL, PRIVATE variable used to store the condensate's average position along the X-axis of the system. It may also
-!        be equivalently interpreted as the X-component of the condensate's center of mass.
+!     evuaX is a REAL, PRIVATE variable used to store the condensate's
+!        average position along the X-axis of the system. It may also be
+!        equivalently interpreted as the X-component of the condensate's
+!        center of mass.
 !
-!     evuaY is a REAL, PRIVATE variable used to store the condensate's average position along the Y-axis of the system. It may also
-!        be equivalently interpreted as the Y-component of the condensate's center of mass.
+!     evuaY is a REAL, PRIVATE variable used to store the condensate's
+!        average position along the Y-axis of the system. It may also be
+!        equivalently interpreted as the Y-component of the condensate's
+!        center of mass.
 !
-!     evuaZ is a REAL, PRIVATE variable used to store the condensate's average position along the Z-axis of the system. It may also
-!        be equivalently interpreted as the Z-component of the condensate's center of mass.
+!     evuaZ is a REAL, PRIVATE variable used to store the condensate's
+!        average position along the Z-axis of the system. It may also be
+!        equivalently interpreted as the Z-component of the condensate's
+!        center of mass.
 !
-!     evuaR is a REAL, PRIVATE variable used to store the condensate's average radial position in the XY-plane with respect to the
+!     evuaR is a REAL, PRIVATE variable used to store the condensate's
+!        average radial position in the XY-plane with respect to the 
 !        origin of the computational domain.
 !
-!     evuaX2a is a REAL, PRIVATE variable used to store the condensate's average squared position along the X-axis of the system 
-!        with respect to the origin of the computation domain.
+!     evuaX2a is a REAL, PRIVATE variable used to store the condensate's
+!        average squared position along the X-axis of the system with 
+!        respect to the origin of the computation domain.
 !
-!     evuaX2b is a REAL, PRIVATE variable used to store the condensate's average squared position along the X-axis of the system 
-!        with respect to its center of mass.
-!
-!     evuaY2a is a REAL, PRIVATE variable used to store the condensate's average squared position along the Y-axis of the system 
-!        with respect to the origin of the computation domain.
-!
-!     evuaY2b is a REAL, PRIVATE variable used to store the condensate's average squared position along the Y-axis of the system 
-!        with respect to its center of mass.
-!
-!     evuaZ2a is a REAL, PRIVATE variable used to store the condensate's average squared position along the Z-axis of the system 
-!        with respect to the origin of the computation domain.
-!
-!     evuaZ2b is a REAL, PRIVATE variable used to store the condensate's average squared position along the Z-axis of the system 
-!        with respect to its center of mass.
-!
-!     evuaR2a is a REAL, PRIVATE variable used to store the condensate's average squared radial position in the XY-plane with 
-!        respect to the origin of the computational domain.
-!
-!     evuaR2b is a REAL, PRIVATE variable used to store the condensate's average squared radial position in the XY-plane with 
+!     evuaX2b is a REAL, PRIVATE variable used to store the condensate's
+!        average squared position along the X-axis of the system with
 !        respect to its center of mass.
 !
-!     evuaIxxA is a REAL, PRIVATE variable used to store the average XX-component of the condensate's moment of inertia tensor with
+!     evuaY2a is a REAL, PRIVATE variable used to store the condensate's
+!        average squared position along the Y-axis of the system with
+!        respect to the origin of the computation domain.
+!
+!     evuaY2b is a REAL, PRIVATE variable used to store the condensate's
+!        average squared position along the Y-axis of the system with
+!        respect to its center of mass.
+!
+!     evuaZ2a is a REAL, PRIVATE variable used to store the condensate's
+!        average squared position along the Z-axis of the system with
+!        respect to the origin of the computation domain.
+!
+!     evuaZ2b is a REAL, PRIVATE variable used to store the condensate's
+!        average squared position along the Z-axis of the system with
+!        respect to its center of mass.
+!
+!     evuaR2a is a REAL, PRIVATE variable used to store the condensate's
+!        average squared radial position in the XY-plane with respect to
+!        the origin of the computational domain.
+!
+!     evuaR2b is a REAL, PRIVATE variable used to store the condensate's
+!        average squared radial position in the XY-plane with respect to
+!        its center of mass.
+!
+!     evuaIxxA is a REAL, PRIVATE variable used to store the average
+!        XX-component of the condensate's moment of inertia tensor with
 !        respect to the origin of the computational domian.
 !
-!     evuaIxxB is a REAL, PRIVATE variable used to store the average XX-component of the condensate's moment of inertia tensor with
+!     evuaIxxB is a REAL, PRIVATE variable used to store the average
+!        XX-component of the condensate's moment of inertia tensor with
 !        respect to its center of mass.
 !
-!     evuaIxyA is a REAL, PRIVATE variable used to store the average XY-component of the condensate's moment of inertia tensor with
+!     evuaIxyA is a REAL, PRIVATE variable used to store the average
+!        XY-component of the condensate's moment of inertia tensor with
 !        respect to the origin of the computational domian.
 !
-!     evuaIxyB is a REAL, PRIVATE variable used to store the average XY-component of the condensate's moment of inertia tensor with
+!     evuaIxyB is a REAL, PRIVATE variable used to store the average
+!        XY-component of the condensate's moment of inertia tensor with
 !        respect to its center of mass.
 !
-!     evuaIxzA is a REAL, PRIVATE variable used to store the average  XZ-component of the condensate's moment of inertia tensor with
+!     evuaIxzA is a REAL, PRIVATE variable used to store the average 
+!        XZ-component of the condensate's moment of inertia tensor with
 !        respect to the origin of the computational domian.
 !
-!     evuaIxzB is a REAL, PRIVATE variable used to store the average XZ-component of the condensate's moment of inertia tensor with
+!     evuaIxzB is a REAL, PRIVATE variable used to store the average
+!        XZ-component of the condensate's moment of inertia tensor with
 !        respect to its center of mass.
 !
-!     evuaIyyA is a REAL, PRIVATE variable used to store the average YY-component of the condensate's moment of inertia tensor with
+!     evuaIyyA is a REAL, PRIVATE variable used to store the average
+!        YY-component of the condensate's moment of inertia tensor with
 !        respect to the origin of the computational domian.
 !
-!     evuaIyyB is a REAL, PRIVATE variable used to store the average YY-component of the condensate's moment of inertia tensor with
+!     evuaIyyB is a REAL, PRIVATE variable used to store the average
+!        YY-component of the condensate's moment of inertia tensor with
 !        respect to its center of mass.
 !
-!     evuaIyzA is a REAL, PRIVATE variable used to store the average YZ-component of the condensate's moment of inertia tensor with
+!     evuaIyzA is a REAL, PRIVATE variable used to store the average
+!        YZ-component of the condensate's moment of inertia tensor with
 !        respect to the origin of the computational domian.
 !
-!     evuaIyzB is a REAL, PRIVATE variable used to store the average YZ-component of the condensate's moment of inertia tensor with
+!     evuaIyzB is a REAL, PRIVATE variable used to store the average
+!        YZ-component of the condensate's moment of inertia tensor with
 !        respect to its center of mass.
 !
-!     evuaIzzA is a REAL, PRIVATE variable used to store the average ZZ-component of the condensate's moment of inertia tensor with
+!     evuaIzzA is a REAL, PRIVATE variable used to store the average
+!        ZZ-component of the condensate's moment of inertia tensor with
 !        respect to the origin of the computational domian.
 !
-!     evuaIzzB is a REAL, PRIVATE variable used to store the average ZZ-component of the condensate's moment of inertia tensor with
+!     evuaIzzB is a REAL, PRIVATE variable used to store the average
+!        ZZ-component of the condensate's moment of inertia tensor with
 !        respect to its center of mass.
 !
-!     evuaVex is a REAL, PRIVATE variable used to store the average potential energy of the condensate due to an external potential
+!     evuaVex is a REAL, PRIVATE variable used to store the average
+!        potential energy of the condensate due to an external potential
 !        acting on it.
 !
-!     evuaVmf is a REAL, PRIVATE variable used to store the average potential energy of the condensate due to the mean-field 
+!     evuaVmf is a REAL, PRIVATE variable used to store the average
+!        potential energy of the condensate due to the mean-field 
 !        interaction between its atoms.
 !
-!     evuaPx is a REAL, PRIVATE variable used to store the condensate's average momentum along the X-axis of the system.
+!     evuaPx is a REAL, PRIVATE variable used to store the condensate's
+!        average momentum along the X-axis of the system.
 !
-!     evuaPy is a REAL, PRIVATE variable used to store the condensate's average momentum along the Y-axis of the system.
+!     evuaPy is a REAL, PRIVATE variable used to store the condensate's
+!        average momentum along the Y-axis of the system.
 !
-!     evuaPz is a REAL, PRIVATE variable used to store the condensate's average momentum along the Z-axis of the system.
+!     evuaPz is a REAL, PRIVATE variable used to store the condensate's
+!        average momentum along the Z-axis of the system.
 !
-!     evuaPx2 is a REAL, PRIVATE variable used to store the condensate's average squared moemntum along the X-axis of the system.
+!     evuaPx2 is a REAL, PRIVATE variable used to store the condensate's
+!        average squared moemntum along the X-axis of the system.
 !
-!     evuaPy2 is a REAL, PRIVATE variable used to store the condensate's average squared moemntum along the Y-axis of the system.
+!     evuaPy2 is a REAL, PRIVATE variable used to store the condensate's
+!        average squared moemntum along the Y-axis of the system.
 !
-!     evuaPz2 is a REAL, PRIVATE variable used to store the condensate's average squared moemntum along the Z-axis of the system.
+!     evuaPz2 is a REAL, PRIVATE variable used to store the condensate's
+!        average squared moemntum along the Z-axis of the system.
 !
-!     evuaLxA is a REAL, PRIVATE variable used to store the condensate's average angular momentum about the X-axis of the system 
-!       with respect to the origin of the computational domain.
+!     evuaLxA is a REAL, PRIVATE variable used to store the condensate's
+!        average angular momentum about the X-axis of the system with
+!        respect to the origin of the computational domain.
 !
-!     evuaLxB is a REAL, PRIVATE variable used to store the condensate's average angular momentum about the X-axis of the system 
-!        with respect to the condensate's center of mass.
+!     evuaLxB is a REAL, PRIVATE variable used to store the condensate's
+!        average angular momentum about the X-axis of the system with
+!        respect to the condensate's center of mass.
 !
-!     evuaLyA is a REAL, PRIVATE variable used to store the condensate's average angular momentum about the Y-axis of the system 
-!        with respect to the origin of the computational domain.
+!     evuaLyA is a REAL, PRIVATE variable used to store the condensate's
+!        average angular momentum about the Y-axis of the system with
+!        respect to the origin of the computational domain.
 !
-!     evuaLyB is a REAL, PRIVATE variable used to store the condensate's average angular momentum about the Y-axis of the system 
-!        with respect to the condensate's center of mass.
+!     evuaLyB is a REAL, PRIVATE variable used to store the condensate's
+!        average angular momentum about the Y-axis of the system with
+!        respect to the condensate's center of mass.
 !
-!     evuaLzA is a REAL, PRIVATE variable used to store the condensate's average angular momentum about the Z-axis of the system 
-!        with respect to the origin of the computational domain.
+!     evuaLzA is a REAL, PRIVATE variable used to store the condensate's
+!        average angular momentum about the Z-axis of the system with
+!        respect to the origin of the computational domain.
 !
-!     evuaLzB is a REAL, PRIVATE variable used to store the condensate's average angular momentum about the Z-axis of the system 
-!        with respect to the condensate's center of mass.
+!     evuaLzB is a REAL, PRIVATE variable used to store the condensate's
+!        average angular momentum about the Z-axis of the system with
+!        respect to the condensate's center of mass.
 !
-!     evuaLx2a is a REAL, PRIVATE variable used to store the condensate's average squared angular momentum about the X-axis of the 
-!        system with respect to the origin of the computational domain.
+!     evuaLx2a is a REAL, PRIVATE variable used to store the
+!        condensate's average squared angular momentum about the X-axis
+!        of the system with respect to the origin of the computational 
+!        domain.
 !
-!     evuaLx2b is a REAL, PRIVATE variable used to store the condensate's average squared angular momentum about the X-axis of the 
-!        system with respect to the condensate's center of mass.
+!     evuaLx2b is a REAL, PRIVATE variable used to store the
+!        condensate's average squared angular momentum about the X-axis
+!        of the system with respect to the condensate's center of mass.
 !
-!     evuaLy2a is a REAL, PRIVATE variable used to store the condensate's average squared angular momentum about the Y-axis of the 
-!        system with respect to the origin of the computational domain.
+!     evuaLy2a is a REAL, PRIVATE variable used to store the
+!        condensate's average squared angular momentum about the Y-axis
+!        of the system with respect to the origin of the computational
+!        domain.
 !
-!     evuaLy2b is a REAL, PRIVATE variable used to store the condensate's average squared angular momentum about the Y-axis of the 
-!        system with respect to the condensate's center of mass.
+!     evuaLy2b is a REAL, PRIVATE variable used to store the
+!        condensate's average squared angular momentum about the Y-axis
+!        of the system with respect to the condensate's center of mass.
 !
-!     evuaLz2a is a REAL, PRIVATE variable used to store the condensate's average squared angular momentum about the Z-axis of the 
-!        system with respect to the origin of the computational domain.
+!     evuaLz2a is a REAL, PRIVATE variable used to store the
+!        condensate's average squared angular momentum about the Z-axis
+!        of the system with respect to the origin of the computational
+!        domain.
 !
-!     evuaLz2b is a REAL, PRIVATE variable used to store the condensate's average squared angular momentum about the Z-axis of the 
-!        system with respect to the condensate's center of mass.
+!     evuaLz2b is a REAL, PRIVATE variable used to store the
+!        condensate's average squared angular momentum about the Z-axis
+!        of the system with respect to the condensate's center of mass.
 !
-!     evuaFx is a REAL, PRIVATE variable used to store the average force on the condensate along the X-axis of the system due to an
+!     evuaFx is a REAL, PRIVATE variable used to store the average force
+!        on the condensate along the X-axis of the system due to an
 !        external potential acting on the condenate.
 !
-!     evuaFy is a REAL, PRIVATE variable used to store the average force on the condensate along the Y-axis of the system due to an
+!     evuaFy is a REAL, PRIVATE variable used to store the average force
+!        on the condensate along the Y-axis of the system due to an
 !        external potential acting on the condenate.
 !
-!     evuaFz is a REAL, PRIVATE variable used to store the average force on the condensate along the Z-axis of the system due to an
+!     evuaFz is a REAL, PRIVATE variable used to store the average force
+!        on the condensate along the Z-axis of the system due to an
 !        external potential acting on the condenate.
 !
-!     evuaTauXa is a REAL, PRIVATE variable used to store the average torque on the condensate about the X-axis of the system due to
-!        and external potential acting on the condensate and measured with respect to the origin of the computational domain.
-!
-!     evuaTauXb is a REAL, PRIVATE variable used to store the average torque on the condensate about the X-axis of the system due to
-!        and external potential acting on the condensate and measured with respect to its center of mass.
-!
-!     evuaTauYa is a REAL, PRIVATE variable used to store the average torque on the condensate about the Y-axis of the system due to
-!        and external potential acting on the condensate and measured with respect to the origin of the computational domain.
-!
-!     evuaTauYb is a REAL, PRIVATE variable used to store the average torque on the condensate about the Y-axis of the system due to
-!        and external potential acting on the condensate and measured with respect to its center of mass.
-!
-!     evuaTauZa is a REAL, PRIVATE variable used to store the average torque on the condensate about the Z-axis of the system due to
-!        and external potential acting on the condensate and measured with respect to the origin of the computational domain.
-!
-!     evuaTauZb is a REAL, PRIVATE variable used to store the average torque on the condensate about the Z-axis of the system due to
-!        and external potential acting on the condensate and measured with respect to its center of mass.
-!
-!     evuaEa is a REAL, PRIVATE variable used to store the condensate's average total energy measured with respect to the origin of
-!        the computational domain.
-!
-!     evuaEb is a REAL, PRIVATE variable used to store the condensate's average total energy measured with respect to its center of
-!        mass.
-!
-!     evuaMuA is a REAL, PRIVATE variable used to store the chemical potential of the condensate as measured with respect to the 
-!        origin of the computational domain.
-!      
-!     evuaMuB is a REAL, PRIVATE variable used to store the chemical potential of the condensate as measured with respect to its
-!        center of mass. 
-!
-!     evuaL2a is a REAL, PRIVATE variable used to store the average squared total angular momentum of the condensate as measured
+!     evuaTauXa is a REAL, PRIVATE variable used to store the average
+!        torque on the condensate about the X-axis of the system due to
+!        and external potential acting on the condensate and measured
 !        with respect to the origin of the computational domain.
 !
-!     evuaL2b is a REAL, PRIVATE variable used to store the average squared total angular momentum of the condensate as measured
+!     evuaTauXb is a REAL, PRIVATE variable used to store the average
+!        torque on the condensate about the X-axis of the system due to
+!        and external potential acting on the condensate and measured
 !        with respect to its center of mass.
 !
-!     evuaTx is a REAL, PRIVATE variable used to store the average kinetic energy of the condensate along the X-axis of the system.
+!     evuaTauYa is a REAL, PRIVATE variable used to store the average
+!        torque on the condensate about the Y-axis of the system due to
+!        and external potential acting on the condensate and measured
+!        with respect to the origin of the computational domain.
 !
-!     evuaTy is a REAL, PRIVATE variable used to store the average kinetic energy of the condensate along the Y-axis of the system.
+!     evuaTauYb is a REAL, PRIVATE variable used to store the average
+!        torque on the condensate about the Y-axis of the system due to
+!        and external potential acting on the condensate and measured
+!        with respect to its center of mass.
 !
-!     evuaTz is a REAL, PRIVATE variable used to store the average kinetic energy of the condensate along the Z-axis of the system.
+!     evuaTauZa is a REAL, PRIVATE variable used to store the average
+!        torque on the condensate about the Z-axis of the system due to
+!        and external potential acting on the condensate and measured
+!        with respect to the origin of the computational domain.
 !
-!     evuaSigXa is a REAL, PRIVATE variable used to store the condensate's position uncertainty along the X-axis of the system and 
-!        measured with respect to the origin of the computational domain.
+!     evuaTauZb is a REAL, PRIVATE variable used to store the average
+!        torque on the condensate about the Z-axis of the system due to
+!        and external potential acting on the condensate and measured
+!        with respect to its center of mass.
 !
-!     evuaSigXa is a REAL, PRIVATE variable used to store the condensate's position uncertainty along the X-axis of the system and 
-!        measured with respect to the origin of the computational domain.
+!     evuaEa is a REAL, PRIVATE variable used to store the condensate's
+!        average total energy measured with respect to the origin of
+!        the computational domain.
 !
-!     evuaSigXb is a REAL, PRIVATE variable used to store the condensate's position uncertainty along the X-axis of the system and 
-!        measured with respect to the condensate's center of mass.
+!     evuaEb is a REAL, PRIVATE variable used to store the condensate's
+!        average total energy measured with respect to its center of
+!        mass.
 !
-!     evuaSigYa is a REAL, PRIVATE variable used to store the condensate's position uncertainty along the Y-axis of the system and 
-!        measured with respect to the origin of the computational domain.
+!     evuaMuA is a REAL, PRIVATE variable used to store the chemical
+!        potential of the condensate as measured with respect to the 
+!        origin of the computational domain.
+!      
+!     evuaMuB is a REAL, PRIVATE variable used to store the chemical
+!        potential of the condensate as measured with respect to its
+!        center of mass. 
 !
-!     evuaSigYb is a REAL, PRIVATE variable used to store the condensate's position uncertainty along the Y-axis of the system and 
-!        measured with respect to the condensate's center of mass.
+!     evuaL2a is a REAL, PRIVATE variable used to store the average
+!        squared total angular momentum of the condensate as measured
+!        with respect to the origin of the computational domain.
 !
-!     evuaSigZa is a REAL, PRIVATE variable used to store the condensate's position uncertainty along the Z-axis of the system and 
-!        measured with respect to the origin of the computational domain.
+!     evuaL2b is a REAL, PRIVATE variable used to store the average
+!        squared total angular momentum of the condensate as measured
+!        with respect to its center of mass.
 !
-!     evuaSigZb is a REAL, PRIVATE variable used to store the condensate's position uncertainty along the Z-axis of the system and 
-!        measured with respect to the condensate's center of mass.
+!     evuaTx is a REAL, PRIVATE variable used to store the average
+!        kinetic energy of the condensate along the X-axis of the
+!        system.
 !
-!     evuaSigPx is a REAL, PRIVATE variable used to store the condensate's momentum uncertainty along the X-axis of the system.
+!     evuaTy is a REAL, PRIVATE variable used to store the average
+!        kinetic energy of the condensate along the Y-axis of the
+!        system.
 !
-!     evuaSigPy is a REAL, PRIVATE variable used to store the condensate's momentum uncertainty along the Y-axis of the system.
+!     evuaTz is a REAL, PRIVATE variable used to store the average
+!        kinetic energy of the condensate along the Z-axis of the
+!        system.
 !
-!     evuaSigPz is a REAL, PRIVATE variable used to store the condensate's momentum uncertainty along the Z-axis of the system.
+!     evuaSigXa is a REAL, PRIVATE variable used to store the
+!        condensate's position uncertainty along the X-axis of the
+!        system and measured with respect to the origin of the
+!        computational domain.
 !
-!     evuaSigLxA is a REAL, PRIVATE variable used to store the uncertainty in the angular momentum of the condensate about the 
-!        X-axis of the system and measured with respect to the origin of the computational domain.
+!     evuaSigXa is a REAL, PRIVATE variable used to store the
+!        condensate's position uncertainty along the X-axis of the
+!        system and measured with respect to the origin of the
+!        computational domain.
 !
-!     evuaSigLxB is a REAL, PRIVATE variable used to store the uncertainty in the angular momentum of the condensate about the 
-!        X-axis of the system and measured with respect to the condensate's center of mass.
+!     evuaSigXb is a REAL, PRIVATE variable used to store the
+!        condensate's position uncertainty along the X-axis of the
+!        system and measured with respect to the condensate's center of
+!        mass.
 !
-!     evuaSigLyA is a REAL, PRIVATE variable used to store the uncertainty in the angular momentum of the condensate about the 
-!        Y-axis of the system and measured with respect to the origin of the computational domain.
+!     evuaSigYa is a REAL, PRIVATE variable used to store the
+!        condensate's position uncertainty along the Y-axis of the
+!        system and measured with respect to the origin of the
+!        computational domain.
 !
-!     evuaSigLyB is a REAL, PRIVATE variable used to store the uncertainty in the angular momentum of the condensate about the 
-!        Y-axis of the system and measured with respect to the condensate's center of mass.
+!     evuaSigYb is a REAL, PRIVATE variable used to store the
+!        condensate's position uncertainty along the Y-axis of the
+!        system and measured with respect to the condensate's center of
+!        mass.
 !
-!     evuaSigLzA is a REAL, PRIVATE variable used to store the uncertainty in the angular momentum of the condensate about the 
-!        Z-axis of the system and measured with respect to the origin of the computational domain.
+!     evuaSigZa is a REAL, PRIVATE variable used to store the
+!        condensate's position uncertainty along the Z-axis of the
+!        system and measured with respect to the origin of the
+!        computational domain.
 !
-!     evuaSigLzB is a REAL, PRIVATE variable used to store the uncertainty in the angular momentum of the condensate about the 
-!        Z-axis of the system and measured with respect to the condensate's center of mass.
+!     evuaSigZb is a REAL, PRIVATE variable used to store the
+!        condensate's position uncertainty along the Z-axis of the
+!        system and measured with respect to the condensate's center of
+!        mass.
 !
-! --- SUBROUTINE DECLARATIONS ------------------------------------------------------------------------------------------------------
+!     evuaSigPx is a REAL, PRIVATE variable used to store the
+!        condensate's momentum uncertainty along the X-axis of the
+!        system.
+!
+!     evuaSigPy is a REAL, PRIVATE variable used to store the
+!        condensate's momentum uncertainty along the Y-axis of the
+!        system.
+!
+!     evuaSigPz is a REAL, PRIVATE variable used to store the
+!        condensate's momentum uncertainty along the Z-axis of the
+!        system.
+!
+!     evuaSigLxA is a REAL, PRIVATE variable used to store the
+!        uncertainty in the angular momentum of the condensate about the 
+!        X-axis of the system and measured with respect to the origin of
+!        the computational domain.
+!
+!     evuaSigLxB is a REAL, PRIVATE variable used to store the
+!        uncertainty in the angular momentum of the condensate about the 
+!        X-axis of the system and measured with respect to the 
+!        condensate's center of mass.
+!
+!     evuaSigLyA is a REAL, PRIVATE variable used to store the
+!        uncertainty in the angular momentum of the condensate about the 
+!        Y-axis of the system and measured with respect to the origin of
+!        the computational domain.
+!
+!     evuaSigLyB is a REAL, PRIVATE variable used to store the
+!        uncertainty in the angular momentum of the condensate about the 
+!        Y-axis of the system and measured with respect to the
+!        condensate's center of mass.
+!
+!     evuaSigLzA is a REAL, PRIVATE variable used to store the
+!        uncertainty in the angular momentum of the condensate about the 
+!        Z-axis of the system and measured with respect to the origin of
+!        the computational domain.
+!
+!     evuaSigLzB is a REAL, PRIVATE variable used to store the
+!        uncertainty in the angular momentum of the condensate about the 
+!        Z-axis of the system and measured with respect to the
+!        condensate's center of mass.
+!
+! --- SUBROUTINE DECLARATIONS ------------------------------------------
        
       PUBLIC :: evua_compute_base
       PUBLIC :: evua_compute_derived
       PUBLIC :: evua_write_all
       PUBLIC :: evua_normalize
 
-! --- SUBROUTINE DEFINITIONS -------------------------------------------------------------------------------------------------------
+! --- SUBROUTINE DEFINITIONS -------------------------------------------
 !
-!     evua_compute_base is a PUBLIC SUBROUTINE that calls functions which computes base quantities associated with a wave function.
+!     evua_compute_base is a PUBLIC SUBROUTINE that calls functions
+!        which computes base quantities associated with a wave function.
 !
-!     evua_compute_derived is a PUBLIC SUBROUTINE that computes quantities which are derived from base quantities associated with a
-!        wave function.
+!     evua_compute_derived is a PUBLIC SUBROUTINE that computes
+!        quantities which are derived from base quantities associated
+!        with a wave function.
 !
-!     evua_write_all is a PUBLIC SUBROUTINE that formats and writes all quantities, both base and derived, to standard output.
+!     evua_write_all is a PUBLIC SUBROUTINE that formats and writes all
+!        quantities, both base and derived, to standard output.
 !
-!     evua_normalize is a PULIC SUBROUTINE that may be used to normalize a wave function. It is currently used only to re-normalize
-!        the wave function after every time step when performing imaginary time propagation.
+!     evua_normalize is a PULIC SUBROUTINE that may be used to normalize
+!        a wave function. It is currently used only to re-normalize the
+!        wave function after every time step when performing imaginary
+!        time propagation.
 !
-! --- FUNCTION DECLARATIONS --------------------------------------------------------------------------------------------------------
+! --- FUNCTION DECLARATIONS --------------------------------------------
 
       PRIVATE :: evua_l2_norm_3d_rect
       PRIVATE :: evua_x_3d_rect
