@@ -22,7 +22,7 @@
 !     Zero Dirichlet boundary conditions are assumed to apply at the
 !     boundary of the computational domain at all times in any given
 !     simulation. As a result, gpse is best suited for investigating
-!     BECs confined within externally applied trapping potentials where
+!     BECs confined within externally applied trapping potentials, where
 !     the condensate density decreases to zero at the boundary of the
 !     computational domain.
 !
@@ -71,7 +71,7 @@
 !     17. Explore OpenMP scheduling options.
 !     18. Create integrated, automated test infrastructure.
 !     19. Test automatic differentiation.
-!     20. Segment limited I/O output into multiple files, e.g. one file per expectation value.
+!     20. Segment limited I/O output into multiple files, e.g. one file per expectation value; maybe a few per file?
 !     21. Support Cartesian, regular, rectilinear and curvilinear grids.
 !     22. Compare performance of array functions vs. passing by reference to subroutines, e.g. in computing potentials
 !
@@ -89,24 +89,24 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, May 18th, 2019
+!     Monday, July 8th, 2019
 !
 ! ----------------------------------------------------------------------
 
       PROGRAM GPSE
-
 ! --- MODULE DECLARATIONS ----------------------------------------------
 
       USE, INTRINSIC :: ISO_FORTRAN_ENV
-      USE            :: MPI
-      USE            :: EVUA
-      USE            :: GRID
-      USE            :: GRK4
-      USE            :: IO
-      USE            :: MATH
-      USE            :: PSI
-      USE            :: ROT
-      USE            :: VEX
+      USE :: MPI
+      USE :: EVUA
+      USE :: GRID
+      USE :: GRK4
+      USE :: IO
+      USE :: MATH
+      USE :: PMCA
+      USE :: PSI
+      USE :: ROT
+      USE :: VEX
 
 ! --- MODULE DEFINITIONS -----------------------------------------------
 !
@@ -137,6 +137,10 @@
 !     MATH is a custom Fortran module written to define well-know
 !        mathematical constants and compute specialized functions.
 !
+!     PMCA is a custom Fortran module written to compute the probability
+!        and mass currents from a single-particle and/or single-component 
+!        Bose-Einstein condensate wave function.
+!
 !     PSI is a custom Fortran module written to compute analytic
 !        solutions of the Schrodinger and Gross-Pitaevskii equations,
 !        which may be used as initial conditions for simulations.
@@ -155,9 +159,9 @@
 
 ! --- PARAMETER DECLARATIONS  ------------------------------------------
 
-      CHARACTER(LEN=*), PARAMETER :: GPSE_VERSION_NUMBER = '0.6.0'
+      CHARACTER(LEN=*), PARAMETER :: GPSE_VERSION_NUMBER = '0.6.1'
       CHARACTER(LEN=*), PARAMETER :: GPSE_LAST_UPDATED = &
-         & 'Saturday, May 18th, 2019'
+         & 'Monday, July 8th, 2019'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -180,6 +184,7 @@
 
       LOGICAL :: itpOn = .FALSE.
       LOGICAL :: chkptOn = .FALSE.
+      LOGICAL :: pmcaOn = .FALSE.
 
       CHARACTER(LEN=8) :: startDate = 'NONE'
       CHARACTER(LEN=10) :: startTime = 'NONE'
@@ -198,16 +203,22 @@
       INTEGER :: nXa = -1
       INTEGER :: nXb = -1
       INTEGER :: nXbc = -1
+      INTEGER :: nXi = -1
+      INTEGER :: nXf = -1
       INTEGER :: dNx = -1
       INTEGER :: nY = -1
       INTEGER :: nYa = -1
       INTEGER :: nYb = -1
       INTEGER :: nYbc = -1
+      INTEGER :: nYi = -1
+      INTEGER :: nYf = -1
       INTEGER :: dNy = -1
       INTEGER :: nZ = -1
       INTEGER :: nZa = -1
       INTEGER :: nZb = -1
       INTEGER :: nZbc = -1
+      INTEGER :: nZi = -1
+      INTEGER :: nZf = -1
       INTEGER :: dNz = -1
       INTEGER :: nXpsi = -1
       INTEGER :: nYpsi = -1
@@ -607,6 +618,11 @@
       REAL, ALLOCATABLE, DIMENSION(:, : ) :: Psi2a
       REAL, ALLOCATABLE, DIMENSION(:, : ) :: Psi2b
 
+      REAL, ALLOCATABLE, DIMENSION(:,:,:) :: Rho3a
+      REAL, ALLOCATABLE, DIMENSION(:,:,:) :: Phi3a
+      REAL, ALLOCATABLE, DIMENSION(:,:,:,:) :: V3a
+      REAL, ALLOCATABLE, DIMENSION(:,:,:,:) :: J3a
+
       COMPLEX, ALLOCATABLE, DIMENSION(:, :, :) :: K1
       COMPLEX, ALLOCATABLE, DIMENSION(:, :, :) :: K2
       COMPLEX, ALLOCATABLE, DIMENSION(:, :, :) :: K3
@@ -636,10 +652,13 @@
 !        of the grid points that define the computational domain.
 !
 !     Za is a REAL-valued, rank-one array that stores the z-coordinates
-!        of the grid points that definte the computational domain.
+!        of the grid points that define the local computational domain.
 !
 !     Zb is a REAL-valued, rank-one array that stores the z-coordinates
-!        of the grid points that definte the computational domain.
+!        of the grid points that define the local computational domain.
+!
+!     Zc is a REAL-valued, rank-one array that stores the z-coordinates
+!        of the grid points that define the global computational domain.
 !
 !     Omega is a REAL-valued, rank-one array that stores the computed
 !        values of the time-varying angular velocity vector of the
@@ -682,9 +701,9 @@
 !
 ! --- NAMELIST DECLARATIONS --------------------------------------------
 
-      NAMELIST /gpseIn/ itpOn, chkptOn, rk4Lambda, fdOrder, nTsteps, &
-         & nTwrite, nX, nY, nZ, dNx, dNy, dNz, t0, tF, xO, yO, zO, &
-         & dT, dX, dY, dZ, xOrrf, yOrrf, zOrrf, wX, wY, wZ, gS, &
+      NAMELIST /gpseIn/ itpOn, chkptOn, pmcaOn, rk4Lambda, fdOrder, &
+         & nTsteps, nTwrite, nX, nY, nZ, dNx, dNy, dNz, t0, tF, xO, yO,&
+         & zO, dT, dX, dY, dZ, xOrrf, yOrrf, zOrrf, wX, wY, wZ, gS, &
          & psiInput, psiOutput, psiFileNo, psiFileNoChkpt, psiInit, &
          & nXpsi, nYpsi, nZpsi, nRpsi, mLpsi, xOpsi, yOpsi, zOpsi, &
          & rOpsi, wXpsi, wYpsi, wZpsi, wRpsi, pXpsi, pYpsi, pZpsi, &
@@ -699,48 +718,51 @@
 !
 ! --- BEGIN MAIN PROGRAM -----------------------------------------------
 
-      CALL MPI_INIT_THREAD ( MPI_THREAD_SINGLE , mpiProvided , mpiError )
-      IF ( mpiError /= MPI_SUCCESS ) THEN
+      CALL MPI_INIT_THREAD(MPI_THREAD_SINGLE, mpiProvided, mpiError)
+      IF (mpiError /= MPI_SUCCESS) THEN
 
-         WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : ERROR - MPI_INIT_THREAD failed. Calling MPI_ABORT.'
-         CALL MPI_ABORT ( MPI_COMM_WORLD , mpiErrorCode , mpiError )
+         WRITE(UNIT=ERROR_UNIT, FMT=*) &
+            & 'gpse: ERROR - MPI_INIT_THREAD failed. Calling MPI_ABORT.'
+         CALL MPI_ABORT(MPI_COMM_WORLD, mpiErrorCode, mpiError)
          STOP
 
       END IF
-      CALL MPI_COMM_SIZE ( MPI_COMM_WORLD , mpiProcesses , mpiError )
-      CALL MPI_COMM_RANK ( MPI_COMM_WORLD , mpiRank , mpiError )
+      CALL MPI_COMM_SIZE(MPI_COMM_WORLD, mpiProcesses, mpiError)
+      CALL MPI_COMM_RANK(MPI_COMM_WORLD, mpiRank, mpiError)
 
-      ALLOCATE ( StartValues ( 8 ) )
-      ALLOCATE ( StopValues  ( 8 ) )
-      CALL DATE_AND_TIME ( startDate , startTime , startZone , StartValues )
+      ALLOCATE(StartValues(8))
+      ALLOCATE(StopValues(8))
+      CALL DATE_AND_TIME(startDate, startTime, startZone, StartValues)
 
-      ALLOCATE ( MpiStatus ( MPI_STATUS_SIZE ) )
+      ALLOCATE(MpiStatus(MPI_STATUS_SIZE))
 
-!$OMP PARALLEL DEFAULT ( SHARED )
-
-      !ompThreads = OMP_GET_NUM_THREADS ( )
-
+!$OMP PARALLEL DEFAULT(SHARED)
+      !ompThreads = OMP_GET_NUM_THREADS()
 !$OMP END PARALLEL
 
-      IF ( mpiRank == MPI_MASTER ) THEN
+      IF (mpiRank == MPI_MASTER) THEN
 
-         CALL gpse_read_stdin ( 'gpse.input' , 500 )
-         CALL grid_boundary_condition_size ( fdOrder , nXbc , nYbc , nZbc )
-         CALL gpse_write_stdout_header ( )
+         CALL gpse_read_stdin( 'gpse.input', 500)
+         CALL grid_boundary_condition_size(fdOrder, nXbc, nYbc, nZbc)
+         CALL gpse_write_stdout_header()
 
       END IF
-      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
 
-      CALL mpi_select_default_kinds ( )
-      CALL mpi_bcast_inputs ( MPI_MASTER , mpiInt , mpiReal , mpiCmplx , mpiError )
+      CALL MPI_BARRIER(MPI_COMM_WORLD, mpiError)
 
-      IF ( itpOn .EQV. .TRUE. ) THEN ! run simulation using imaginary time propagation
+      CALL mpi_select_default_kinds()
+      CALL mpi_bcast_inputs(MPI_MASTER, mpiInt, mpiReal, mpiCmplx, &
+         & mpiError)
 
-         dTz = CMPLX ( 0.0 , -dT )
+!     run simulation using imaginary time propagation
+      IF (itpOn .EQV. .TRUE.) THEN
 
-      ELSE ! run simulation normally
+         dTz = CMPLX(0.0, -dT)
 
-         dTz = CMPLX ( dT , 0.0 )
+!     run simulation in real (normal) time
+      ELSE
+
+         dTz = CMPLX(dT, 0.0)
 
       END IF
 
@@ -748,14 +770,18 @@
       nXb = nX
       nYa = 1
       nYb = nY
-      nZa = 1 + mpiRank * FLOOR ( REAL ( nZ / mpiProcesses ) )
-      IF ( ( mpiRank + 1 ) == mpiProcesses ) THEN ! include any remaining z-axis grid points on last MPI process
+      nZa = 1 + mpiRank * FLOOR(REAL(nZ / mpiProcesses))
 
-         nZb = ( mpiRank + 1 ) * FLOOR ( REAL ( nZ / mpiProcesses ) ) + MODULO ( nZ , mpiProcesses )
+!     include any remaining z-axis grid points on last MPI process
+      IF ((mpiRank + 1) == mpiProcesses) THEN
 
-      ELSE ! all other MPI processes have same number of z-axis grid points
+         nZb = (mpiRank + 1) * FLOOR(REAL(nZ / mpiProcesses)) &
+            & + MODULO(nZ, mpiProcesses)
 
-         nZb = ( mpiRank + 1 ) * FLOOR ( REAL ( nZ / mpiProcesses ) )
+!     all other MPI processes have same number of z-axis grid points
+      ELSE
+
+         nZb = (mpiRank + 1) * FLOOR(REAL(nZ / mpiProcesses))
 
       END IF
 
@@ -763,19 +789,52 @@
       wYo = wY
       wZo = wZ
 
-      ALLOCATE ( Xa ( nXa - nXbc : nXb + nXbc ) )
-      ALLOCATE ( Ya ( nYa - nYbc : nYb + nYbc ) )
-      ALLOCATE ( Za ( nZa - nZbc : nZb + nZbc ) )
-      ALLOCATE ( Zb ( nZa - nZbc : nZb + nZbc ) )
-      ALLOCATE ( Zc ( 1 - nZbc : nZ + nZbc ) )
-      ALLOCATE ( Omega ( 3 ) )
-      ALLOCATE ( Vex3a ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
-      ALLOCATE ( K1 ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
-      ALLOCATE ( K2 ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
-      ALLOCATE ( K3 ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
-      ALLOCATE ( K4 ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
-      ALLOCATE ( Psi3a ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
-      ALLOCATE ( Psi3b ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ) )
+      ALLOCATE(Xa(nXa - nXbc : nXb + nXbc))
+      ALLOCATE(Ya(nYa - nYbc : nYb + nYbc))
+      ALLOCATE(Za(nZa - nZbc : nZb + nZbc))
+      ALLOCATE(Zb(nZa - nZbc : nZb + nZbc))
+      ALLOCATE(Zc(1 - nZbc : nZ + nZbc))
+      ALLOCATE(Omega(3))
+      ALLOCATE(Vex3a(nXa - nXbc : nXb + nXbc, &
+                   & nYa - nYbc : nYb + nYbc, &
+                   & nZa - nZbc : nZb + nZbc))
+      ALLOCATE(K1(nXa - nXbc : nXb + nXbc, &
+                & nYa - nYbc : nYb + nYbc, &
+                & nZa - nZbc : nZb + nZbc))
+      ALLOCATE(K2(nXa - nXbc : nXb + nXbc, &
+                & nYa - nYbc : nYb + nYbc, &
+                & nZa - nZbc : nZb + nZbc))
+      ALLOCATE(K3(nXa - nXbc : nXb + nXbc, &
+                & nYa - nYbc : nYb + nYbc, &
+                & nZa - nZbc : nZb + nZbc))
+      ALLOCATE(K4(nXa - nXbc : nXb + nXbc, &
+                & nYa - nYbc : nYb + nYbc, &
+                & nZa - nZbc : nZb + nZbc))
+      ALLOCATE(Psi3a(nXa - nXbc : nXb + nXbc, &
+                   & nYa - nYbc : nYb + nYbc, &
+                   & nZa - nZbc : nZb + nZbc))
+      ALLOCATE(Psi3b(nXa - nXbc : nXb + nXbc, &
+                   & nYa - nYbc : nYb + nYbc, &
+                   & nZa - nZbc : nZb + nZbc))
+
+      IF (pmcaOn .EQV. .TRUE.) THEN
+
+         ALLOCATE(Rho3a(nXa - nXbc : nXb + nXbc, &
+                        & nYa - nYbc : nYb + nYbc, &
+                        & nZa - nZbc : nZb + nZbc))
+         ALLOCATE(Phi3a(nXa - nXbc : nXb + nXbc, &
+                      & nYa - nYbc : nYb + nYbc, &
+                      & nZa - nZbc : nZb + nZbc))
+         ALLOCATE(V3a(3, & 
+                         & nXa - nXbc : nXb + nXbc, &
+                         & nYa - nYbc : nYb + nYbc, &
+                         & nZa - nZbc : nZb + nZbc))
+         ALLOCATE(J3a(3, &
+                         & nXa - nXbc : nXb + nXbc, &
+                         & nYa - nYbc : nYb + nYbc, &
+                         & nZa - nZbc : nZb + nZbc))
+
+      END IF
 
       Xa = 0.0
       Ya = 0.0
@@ -784,56 +843,64 @@
       Zc = 0.0
       Omega = 0.0
       Vex3a = 0.0
-      K1 = CMPLX ( 0.0 , 0.0 )
-      K2 = CMPLX ( 0.0 , 0.0 )
-      K3 = CMPLX ( 0.0 , 0.0 )
-      K4 = CMPLX ( 0.0 , 0.0 )
-      Psi3a = CMPLX ( 0.0 , 0.0 )
-      Psi3b = CMPLX ( 0.0 , 0.0 )
+      K1 = CMPLX(0.0, 0.0)
+      K2 = CMPLX(0.0, 0.0)
+      K3 = CMPLX(0.0, 0.0)
+      K4 = CMPLX(0.0, 0.0)
+      Psi3a = CMPLX(0.0, 0.0)
+      Psi3b = CMPLX(0.0, 0.0)
 
-      CALL grid_regular_axis ( nX , nXa , nXb , nXbc , xO , dX , Xa ) 
-      CALL grid_regular_axis ( nY , nYa , nYb , nYbc , yO , dY , Ya ) 
-      CALL grid_regular_axis ( nZ , nZa , nZb , nZbc , zO , dZ , Za )
-      CALL grid_regular_axis ( nZ , 1 , nZ , nZbc , zO , dZ , Zc )
+      CALL grid_regular_axis(nX, nXa, nXb, nXbc, xO, dX, Xa) 
+      CALL grid_regular_axis(nY, nYa, nYb, nYbc, yO, dY, Ya) 
+      CALL grid_regular_axis(nZ, nZa, nZb, nZbc, zO, dZ, Za)
+      CALL grid_regular_axis(nZ, 1, nZ, nZbc, zO, dZ, Zc )
 
-      IF ( psiInput == 0 ) THEN ! compute initial wave function from available analytic expression
+!     compute initial wave function from available analytic expression
+      IF (psiInput == 0) THEN
 
-         CALL psi_init ( psiInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , nXpsi , nYpsi , nZpsi , nRpsi , mLpsi ,&
-            & xOpsi , yOpsi , zOpsi , rOpsi , wXpsi , wYpsi , wZpsi , wRpsi , Xa , Ya , Za , Psi3a )
-         CALL evua_normalize ( MPI_MASTER , mpiReal , mpiError , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , dY , dZ , Psi3a )
+         CALL psi_init(psiInit, nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
+            & nZb, nZbc, nXpsi, nYpsi, nZpsi, nRpsi, mLpsi, xOpsi, &
+            & yOpsi, zOpsi, rOpsi, wXpsi, wYpsi, wZpsi, wRpsi, Xa, Ya, &
+            & Za, Psi3a)
+         CALL evua_normalize(MPI_MASTER, mpiReal, mpiError, nXa, nXb, &
+            & nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, dX, dY, dZ, Psi3a)
 
-      ELSE IF ( psiInput == 1 ) THEN ! read initial wave function from binary file on MPI_MASTER
+!     read initial wave function from binary file on MPI_MASTER
+      ELSE IF (psiInput == 1) THEN
 
          psiFilePos = 1 ! initialize file position
 
-         IF ( mpiRank == MPI_MASTER ) THEN ! read and initialize first block of wave function values from binary file on MPI_MASTER
-
-            CALL io_read_bin_psi ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3a )
-
+!        read and initialize first block of wave function values from 
+!        binary file on MPI_MASTER
+         IF (mpiRank == MPI_MASTER) THEN
+            CALL io_read_bin_psi(psiFileNo, psiFilePos, nXa, nXb, nXbc,&
+               & nYa, nYb, nYbc, nZa, nZb, nZbc, Psi3a)
          END IF
 
-         DO mpiDestination = 1 , mpiProcesses - 1 ! loop over mpiDesination ranks that are not equal to MPI_MASTER
-
-            IF ( mpiRank == MPI_MASTER ) THEN ! read in next block of wave function values from binary file on MPI_MASTER
-
-               CALL io_read_bin_psi ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3b )
-
+!        loop over mpiDesination ranks that are not equal to MPI_MASTER
+         DO mpiDestination = 1, mpiProcesses - 1
+!           read in next block of wave function values from binary file
+!           on MPI_MASTER
+            IF (mpiRank == MPI_MASTER) THEN
+               CALL io_read_bin_psi(psiFileNo, psiFilePos, nXa, nXb, &
+                  & nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, Psi3b)
             END IF
 !           send read block from MPI_MASTER to mpiRank equal to mpiDestination
-            CALL mpi_copy_psi ( mpiRank , MPI_MASTER , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , &
-               & Psi3b )
-
+            CALL mpi_copy_psi(mpiRank, MPI_MASTER, mpiDestination, nXa,&
+               & nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, Psi3b)
          END DO
 
-         IF ( mpiRank /= MPI_MASTER ) THEN ! after all blocks have been sent, copy wave function values into Psi3a; 
-                                           ! MPI_MASTER block was read into Psi3a directly
+!        after all blocks have been sent, copy wave function values into Psi3a; 
+!        MPI_MASTER block was read into Psi3a directly
+         IF (mpiRank /= MPI_MASTER) THEN
             Psi3a = Psi3b
-
          END IF
- 
-      ELSE IF ( psiInput == 3 ) THEN ! Use simple parallel I/O to read in the complete wave function simultaneously from many
-                                     ! legacy VTK files that only contain a single, one-dimensional slab of the wave function
-                                     ! overseen by an MPI process
+
+!     Use simple parallel I/O to read in the complete wave function
+!     simultaneously from many legacy VTK files that only contain a 
+!     single, one-dimensional slab of the wave function overseen by an 
+!     MPI process
+      ELSE IF (psiInput == 3) THEN 
 
          CALL io_read_vtk('psi-', psiFileNo, mpiRank, nX, nXa, nXb, &
             & nXbc, dNx, nY, nYa, nYb, nYbc, dNy, nZ, nZa, nZb, nZbc,&
@@ -841,28 +908,33 @@
 
       ELSE
 
-         IF ( mpiRank == MPI_MASTER ) THEN
-
-            WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : ERROR - psiInput not reognized.'
+         IF (mpiRank == MPI_MASTER) THEN
+            WRITE(UNIT = ERROR_UNIT, FMT = *) &
+               & 'gpse : ERROR - psiInput not reognized.'
             STOP
-
          END IF
 
       END IF
-      CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3a )
-      CALL psi_boost ( nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOpsi , yOpsi , zOpsi , pXpsi , pYpsi , pZpsi , &
-         & Xa , Ya , Za , Psi3a )
 
-      IF ( vexInput == 0 ) THEN ! compute initial external potential from known analytic expression
+      CALL mpi_exchange_ghosts(nX, nXa, nXb, nXbc, nY, nYa, nYb, nYbc, &
+         & nZ, nZa, nZb, nZbc, Psi3a)
 
-         CALL vex_init ( vexInit , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOvex , yOvex , zOvex , rOvex , fXvex ,&
-            & fYvex , fZvex , wXvex , wYvex , wZvex , wRvex , Xa , Ya , Za , Vex3a )
+      CALL psi_boost(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, &
+         & xOpsi, yOpsi, zOpsi, pXpsi, pYpsi, pZpsi, Xa, Ya, Za, Psi3a)
+
+!     compute initial external potential from known analytic expression
+      IF (vexInput == 0) THEN
+
+         CALL vex_init(vexInit, nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
+            & nZb, nZbc, xOvex, yOvex, zOvex, rOvex, fXvex, fYvex, &
+            & fZvex, wXvex, wYvex, wZvex, wRvex, Xa, Ya, Za, Vex3a)
 
       ELSE
 
-         IF ( mpiRank == MPI_MASTER ) THEN
+         IF (mpiRank == MPI_MASTER) THEN
 
-            WRITE ( UNIT = ERROR_UNIT , FMT = * ) 'gpse : ERROR - vexInput not recognized.'
+            WRITE(UNIT = ERROR_UNIT, FMT = *) &
+               & 'gpse : ERROR - vexInput not recognized.'
             STOP
 
          END IF 
@@ -872,26 +944,135 @@
       psiFileNo = 1000
       vexFileNo = 1000
 
-! --- BEGIN MAIN TIME PROPAGATION LOOP ---------------------------------------------------------------------------------------------
+! --- BEGIN MAIN TIME PROPAGATION LOOP ---------------------------------
 
       tN = t0 ! initialize simulation time
 
-      DO n = 0 , nTsteps
+      DO n = 0, nTsteps
 
-         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+         CALL MPI_BARRIER(MPI_COMM_WORLD, mpiError)
 
-         IF ( MODULO ( n , nTwrite ) == 0 ) THEN ! compute partial 
+         IF (MODULO(n, nTwrite) == 0) THEN ! compute partial 
 !        relations to file from MPI_MASTER; write wave function and 
 !        external potential to file from MPI_MASTER
 
-            ! Compute partial base expectation values locally on each MPI process; reduce partial base expectation values from all 
-            ! MPI processes to MPI_MASTER to get full base expectation values
-            CALL evua_compute_base ( MPI_MASTER , mpiReal , mpiError , 1 , fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , &
-               & nZb , nZbc , xO , yO , zO , dX , dY , dZ , gS , Xa , Ya , Za , Vex3a , Psi3a )
-            ! Compute derived expectation values, uncertainties from base expectation values
-            CALL evua_compute_derived ( mpiRank , MPI_MASTER , wX , wY , wZ )
-            ! Write expectation values, undertainties and uncertainty relations to file from MPI_MASTER
-            CALL evua_write_all ( mpiRank , MPI_MASTER , tN , wX , wY , wZ )
+!           Compute partial base expectation values locally on each MPI 
+!           process; reduce partial base expectation values from all MPI
+!           processes to MPI_MASTER to get full base expectation values
+            CALL evua_compute_base(MPI_MASTER, mpiReal, mpiError, 1, &
+               & fdOrder, nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, &
+               & nZbc, xO, yO, zO, dX, dY, dZ, gS, Xa, Ya, Za, Vex3a, &
+               & Psi3a)
+
+!           Compute derived expectation values, uncertainties from base
+            CALL evua_compute_derived(mpiRank, MPI_MASTER, wX, wY, wZ)
+
+!           Write expectation values, undertainties and uncertainty 
+!           relations to file from MPI_MASTER
+            CALL evua_write_all(mpiRank, MPI_MASTER, tN, wX, wY, wZ)
+
+!           Write probability / mass currents and average velocities to 
+!           file from MPI_MASTER.
+            IF (pmcaOn .EQV. .TRUE.) THEN
+
+               CALL pmca_density(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
+                  & nZb, nZbc, Psi3a, Rho3a)
+
+               CALL pmca_phase(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
+                  & nZb, nZbc, Psi3a, Phi3a)
+
+               CALL pmca_velocity(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
+                  & nZb, nZbc, dX, dY, dZ, Phi3a, V3a)
+
+               ! pmcaI12
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXi, nYi, nZi, 0.0, 0.0, Zc(1), Xa, &
+!                  & Ya, Zc)
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXf, nYf, nZf, 0.0, Ya(nYb), Zc(nZ), &
+!                  & Xa, Ya, Zc)
+!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
+!
+               ! pmcaI34
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXi, nYi, nZi, 0.0, Ya(nYa), Zc(1), &
+!                  & Xa, Ya, Zc)
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXf, nYf, nZf, 0.0, 0.0, Zc(nZ), &
+!                  & Xa, Ya, Zc)
+!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
+
+               ! pmcaI41
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXi, nYi, nZi, 0.0, 0.0, Zc(1), Xa, &
+!                  & Ya, Zc)
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXf, nYf, nZf, Xa(nXb), 0.0, Zc(nZ), &
+!                  & Xa, Ya, Zc)
+!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
+
+               ! pmcaI23
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXi, nYi, nZi, Xa(nXa), 0.0, Zc(1), Xa, &
+!                  & Ya, Zc)
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXf, nYf, nZf, 0.0, 0.0, Zc(nZ), &
+!                  & Xa, Ya, Zc)
+!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
+
+               ! pmcaI1
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXi, nYi, nZi, 0.0, 0.0, 0.0, Xa, &
+!                  & Ya, Zc)
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXf, nYf, nZf, Xa(nXb), Ya(nYb), 0.0, &
+!                  & Xa, Ya, Zc)
+!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
+
+               ! pmcaI2
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXi, nYi, nZi, Xa(nXa), 0.0, 0.0, Xa, &
+!                  & Ya, Zc)
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXf, nYf, nZf, 0.0, Ya(nYb), 0.0, &
+!                  & Xa, Ya, Zc)
+!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
+
+               ! pmcaI3
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXi, nYi, nZi, Xa(nXa), Ya(nYa), 0.0, &
+!                  & Xa, Ya, Zc)
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXf, nYf, nZf, 0.0, 0.0, 0.0, &
+!                  & Xa, Ya, Zc)
+!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
+
+               ! pmcaI4
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXi, nYi, nZi, 0.0, Ya(nYa), 0.0, Xa, &
+!                  & Ya, Zc)
+!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+!                  & 1, nZ, nZbc, nXf, nYf, nZf, Xa(nXb), Ya(nYb), 0.0, &
+!                  & Xa, Ya, Zc)
+!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
+
+!               CALL pmca_compute_velocities()
+
+!               CALL pmca_write_velocities()
+
+               CALL pmca_current_density(nXa, nXb, nXbc, nYa, nYb, &
+                  & nYbc, nZa, nZb, nZbc, Rho3a, V3a, &
+                  & J3a)
+
+!               CALL pmca_compute_currents(MPI_MASTER, mpiReal, &
+!                  & mpiError, quadRule, nXa, nXb, nXbc, nYa, nYb, nYbc,&
+!                  & nZa, nZb, nZbc, dX, dY, dZ, Xa, Ya, Zc, J3a)
+
+!               CALL pmca_write_currents(mpiRank, nXa, nXb, nXbc, &
+!                  & nYa, nYb, nYbc, nZa, nZb, nZbc, dX, dY, dZ, Xa, Ya, Za, Zc,  &
+!                  & J3a)
+
+            END IF 
 
             IF ( psiOutput == 1 ) THEN ! Write wave function to file from MPI_MASTER using streaming I/O binary with partial reduce
 
@@ -1240,324 +1421,309 @@
 
       END IF
 
-      DEALLOCATE ( Psi3b )
-      DEALLOCATE ( Psi3a )
-      DEALLOCATE ( K4 )
-      DEALLOCATE ( K3 )
-      DEALLOCATE ( K2 )
-      DEALLOCATE ( K1 )
-      DEALLOCATE ( Vex3a )
-      DEALLOCATE ( Omega )
-      DEALLOCATE ( Zc )
-      DEALLOCATE ( Zb )
-      DEALLOCATE ( Za )
-      DEALLOCATE ( Ya )
-      DEALLOCATE ( Xa )
-      DEALLOCATE ( MpiStatus )
-      DEALLOCATE ( StopValues )
-      DEALLOCATE ( StartValues )
+      IF (pmcaOn .EQV. .TRUE.) THEN
+
+         DEALLOCATE(Rho3a)
+         DEALLOCATE(Phi3a)
+         DEALLOCATE(V3a)
+         DEALLOCATE(J3a)
+
+      END IF
+
+      DEALLOCATE(Psi3b)
+      DEALLOCATE(Psi3a)
+      DEALLOCATE(K4)
+      DEALLOCATE(K3)
+      DEALLOCATE(K2)
+      DEALLOCATE(K1)
+      DEALLOCATE(Vex3a)
+      DEALLOCATE(Omega)
+      DEALLOCATE(Zc)
+      DEALLOCATE(Zb)
+      DEALLOCATE(Za)
+      DEALLOCATE(Ya)
+      DEALLOCATE(Xa)
+      DEALLOCATE(MpiStatus)
+      DEALLOCATE(StopValues)
+      DEALLOCATE(StartValues)
       
-      CALL MPI_FINALIZE ( mpiError )
+      CALL MPI_FINALIZE(mpiError)
 
       STOP
 
-! --- END MAIN PROGRAM -------------------------------------------------------------------------------------------------------------
+! --- END MAIN PROGRAM -------------------------------------------------
 
       CONTAINS
 
-! ----------------------------------------------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------
 
-      SUBROUTINE gpse_read_stdin ( fileName , fileUnit )
-
+      SUBROUTINE gpse_read_stdin(fileName, fileUnit)
       IMPLICIT NONE
 
-      CHARACTER ( LEN = * ), INTENT ( IN ) :: fileName
+      CHARACTER(LEN=*), INTENT(IN) :: fileName
             
-      INTEGER, INTENT ( IN ) :: fileUnit
+      INTEGER, INTENT (IN) :: fileUnit
 
-      OPEN  ( UNIT = fileUnit , FILE = fileName , ACTION = 'READ' , FORM = 'FORMATTED' , STATUS = 'OLD' )
-
-         READ  ( UNIT = fileUnit , NML = gpseIn )
-
-      CLOSE ( UNIT = fileUnit , STATUS = 'KEEP' )
+      OPEN(UNIT= fileUnit, FILE=fileName, ACTION='READ', &
+         & FORM='FORMATTED', STATUS='OLD')
+         READ(UNIT=fileUnit, NML=gpseIn)
+      CLOSE(UNIT=fileUnit, STATUS= 'KEEP')
 
       RETURN
-
       END SUBROUTINE
 
-! ----------------------------------------------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------
 
-      SUBROUTINE gpse_write_stdout_header ( )
-
+      SUBROUTINE gpse_write_stdout_header()
       IMPLICIT NONE
 
-      IF ( mpiRank == MPI_MASTER ) THEN
+      IF (mpiRank == MPI_MASTER) THEN
 
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# =========================================================================='
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     GPSE VERSION ', GPSE_VERSION_NUMBER
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
-         !WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        Compiled by ', COMPILER_VERSION ( ) , ' using the options ', COMPILER_OPTIONS ( )
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     AUTHOR(S)'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#         Marty Kandes, Ph.D.'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     COPYRIGHT'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'     
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#         Copyright (c) 2014, 2015, 2016, 2017 Martin Charles Kandes'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     LAST UPDATED'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#         ', GPSE_LAST_UPDATED
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# -------------------------------------------------------------------------'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#'
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     STARTING GPSE ... '
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     RUN STARTED @ ', startTime, ' ON ', startDate, ' ... '
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     RUNNING ON ', mpiProcesses, ' MPI PROCESSES WITH ', ompThreads , ' OPENMP THREADS PER PROCESS ... '
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     CHECKING MACHINE/COMPILER-SPECIFIC DATA TYPE SUPPORT AND CONFIGURATION ... '
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        INTEGER_KINDS SUPPORTED ... ', INTEGER_KINDS
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        REAL_KINDS SUPPORTED ...    ', REAL_KINDS
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        DEFAULT INTEGER KIND ...    ', INT_DEFAULT_KIND
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        DEFAULT REAL KIND ...       ', REAL_DEFAULT_KIND
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        DEFAULT COMPLEX KIND ...    ', CMPLX_DEFAULT_KIND
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     INPUT PARAMETERS ... '
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        itpOn     = ', itpOn
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        chkptOn   = ', chkptOn
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        rk4Lambda = ', rk4Lambda
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        fdOrder   = ', fdOrder
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nTsteps   = ', nTsteps
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nTwrite   = ', nTwrite
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nX        = ', nX
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nY        = ', nY
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nZ        = ', nZ
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        t0        = ', t0
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        tF        = ', tF
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        xO        = ', xO
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        yO        = ', yO
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        zO        = ', zO
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        dT        = ', dT
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        dX        = ', dX
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        dY        = ', dY
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        dZ        = ', dZ
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        xOrrf     = ', xOrrf
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        yOrrf     = ', yOrrf
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        zOrrf     = ', zOrrf
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wX        = ', wX
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wY        = ', wY
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wZ        = ', wZ
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        gS        = ', gS
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiInput  = ', psiInput
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiOutput = ', psiOutput
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiFileNo = ', psiFileNo
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiFileNoChkpt = ', psiFileNoChkpt
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        psiInit   = ', psiInit
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nXpsi     = ', nXpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nYpsi     = ', nYpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nZpsi     = ', nZpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        nRpsi     = ', nRpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        mLpsi     = ', mLpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        xOpsi     = ', xOpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        yOpsi     = ', yOpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        zOpsi     = ', zOpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        rOpsi     = ', rOpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wXpsi     = ', wXpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wYpsi     = ', wYpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wZpsi     = ', wZpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wRpsi     = ', wRpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        pXpsi     = ', pXpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        pYpsi     = ', pYpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        pZpsi     = ', pZpsi
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        vexInput  = ', vexInput
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        vexOutput = ', vexOutput
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        vexFileNo = ', vexFileNo
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        vexInit   = ', vexInit
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        xOvex     = ', xOvex
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        yOvex     = ', yOvex
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        zOvex     = ', zOvex
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        rOvex     = ', rOvex
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        fXvex     = ', fXvex
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        fYvex     = ', fYvex
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        fZvex     = ', fZvex
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wXvex     = ', wXvex
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wYvex     = ', wYvex
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wZvex     = ', wZvex
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#        wRvex     = ', wRvex
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     BROADCASTING INPUT PARAMETERS TO ALL MPI PROCESSES ... '
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '# 1 : tN , 2 : wX , 3 : wY , 4 : wZ , 5 : evuaL2Norm , 6 : evuaEa , 7 : evuaEb , &
-            & 8 : evuaMuA , 9 : evuaMuB , 10 : evuaL2a , 11 : evuaL2b , 12 : evuaTx , 13 : evuaTy , 14 : evuaTz , 15 : evuaVex , &
-            & 16 : evuaVmf , 17 : evuaX , 18 : evuaX2a , 19 : evuaSigXa , 20 : evuaX2b , 21 : evuaSigXb , 22 : evuaPx , &
-            & 23 : evuaPx2 , 24 : evuaSigPx , 25 : evuaLxA , 26 : evuaLx2a , 27 : evuaSigLxA , 28 : evuaLxB , 29 : evuaLx2b , &
-            & 30 : evuaSigLxB , 31 : evuaFx , 32 : evuaTauXa , 33 : evuaTauXb , 34 : evuaY , 35 : evuaY2a , 36 : evuaSigYa , &
-            & 37 : evuaY2b , 38 : evuaSigYb , 39 : evuaPy , 40 : evuaPy2 , 41 : evuaSigPy , 42 : evuaLyA , 43 : evuaLy2a , &
-            & 44 : evuaSigLyA , 45 : evuaLyB , 46 : evuaLy2b , 47 : evuaSigLyB , 48 : evuaFy , 49 : evuaTauYa , 50 : evuaTauYb , &
-            & 51 : evuaZ , 52 : evuaZ2a , 53 : evuaSigZa , 54 : evuaZ2b , 55 : evuaSigZb , 56 : evuaPz , 57 : evuaPz2 , &
-            & 58 : evuaSigPz , 59 : evuaLzA , 60 : evuaLz2a , 61 : evuaSigLzA , 62 : evuaLzB , 63 : evuaLz2b , 64 : evuaSigLzB , &
-            & 65 : evuaFz , 66 : evuaTauZa , 67 : evuaTauZb , 68 : evuaR , 69 : evuaR2a , 70 : evuaR2b , 71 : evuaIxxA , &
-            & 72 : evuaIxyA , 73 : evuaIxzA , 74 : evuaIyyA , 75 : evuaIyzA , 76 : evuaIzzA , 77 : evuaIxxB , 78 : evuaIxyB , &
-            & 79 : evuaIxzB , 80 : evuaIyyB , 81 : evuaIyzB , 82 : evuaIzzB'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '# =========================================================================='
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#     GPSE VERSION ', GPSE_VERSION_NUMBER
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#'
+         !WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        Compiled by ', COMPILER_VERSION ( ) , ' using the options ', COMPILER_OPTIONS ( )
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#     AUTHOR(S)'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#         Marty Kandes, Ph.D.'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#     COPYRIGHT'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#'     
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#         Copyright (c) 2014, 2015, 2016, 2017 Martin Charles Kandes'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#     LAST UPDATED'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#         ', GPSE_LAST_UPDATED
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '# -------------------------------------------------------------------------'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#'
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#     STARTING GPSE ... '
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#     RUN STARTED @ ', startTime, ' ON ', startDate, ' ... '
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#     RUNNING ON ', mpiProcesses, ' MPI PROCESSES WITH ', ompThreads , ' OPENMP THREADS PER PROCESS ... '
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#     CHECKING MACHINE/COMPILER-SPECIFIC DATA TYPE SUPPORT AND CONFIGURATION ... '
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        INTEGER_KINDS SUPPORTED ... ', INTEGER_KINDS
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        REAL_KINDS SUPPORTED ...    ', REAL_KINDS
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        DEFAULT INTEGER KIND ...    ', INT_DEFAULT_KIND
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        DEFAULT REAL KIND ...       ', REAL_DEFAULT_KIND
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        DEFAULT COMPLEX KIND ...    ', CMPLX_DEFAULT_KIND
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#     INPUT PARAMETERS ... '
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        itpOn     = ', itpOn
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        chkptOn   = ', chkptOn
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        pmcaOn    = ', pmcaOn
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        rk4Lambda = ', rk4Lambda
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        fdOrder   = ', fdOrder
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        nTsteps   = ', nTsteps
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        nTwrite   = ', nTwrite
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        nX        = ', nX
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        nY        = ', nY
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        nZ        = ', nZ
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        t0        = ', t0
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        tF        = ', tF
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        xO        = ', xO
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        yO        = ', yO
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        zO        = ', zO
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        dT        = ', dT
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        dX        = ', dX
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        dY        = ', dY
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        dZ        = ', dZ
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        xOrrf     = ', xOrrf
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        yOrrf     = ', yOrrf
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        zOrrf     = ', zOrrf
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        wX        = ', wX
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        wY        = ', wY
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        wZ        = ', wZ
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        gS        = ', gS
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        psiInput  = ', psiInput
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        psiOutput = ', psiOutput
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        psiFileNo = ', psiFileNo
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        psiFileNoChkpt = ', psiFileNoChkpt
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        psiInit   = ', psiInit
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        nXpsi     = ', nXpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        nYpsi     = ', nYpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        nZpsi     = ', nZpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        nRpsi     = ', nRpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        mLpsi     = ', mLpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        xOpsi     = ', xOpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        yOpsi     = ', yOpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        zOpsi     = ', zOpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        rOpsi     = ', rOpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        wXpsi     = ', wXpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        wYpsi     = ', wYpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        wZpsi     = ', wZpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        wRpsi     = ', wRpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        pXpsi     = ', pXpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        pYpsi     = ', pYpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        pZpsi     = ', pZpsi
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        vexInput  = ', vexInput
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        vexOutput = ', vexOutput
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        vexFileNo = ', vexFileNo
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        vexInit   = ', vexInit
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        xOvex     = ', xOvex
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        yOvex     = ', yOvex
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        zOvex     = ', zOvex
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        rOvex     = ', rOvex
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        fXvex     = ', fXvex
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        fYvex     = ', fYvex
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        fZvex     = ', fZvex
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        wXvex     = ', wXvex
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        wYvex     = ', wYvex
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        wZvex     = ', wZvex
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        wRvex     = ', wRvex
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#     BROADCASTING INPUT PARAMETERS TO ALL MPI PROCESSES ... '
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '# 1: tN, 2: wX, 3: wY, 4: wZ, &
+            & 5: evuaL2Norm, 6: evuaEa, 7: evuaEb, 8: evuaMuA, &
+            & 9: evuaMuB, 10: evuaL2a, 11: evuaL2b, 12: evuaTx, &
+            & 13: evuaTy, 14: evuaTz, 15: evuaVex, 16: evuaVmf, &
+            & 17: evuaX, 18: evuaX2a, 19: evuaSigXa, 20: evuaX2b, &
+            & 21: evuaSigXb, 22: evuaPx, 23: evuaPx2, 24: evuaSigPx, &
+            & 25: evuaLxA, 26: evuaLx2a, 27: evuaSigLxA, 28: evuaLxB, &
+            & 29: evuaLx2b, 30: evuaSigLxB, 31: evuaFx, 32: evuaTauXa, &
+            & 33: evuaTauXb, 34: evuaY, 35: evuaY2a, 36: evuaSigYa, &
+            & 37: evuaY2b, 38: evuaSigYb, 39: evuaPy, 40: evuaPy2, &
+            & 41: evuaSigPy, 42: evuaLyA, 43: evuaLy2a, 44: evuaSigLyA,&
+            & 45: evuaLyB, 46: evuaLy2b, 47: evuaSigLyB, 48: evuaFy, &
+            & 49: evuaTauYa, 50: evuaTauYb, 51: evuaZ, 52: evuaZ2a, &
+            & 53: evuaSigZa, 54: evuaZ2b, 55: evuaSigZb, 56: evuaPz, &
+            & 57: evuaPz2, 58: evuaSigPz, 59: evuaLzA, 60: evuaLz2a, &
+            & 61: evuaSigLzA, 62: evuaLzB, 63: evuaLz2b, &
+            & 64: evuaSigLzB, 65: evuaFz, 66: evuaTauZa, 67: evuaTauZb,&
+            & 68: evuaR, 69: evuaR2a, 70: evuaR2b, 71: evuaIxxA, &
+            & 72: evuaIxyA, 73: evuaIxzA, 74: evuaIyyA, 75: evuaIyzA, &
+            & 76: evuaIzzA, 77: evuaIxxB, 78: evuaIxyB, 79: evuaIxzB, &
+            & 80: evuaIyyB, 81: evuaIyzB, 82: evuaIzzB'
 
       END IF
 
       RETURN
-
       END SUBROUTINE
 
-! ----------------------------------------------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------
 
-      SUBROUTINE mpi_select_default_kinds ( )
-
+      SUBROUTINE mpi_select_default_kinds()
       IMPLICIT NONE
 
-      SELECT CASE ( INT_DEFAULT_KIND )
-
-         CASE ( INT_8 )
-
+      SELECT CASE(INT_DEFAULT_KIND)
+         CASE(INT_8)
             mpiInt = MPI_INTEGER1
-
-         CASE ( INT_16 )
-
+         CASE(INT_16)
             mpiInt = MPI_INTEGER2
-
-         CASE ( INT_32 )
-
+         CASE(INT_32)
             mpiInt = MPI_INTEGER
-
-         CASE ( INT_64 )
-
+         CASE(INT_64)
             mpiInt = MPI_INTEGER8
-
          CASE DEFAULT
-
             mpiInt = -1
-
       END SELECT
 
-      SELECT CASE ( REAL_DEFAULT_KIND )
-
-         CASE ( REAL_32 )
-
+      SELECT CASE(REAL_DEFAULT_KIND)
+         CASE(REAL_32)
             mpiReal = MPI_REAL
-
-         CASE ( REAL_64 )
-
+         CASE(REAL_64)
             mpiReal= MPI_DOUBLE_PRECISION
-
-         CASE ( REAL_128 )
-
+         CASE(REAL_128)
             mpiReal = MPI_REAL16
-
          CASE DEFAULT
-
             mpiReal = -1
-
        END SELECT
 
-       SELECT CASE ( CMPLX_DEFAULT_KIND )
-
-          CASE ( REAL_32 )
-
+       SELECT CASE(CMPLX_DEFAULT_KIND)
+          CASE(REAL_32)
              mpiCmplx = MPI_COMPLEX
-
-          CASE ( REAL_64 )
-
+          CASE(REAL_64)
              mpiCmplx = MPI_DOUBLE_COMPLEX
-
-          CASE ( REAL_128 )
-
+          CASE(REAL_128)
              mpiCmplx = MPI_COMPLEX32
-
           CASE DEFAULT
-
              mpiCmplx = -1
-
        END SELECT
 
        RETURN
-
        END SUBROUTINE
 
-! ----------------------------------------------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------
 
-      SUBROUTINE mpi_bcast_inputs ( mpiMaster , mpiInt , mpiReal , mpiCmplx , mpiError )
-
+      SUBROUTINE mpi_bcast_inputs(mpiMaster, mpiInt, mpiReal, mpiCmplx,&
+         & mpiError)
       IMPLICIT NONE
 
-      INTEGER, INTENT ( IN    ) :: mpiMaster
-      INTEGER, INTENT ( IN    ) :: mpiInt
-      INTEGER, INTENT ( IN    ) :: mpiReal
-      INTEGER, INTENT ( IN    ) :: mpiCmplx
-      INTEGER, INTENT ( INOUT ) :: mpiError
+      INTEGER, INTENT(IN) :: mpiMaster
+      INTEGER, INTENT(IN) :: mpiInt
+      INTEGER, INTENT(IN) :: mpiReal
+      INTEGER, INTENT(IN) :: mpiCmplx
+      INTEGER, INTENT(INOUT) :: mpiError
 
-      CALL MPI_BCAST ( itpOn     , 1 , MPI_LOGICAL , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( rk4Lambda , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( fdOrder   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nTsteps   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nTwrite   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nX        , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nXbc      , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( dNx       , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nY        , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nYbc      , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( dNy       , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nZ        , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nZbc      , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( dNz       , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( t0        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( tF        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( xO        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( yO        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( zO        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( dT        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( dX        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( dY        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( dZ        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( wX        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( wY        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( wZ        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( gS        , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiInput  , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiOutput , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiFileNo , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( psiInit   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nXpsi     , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nYpsi     , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nZpsi     , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( nRpsi     , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( mLpsi     , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( xOpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( yOpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( zOpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( rOpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( wXpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( wYpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( wZpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( wRpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( pXpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( pYpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( pZpsi     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexInput  , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexOutput , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexFileNo , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( vexInit   , 1 , mpiInt      , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( xOvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( yOvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( zOvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( rOvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( fXvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( fYvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( fZvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( wXvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( wYvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( wZvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
-      CALL MPI_BCAST ( wRvex     , 1 , mpiReal     , mpiMaster , MPI_COMM_WORLD , mpiError )
+      CALL MPI_BCAST(itpOn, 1, MPI_LOGICAL, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(chkptOn, 1, MPI_LOGICAL, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(pmcaOn, 1, MPI_LOGICAL, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(rk4Lambda, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(fdOrder, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(nTsteps, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(nTwrite, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(nX, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(nXbc, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(dNx, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(nY, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(nYbc, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(dNy, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(nZ, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(nZbc, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(dNz, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(t0, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(tF, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(xO, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(yO, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(zO, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(dT, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(dX, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(dY, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(dZ, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(wX, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(wY, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(wZ, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(gS, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(psiInput, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(psiOutput, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(psiFileNo, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(psiInit, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(nXpsi, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(nYpsi, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(nZpsi, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(nRpsi, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(mLpsi, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(xOpsi, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(yOpsi, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(zOpsi, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(rOpsi, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(wXpsi, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(wYpsi, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(wZpsi, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(wRpsi, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(pXpsi, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(pYpsi, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(pZpsi, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(vexInput, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(vexOutput, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(vexFileNo, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(vexInit, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(xOvex, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(yOvex, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(zOvex, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(rOvex, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(fXvex, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(fYvex, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(fZvex, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(wXvex, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(wYvex, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(wZvex, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(wRvex, 1, mpiReal, mpiMaster, MPI_COMM_WORLD, mpiError)
 
       RETURN
 
       END SUBROUTINE
 
-! ----------------------------------------------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------
 
       SUBROUTINE mpi_copy_q ( mpiRank , mpiSource , mpiDestination , nQ , nQa , nQb , nQbc , Q )
 
