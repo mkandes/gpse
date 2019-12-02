@@ -2,8 +2,34 @@ CHANGELOG : GPSE
 
 dev
 
-    * support for probability mass-current analysis
-    * support for large file sizes (> 2GB) with MPI-I/O 
+    * reorganize main time propagation/simulation loop to allow wave 
+      function data to be reprocessed; i.e., allow users to read in wave
+      functions from a previous simulation and recompute expectation 
+      values, probability currents, average velocities, etc.
+    * compute average velocities across same boundaries where the 
+      initial four probability currents are computed 
+    * compute probability currents and average velocities along z-axis 
+      in x-y plane to provide measure of out-of-plane dynamics
+    * support for large file sizes (> 2GB) with MPI-I/O
+
+2019/12/01 v0.6.2
+
+    + implemented and verified computation of several probability 
+      currents about the z-axis of the system; currently, four currents
+      are computed, where each represent the probabiity current passing
+      from one Cartesian (volume) quadrant in the x-y plane to the next
+
+2019/07/08 v0.6.1
+
+    + implemented grid_linear_search function and grid_nearest_point 
+      subroutine in grid module to support new probability/mass current
+      analysis module (pmca); the grid_nearest_point subroutine will be
+      utilized by the pmca module to help determine integration limits
+      over which the probability/mass currents and average velocites of
+      the wave function will be computed on different surfaces within
+      the three-dimensional, regular grid
+    + continued reformatting source code into a 72 character wide, 
+      pep8-like format
 
 2019/05/19 v0.6.0
 
