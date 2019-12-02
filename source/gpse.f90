@@ -89,7 +89,7 @@
 !
 ! LAST UPDATED
 !
-!     Monday, July 8th, 2019
+!     Sunday, December 1st, 2019
 !
 ! ----------------------------------------------------------------------
 
@@ -159,9 +159,9 @@
 
 ! --- PARAMETER DECLARATIONS  ------------------------------------------
 
-      CHARACTER(LEN=*), PARAMETER :: GPSE_VERSION_NUMBER = '0.6.1'
+      CHARACTER(LEN=*), PARAMETER :: GPSE_VERSION_NUMBER = '0.6.2'
       CHARACTER(LEN=*), PARAMETER :: GPSE_LAST_UPDATED = &
-         & 'Monday, July 8th, 2019'
+         & 'Sunday, December 1st, 2019'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -244,8 +244,14 @@
       REAL :: t0 = 0.0
       REAL :: tF = 0.0
       REAL :: xO = 0.0
+      REAL :: xI = 0.0
+      REAL :: xF = 0.0
       REAL :: yO = 0.0
+      REAL :: yI = 0.0
+      REAL :: yF = 0.0
       REAL :: zO = 0.0
+      REAL :: zI = 0.0
+      REAL :: zF = 0.0
       REAL :: dT = 0.0
       REAL :: dX = 0.0
       REAL :: dY = 0.0
@@ -621,7 +627,7 @@
       REAL, ALLOCATABLE, DIMENSION(:,:,:) :: Rho3a
       REAL, ALLOCATABLE, DIMENSION(:,:,:) :: Phi3a
       REAL, ALLOCATABLE, DIMENSION(:,:,:,:) :: V3a
-      REAL, ALLOCATABLE, DIMENSION(:,:,:,:) :: J3a
+!      REAL, ALLOCATABLE, DIMENSION(:,:,:,:) :: J3a
 
       COMPLEX, ALLOCATABLE, DIMENSION(:, :, :) :: K1
       COMPLEX, ALLOCATABLE, DIMENSION(:, :, :) :: K2
@@ -629,6 +635,8 @@
       COMPLEX, ALLOCATABLE, DIMENSION(:, :, :) :: K4
       COMPLEX, ALLOCATABLE, DIMENSION(:, :, :) :: Psi3a
       COMPLEX, ALLOCATABLE, DIMENSION(:, :, :) :: Psi3b
+      COMPLEX, ALLOCATABLE, DIMENSION(:,:,:,:) :: GradPsi3a
+      COMPLEX, ALLOCATABLE, DIMENSION(:,:,:,:) :: J3a
 
 ! --- ARRAY DEFINITIONS ------------------------------------------------
 !
@@ -829,6 +837,10 @@
                          & nXa - nXbc : nXb + nXbc, &
                          & nYa - nYbc : nYb + nYbc, &
                          & nZa - nZbc : nZb + nZbc))
+         ALLOCATE(GradPsi3a(3, &
+                         & nXa - nXbc : nXb + nXbc, &
+                         & nYa - nYbc : nYb + nYbc, &
+                         & nZa - nZbc : nZb + nZbc))
          ALLOCATE(J3a(3, &
                          & nXa - nXbc : nXb + nXbc, &
                          & nYa - nYbc : nYb + nYbc, &
@@ -978,99 +990,24 @@
                CALL pmca_density(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
                   & nZb, nZbc, Psi3a, Rho3a)
 
-               CALL pmca_phase(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
-                  & nZb, nZbc, Psi3a, Phi3a)
-
-               CALL pmca_velocity(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
-                  & nZb, nZbc, dX, dY, dZ, Phi3a, V3a)
-
-               ! pmcaI12
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXi, nYi, nZi, 0.0, 0.0, Zc(1), Xa, &
-!                  & Ya, Zc)
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXf, nYf, nZf, 0.0, Ya(nYb), Zc(nZ), &
-!                  & Xa, Ya, Zc)
-!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
-!
-               ! pmcaI34
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXi, nYi, nZi, 0.0, Ya(nYa), Zc(1), &
-!                  & Xa, Ya, Zc)
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXf, nYf, nZf, 0.0, 0.0, Zc(nZ), &
-!                  & Xa, Ya, Zc)
-!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
-
-               ! pmcaI41
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXi, nYi, nZi, 0.0, 0.0, Zc(1), Xa, &
-!                  & Ya, Zc)
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXf, nYf, nZf, Xa(nXb), 0.0, Zc(nZ), &
-!                  & Xa, Ya, Zc)
-!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
-
-               ! pmcaI23
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXi, nYi, nZi, Xa(nXa), 0.0, Zc(1), Xa, &
-!                  & Ya, Zc)
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXf, nYf, nZf, 0.0, 0.0, Zc(nZ), &
-!                  & Xa, Ya, Zc)
-!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
-
-               ! pmcaI1
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXi, nYi, nZi, 0.0, 0.0, 0.0, Xa, &
-!                  & Ya, Zc)
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXf, nYf, nZf, Xa(nXb), Ya(nYb), 0.0, &
-!                  & Xa, Ya, Zc)
-!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
-
-               ! pmcaI2
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXi, nYi, nZi, Xa(nXa), 0.0, 0.0, Xa, &
-!                  & Ya, Zc)
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXf, nYf, nZf, 0.0, Ya(nYb), 0.0, &
-!                  & Xa, Ya, Zc)
-!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
-
-               ! pmcaI3
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXi, nYi, nZi, Xa(nXa), Ya(nYa), 0.0, &
-!                  & Xa, Ya, Zc)
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXf, nYf, nZf, 0.0, 0.0, 0.0, &
-!                  & Xa, Ya, Zc)
-!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
-
-               ! pmcaI4
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXi, nYi, nZi, 0.0, Ya(nYa), 0.0, Xa, &
-!                  & Ya, Zc)
-!               CALL grid_nearest_point(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-!                  & 1, nZ, nZbc, nXf, nYf, nZf, Xa(nXb), Ya(nYb), 0.0, &
-!                  & Xa, Ya, Zc)
-!               WRITE(UNIT=OUTPUT_UNIT, FMT=*) mpiRank, nXi, nXf, nYi, nYf, nZi, nZf
-
-!               CALL pmca_compute_velocities()
-
-!               CALL pmca_write_velocities()
+!               CALL pmca_phase(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
+!                  & nZb, nZbc, Psi3a, Phi3a)
+!               CALL pmca_velocity2(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
+!                  & nZb, nZbc, dX, dY, dZ, Phi3a, V3a)
+!               CALL pmca_current_density2(nXa, nXb, nXbc, nYa, nYb, &
+!                  & nYbc, nZa, nZb, nZbc, Rho3a, V3a, J3a)
 
                CALL pmca_current_density(nXa, nXb, nXbc, nYa, nYb, &
-                  & nYbc, nZa, nZb, nZbc, Rho3a, V3a, &
+                  & nYbc, nZa, nZb, nZbc, dX, dY, dZ, Psi3a, GradPsi3a,&
                   & J3a)
 
-!               CALL pmca_compute_currents(MPI_MASTER, mpiReal, &
-!                  & mpiError, quadRule, nXa, nXb, nXbc, nYa, nYb, nYbc,&
-!                  & nZa, nZb, nZbc, dX, dY, dZ, Xa, Ya, Zc, J3a)
+               CALL pmca_compute_currents(mpiRank, MPI_MASTER, mpiReal,&
+                  & mpiError, 1, nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
+                  & nZb, nZbc, nZ, dX, dY, dZ, Xa, Ya, Za, Zc, REAL(J3a))
+               CALL pmca_write_currents(mpiRank, MPI_MASTER, tN)
 
-!               CALL pmca_write_currents(mpiRank, nXa, nXb, nXbc, &
-!                  & nYa, nYb, nYbc, nZa, nZb, nZbc, dX, dY, dZ, Xa, Ya, Za, Zc,  &
-!                  & J3a)
+!               CALL pmca_compute_velocities()
+!               CALL pmca_write_velocities()
 
             END IF 
 
@@ -1426,6 +1363,7 @@
          DEALLOCATE(Rho3a)
          DEALLOCATE(Phi3a)
          DEALLOCATE(V3a)
+         DEALLOCATE(GradPsi3a)
          DEALLOCATE(J3a)
 
       END IF
@@ -1978,4 +1916,4 @@
 
       END PROGRAM
 
-! ======================================================================
+!!! ======================================================================

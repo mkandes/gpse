@@ -41,7 +41,7 @@
 !
 ! LAST UPDATED
 !
-!     Monday, July 8th, 2019
+!     Thursday, August 15th, 2019
 !
 ! ----------------------------------------------------------------------
 
@@ -88,7 +88,7 @@
 !
 ! --- FUNCTION DECLARATIONS --------------------------------------------
 
-      PRIVATE :: grid_linear_search
+      PUBLIC :: grid_linear_search
       PRIVATE :: grid_binary_search
 
 ! --- FUNCTION DEFINITIONS ---------------------------------------------
@@ -238,10 +238,11 @@
 
       INTEGER :: j
 
-      nQo = -1
+      nQo = 0 ! must be zero for MPI_ALLREDUCE scheme used in pmca_current_3d_rect to work
 
-      DO j = nQa - nQbc, nQb + nQbc
+      DO j = nQa, nQb
          IF ((qO >= Q(j)).AND.(qO < Q(j+1))) THEN
+            ! add code to determine if q0 is closer to Q(j) or Q(j+1)
             nQo = j
          END IF
       END DO
