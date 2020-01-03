@@ -37,7 +37,7 @@
 !
 ! COPYRIGHT
 !     
-!     Copyright (c) 2014, 2015, 2016, 2017, 2018, 2019 Martin Charles Kandes
+!     Copyright (c) 2014, 2015, 2016, 2017, 2018, 2019, 2020 Martin Charles Kandes
 !
 ! LAST UPDATED
 !

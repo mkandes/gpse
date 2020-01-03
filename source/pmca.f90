@@ -39,7 +39,7 @@
 !
 ! COPYRIGHT
 !     
-!     Copyright (c) 2014, 2015, 2016, 2017, 2018, 2019 Martin Charles Kandes
+!     Copyright (c) 2014, 2015, 2016, 2017, 2018, 2019, 2020 Martin Charles Kandes
 !
 ! LAST UPDATED
 !
@@ -199,29 +199,29 @@
          CALL MPI_REDUCE(pmcaI, pmcaI41, 1, mpiReal, MPI_SUM, &
             & mpiMaster, MPI_COMM_WORLD, mpiError)
 
-         !pmcaI = pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-         !   & nZa, nZb, nZbc, nZ, dX, dY, dZ, 0.0, Xa(nXb), 0.0, &
-         !   & Ya(nYb), 0.0, 0.0, Xa, Ya, Za, Zc, J3)
-         !CALL MPI_REDUCE(pmcaI, pmcaI1, 1, mpiReal, MPI_SUM, &
-         !   & mpiMaster, MPI_COMM_WORLD, mpiError)
+         pmcaI = pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, 0.0, Xa(nXb), 0.0, &
+            & Ya(nYb), 0.0, 0.0, Xa, Ya, Za, Zc, J3)
+         CALL MPI_REDUCE(pmcaI, pmcaI1, 1, mpiReal, MPI_SUM, &
+            & mpiMaster, MPI_COMM_WORLD, mpiError)
 
-         !pmcaI = pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-         !   & nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa(nXa), 0.0, 0.0, &
-         !   & Ya(nYb), 0.0, 0.0, Xa, Ya, Za, Zc, J3)
-         !CALL MPI_REDUCE(pmcaI, pmcaI2, 1, mpiReal, MPI_SUM, &
-         !   & mpiMaster, MPI_COMM_WORLD, mpiError)
+         pmcaI = pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa(nXa), 0.0, 0.0, &
+            & Ya(nYb), 0.0, 0.0, Xa, Ya, Za, Zc, J3)
+         CALL MPI_REDUCE(pmcaI, pmcaI2, 1, mpiReal, MPI_SUM, &
+            & mpiMaster, MPI_COMM_WORLD, mpiError)
 
-         !pmcaI = pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-         !   & nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa(nXa), 0.0, Ya(nYa), &
-         !   & 0.0, 0.0, 0.0, Xa, Ya, Za, Zc, J3)
-         !CALL MPI_REDUCE(pmcaI, pmcaI3, 1, mpiReal, MPI_SUM, &
-         !   & mpiMaster, MPI_COMM_WORLD, mpiError)
+         pmcaI = pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa(nXa), 0.0, Ya(nYa), &
+            & 0.0, 0.0, 0.0, Xa, Ya, Za, Zc, J3)
+         CALL MPI_REDUCE(pmcaI, pmcaI3, 1, mpiReal, MPI_SUM, &
+            & mpiMaster, MPI_COMM_WORLD, mpiError)
 
-         !pmcaI = pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-         !   & nZa, nZb, nZbc, nZ, dX, dY, dZ, 0.0, Xa(nXb), Ya(nYa), &
-         !   & 0.0, 0.0, 0.0, Xa, Ya, Za, Zc, J3)
-         !CALL MPI_REDUCE(pmcaI, pmcaI4, 1, mpiReal, MPI_SUM, &
-         !   & mpiMaster, MPI_COMM_WORLD, mpiError)
+         pmcaI = pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, 0.0, Xa(nXb), Ya(nYa), &
+            & 0.0, 0.0, 0.0, Xa, Ya, Za, Zc, J3)
+         CALL MPI_REDUCE(pmcaI, pmcaI4, 1, mpiReal, MPI_SUM, &
+            & mpiMaster, MPI_COMM_WORLD, mpiError)
 
       ELSE
 
@@ -720,14 +720,18 @@
          END DO
          pmcaI = pmcaI * dX * dZ
 
-      ELSE IF ((nZiG == nZfG).AND.(nZa <= nZiG).AND.(nZiG <= nZb)) THEN
+      ELSE IF (nZiG == nZfG) THEN 
 
-         DO k = nYiG, nYfG
-            DO j = nXiG, nXfG
-               pmcaI = pmcaI + J3(3,j,k,nZiG)
+         IF ((nZiG == nZiL).AND.(nZfG == nZfL)) THEN
+
+            DO k = nYiG, nYfG
+               DO j = nXiG, nXfG
+                  pmcaI = pmcaI + J3(3,j,k,nZiG)
+               END DO
             END DO
-         END DO
-         pmcaI = pmcaI * dX * dY
+            pmcaI = pmcaI * dX * dY
+
+         END IF
 
       ELSE
 

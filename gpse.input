@@ -4,7 +4,7 @@
    pmcaOn    = .TRUE.      ! Perform probability/mass current density analysis? .TRUE. = Yes; .FALSE. = No
    rk4Lambda = 2           ! 1 = Tan-Chen-1; 2 = Classical 4th-Order Runge-Kutta; 3 = Tan-Chen Lambda-3; 4 = England; 5 = Tan-Chen-5
    fdOrder   = 2           ! 2 = 2nd-Order Central Differences(CD); 4 = 4th-Order CD; 6 = 6th-Order CD; 8 = 8th-Order CD
-   nTsteps   = 32768       ! Total number of time steps in simulation
+   nTsteps   = 1024       ! Total number of time steps in simulation
    nTwrite   = 256         ! Period of IO writes to disk; i.e., number of time steps between writes to disk
    nX        = 384         ! Number of grid points along the x-axis
    nY        = 384         ! Number of grid points along the y-axis
