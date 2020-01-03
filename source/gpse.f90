@@ -85,11 +85,11 @@
 !
 ! COPYRIGHT
 !     
-!     Copyright (c) 2014, 2015, 2016, 2017, 2018, 2019 Martin Charles Kandes
+!     Copyright (c) 2014, 2015, 2016, 2017, 2018, 2019, 2020 Martin Charles Kandes
 !
 ! LAST UPDATED
 !
-!     Sunday, December 1st, 2019
+!     Friday, January 3rd, 2020
 !
 ! ----------------------------------------------------------------------
 
@@ -159,9 +159,9 @@
 
 ! --- PARAMETER DECLARATIONS  ------------------------------------------
 
-      CHARACTER(LEN=*), PARAMETER :: GPSE_VERSION_NUMBER = '0.6.2'
+      CHARACTER(LEN=*), PARAMETER :: GPSE_VERSION_NUMBER = '0.6.3'
       CHARACTER(LEN=*), PARAMETER :: GPSE_LAST_UPDATED = &
-         & 'Sunday, December 1st, 2019'
+         & 'Friday, January 3rd, 2020'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -180,11 +180,27 @@
 !        rank of the master MPI process when the program begins
 !        execution.
 !
-! --- VARIABLE DECLARATIONS --------------------------------------------
+! --- LOGICAL VARIABLE DECLARATIONS ------------------------------------
 
       LOGICAL :: itpOn = .FALSE.
       LOGICAL :: chkptOn = .FALSE.
       LOGICAL :: pmcaOn = .FALSE.
+
+! --- LOGICAL VARIABLE DEFINITIONS -------------------------------------
+!
+!     itpOn is a LOGICAL input variable used as a flag to determine if
+!        imaginary time propagation will be performed.
+!
+!     chkptOn is a LOGICAL input variable used as a flag to determine if
+!        a binary checkpoint wave function should be written out to the
+!        psiFileNoChkpt file at the end of the simulation.
+!
+!     pmcaOn is a LOGICAL input variable used as a flag to determine if 
+!        the probability and mass current analysis is performed during 
+!        a simulation. This option requires a significant amount of 
+!        additional memory compared to a more standard simulation.
+!
+! --- CHARACTER VARIABLE DECLARATIONS ----------------------------------
 
       CHARACTER(LEN=8) :: startDate = 'NONE'
       CHARACTER(LEN=10) :: startTime = 'NONE'
@@ -192,7 +208,32 @@
       CHARACTER(LEN=8) :: stopDate = 'NONE'
       CHARACTER(LEN=10) :: stopTime = 'NONE'
       CHARACTER(LEN=5) :: stopZone = 'NONE'
-      CHARACTER(LEN=4)  :: fileUnitChar  = 'NONE'
+      CHARACTER(LEN=4) :: fileUnitChar  = 'NONE'
+
+! --- CHARACTER VARIABLE DEFINITIONS -----------------------------------
+!
+!     startDate is a CHARACTER variable that records the start date of
+!        program execution.
+!
+!     startTime is a CHARACTER variable that records the start time of
+!        program execution.
+!
+!     startZone is a CHARACTER variable that records the time zone of
+!        the system.
+!
+!     stopDate is a CHARACTER variable that records the date when
+!        program execution ends.
+!
+!     stopTime is a CHARACTER variable that records the time when
+!        program execution ends.
+!
+!     stopZone is a CHARACTER variable that records the time zone of the
+!        system.
+!
+!     fileUnitChar is a CHARACTER variable that is used to convert an 
+!        INTEGER-valued file unit number for use in an filename.
+!
+! --- INTEGER VARIABLE DECLARATIONS ------------------------------------
 
       INTEGER :: rk4Lambda = -1
       INTEGER :: fdOrder = -1
@@ -203,22 +244,16 @@
       INTEGER :: nXa = -1
       INTEGER :: nXb = -1
       INTEGER :: nXbc = -1
-      INTEGER :: nXi = -1
-      INTEGER :: nXf = -1
       INTEGER :: dNx = -1
       INTEGER :: nY = -1
       INTEGER :: nYa = -1
       INTEGER :: nYb = -1
       INTEGER :: nYbc = -1
-      INTEGER :: nYi = -1
-      INTEGER :: nYf = -1
       INTEGER :: dNy = -1
       INTEGER :: nZ = -1
       INTEGER :: nZa = -1
       INTEGER :: nZb = -1
       INTEGER :: nZbc = -1
-      INTEGER :: nZi = -1
-      INTEGER :: nZf = -1
       INTEGER :: dNz = -1
       INTEGER :: nXpsi = -1
       INTEGER :: nYpsi = -1
@@ -239,88 +274,8 @@
       INTEGER :: mpiFileHandle = -1
       INTEGER :: ompThreads = -1
       INTEGER :: j, k, l, m, n
-      
-      REAL :: tN = 0.0
-      REAL :: t0 = 0.0
-      REAL :: tF = 0.0
-      REAL :: xO = 0.0
-      REAL :: xI = 0.0
-      REAL :: xF = 0.0
-      REAL :: yO = 0.0
-      REAL :: yI = 0.0
-      REAL :: yF = 0.0
-      REAL :: zO = 0.0
-      REAL :: zI = 0.0
-      REAL :: zF = 0.0
-      REAL :: dT = 0.0
-      REAL :: dX = 0.0
-      REAL :: dY = 0.0
-      REAL :: dZ = 0.0
-      REAL :: xOrrf = 0.0
-      REAL :: yOrrf = 0.0
-      REAL :: zOrrf = 0.0
-      REAL :: wXo = 0.0
-      REAL :: wYo = 0.0
-      REAL :: wZo = 0.0
-      REAL :: wX = 0.0
-      REAL :: wY = 0.0
-      REAL :: wZ = 0.0
-      REAL :: gS = 0.0
-      REAL :: xOpsi = 0.0
-      REAL :: yOpsi = 0.0
-      REAL :: zOpsi = 0.0
-      REAL :: rOpsi = 0.0
-      REAL :: wXpsi = 0.0
-      REAL :: wYpsi = 0.0
-      REAL :: wZpsi = 0.0
-      REAL :: wRpsi = 0.0
-      REAL :: pXpsi = 0.0
-      REAL :: pYpsi = 0.0
-      REAL :: pZpsi = 0.0
-      REAL :: xOvex = 0.0
-      REAL :: yOvex = 0.0
-      REAL :: zOvex = 0.0
-      REAL :: rOvex = 0.0
-      REAL :: fXvex = 0.0
-      REAL :: fYvex = 0.0
-      REAL :: fZvex = 0.0
-      REAL :: wXvex = 0.0
-      REAL :: wYvex = 0.0
-      REAL :: wZvex = 0.0
-      REAL :: wRvex = 0.0
-      REAL :: thetaXo = 0.0
-      REAL :: nu = 0.0
-      REAL :: sigma = 0.0
-      REAL :: tSigma = 0.0
 
-      COMPLEX :: dTz = CMPLX(0.0, 0.0)
-
-! --- VARIABLE DEFINITIONS ---------------------------------------------
-!
-!     itpOn is a LOGICAL input variable used as a flag to determine if
-!        imaginary time propagation will be performed.
-!
-!     chkptOn is a LOGICAL input variable used as a flag to determine if
-!        a binary checkpoint wave function should be written out to the
-!        psiFileNoChkpt file at the end of the simulation.
-!
-!     startDate is a CHARACTER variable that records the start date of
-!        program execution.
-!
-!     startTime is a CHARACTER variable that records the start time of
-!        program execution.
-!
-!     startZone is a CHARACTER variable that records the time zone of
-!        the system.
-!
-!     stopDate is a CHARACTER variable that records the date when
-!        program execution ends.
-!
-!     stopTime is a CHARACTER variable that records the time when
-!        program execution ends.
-!
-!     stopZone is a CHARACTER variable that records the time zone of the
-!        system.
+! --- INTEGER VARIABLE DEFINITIONS -------------------------------------
 !
 !     rk4Lambda is an INTEGER-valued input variable that selects the
 !        specific Runge-Kutta scheme used for the time-integration. 
@@ -356,6 +311,14 @@
 !        points in the boundary condition along the x-axis required by
 !        the order-of-accuracy of central differences to be used.
 !
+!     dNx is an INTEGER-valued variable that controls the total number
+!        of grid points along the x-axis that a wave function is read in 
+!        from a file and/or written out to in a file. e.g., if the wave 
+!        function is being written out to a VTK file, then it will only
+!        be written out every dNx grid points along the x-axis. This 
+!        allows for a reduction in the resolution of the wavefunction on
+!        input and/or output.
+!
 !     nY is an INTEGER-valued input variable that sets the number of 
 !        grid points along the y-axis of the system.
 !
@@ -369,6 +332,10 @@
 !        points in the boundary condition along the y-axis required by
 !        the order-of-accuracy of central differences to be used.
 !
+!     dNy is an INTEGER-valued variable that controls the total number
+!        of grid points along the y-axis that a wave function is read in 
+!        from a file and/or written out to in a file. 
+!
 !     nZ is an INTEGER-valued input variable that sets the number of
 !        grid points along the z-axis of the system.
 !
@@ -381,6 +348,10 @@
 !     nZbc is an INTEGER-valued variable that sets the number of grid
 !        points in the boundary condition along the z-axis required by
 !        the order-of-accuracy of central differences to be used.
+!
+!     dNz is an INTEGER-valued variable that controls the total number
+!        of grid points along the z-axis that a wave function is read in 
+!        from a file and/or written out to in a file.
 !
 !     nXpsi is an INTEGER-valued input variable that sets the degree of
 !        Hermite polynomial used to define anisotropic SHO wave
@@ -434,11 +405,69 @@
 !     mpiReal is an INTEGER-valued variable that stores the default KIND
 !        parameter for MPI REALs.
 !
+!     mpiOffset is an INTEGER-valued variable that stores the explicit 
+!        offset in bytes where the values of a wave function should be
+!        read in from and/or written to in a file using MPI-I/O.
+!
+!     mpiFileHandle is an INTEGER-valued variable that stores the file 
+!        handle returned after opening a file using MPI-I/O.
+!
 !     ompThreads is an INTEGER-valued variable that stores the total
 !        number of OpenMP threads in a PARALLEL region.
 !
 !     j, k, l , m, and n are INTEGER-valued variables reserved for use
 !        as loop counters.
+!
+! --- REAL VARIABLE DECLARATIONS ---------------------------------------
+      
+      REAL :: tN = 0.0
+      REAL :: t0 = 0.0
+      REAL :: tF = 0.0
+      REAL :: xO = 0.0
+      REAL :: yO = 0.0
+      REAL :: zO = 0.0
+      REAL :: dT = 0.0
+      REAL :: dX = 0.0
+      REAL :: dY = 0.0
+      REAL :: dZ = 0.0
+      REAL :: xOrrf = 0.0
+      REAL :: yOrrf = 0.0
+      REAL :: zOrrf = 0.0
+      REAL :: wXo = 0.0
+      REAL :: wYo = 0.0
+      REAL :: wZo = 0.0
+      REAL :: wX = 0.0
+      REAL :: wY = 0.0
+      REAL :: wZ = 0.0
+      REAL :: gS = 0.0
+      REAL :: xOpsi = 0.0
+      REAL :: yOpsi = 0.0
+      REAL :: zOpsi = 0.0
+      REAL :: rOpsi = 0.0
+      REAL :: wXpsi = 0.0
+      REAL :: wYpsi = 0.0
+      REAL :: wZpsi = 0.0
+      REAL :: wRpsi = 0.0
+      REAL :: pXpsi = 0.0
+      REAL :: pYpsi = 0.0
+      REAL :: pZpsi = 0.0
+      REAL :: xOvex = 0.0
+      REAL :: yOvex = 0.0
+      REAL :: zOvex = 0.0
+      REAL :: rOvex = 0.0
+      REAL :: fXvex = 0.0
+      REAL :: fYvex = 0.0
+      REAL :: fZvex = 0.0
+      REAL :: wXvex = 0.0
+      REAL :: wYvex = 0.0
+      REAL :: wZvex = 0.0
+      REAL :: wRvex = 0.0
+      REAL :: thetaXo = 0.0
+      REAL :: nu = 0.0
+      REAL :: sigma = 0.0
+      REAL :: tSigma = 0.0
+
+! --- REAL VARIABLE DEFINITIONS ---------------------------------------------
 !
 !     tN is a REAL-valued input variable that stores the running
 !        simulation time.
@@ -605,8 +634,14 @@
 !        rotating frame's angular velocity vector is flipped 180 degrees
 !        about the x-axis.
 !
+! --- COMPLEX VARIABLE DECLARATIONS ------------------------------------
+
+      COMPLEX :: dTz = CMPLX(0.0, 0.0)
+
+! --- COMPLEX VARIABLE DEFINITIONS -------------------------------------
+!
 !     dTz is a COMPLEX_valued variable that determines the interval of
-!        a simulation time.
+!        a simulation time step.
 !
 ! --- ARRAY DECLARATIONS -----------------------------------------------
 

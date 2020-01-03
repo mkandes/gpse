@@ -7,10 +7,14 @@ dev
       functions from a previous simulation and recompute expectation 
       values, probability currents, average velocities, etc.
     * compute average velocities across same boundaries where the 
-      initial four probability currents are computed 
-    * compute probability currents and average velocities along z-axis 
-      in x-y plane to provide measure of out-of-plane dynamics
+      probability currents are computed 
     * support for large file sizes (> 2GB) with MPI-I/O
+
+2020/01/03 v0.6.3
+
+    + implemented computation of probability currents along z-axis in 
+      x-y plane for each Cartesian quadrant to provide measurement of 
+      out-of-plane dynamics
 
 2019/12/01 v0.6.2
 
