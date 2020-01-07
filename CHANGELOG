@@ -6,9 +6,13 @@ dev
       function data to be reprocessed; i.e., allow users to read in wave
       functions from a previous simulation and recompute expectation 
       values, probability currents, average velocities, etc.
-    * compute average velocities across same boundaries where the 
-      probability currents are computed 
     * support for large file sizes (> 2GB) with MPI-I/O
+
+2020/01/04 v0.6.4
+
+    + implemented and verified computation of average velocities across 
+      same boundaries where the probability currents are computed in 
+      pmca module
 
 2020/01/03 v0.6.3
 
