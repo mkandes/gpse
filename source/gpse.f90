@@ -89,7 +89,7 @@
 !
 ! LAST UPDATED
 !
-!     Friday, January 3rd, 2020
+!     Saturday, January 4th, 2020
 !
 ! ----------------------------------------------------------------------
 
@@ -159,9 +159,9 @@
 
 ! --- PARAMETER DECLARATIONS  ------------------------------------------
 
-      CHARACTER(LEN=*), PARAMETER :: GPSE_VERSION_NUMBER = '0.6.3'
+      CHARACTER(LEN=*), PARAMETER :: GPSE_VERSION_NUMBER = '0.6.4'
       CHARACTER(LEN=*), PARAMETER :: GPSE_LAST_UPDATED = &
-         & 'Friday, January 3rd, 2020'
+         & 'Saturday, January 4th, 2020'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -662,7 +662,6 @@
       REAL, ALLOCATABLE, DIMENSION(:,:,:) :: Rho3a
       REAL, ALLOCATABLE, DIMENSION(:,:,:) :: Phi3a
       REAL, ALLOCATABLE, DIMENSION(:,:,:,:) :: V3a
-!      REAL, ALLOCATABLE, DIMENSION(:,:,:,:) :: J3a
 
       COMPLEX, ALLOCATABLE, DIMENSION(:, :, :) :: K1
       COMPLEX, ALLOCATABLE, DIMENSION(:, :, :) :: K2
@@ -865,9 +864,6 @@
          ALLOCATE(Rho3a(nXa - nXbc : nXb + nXbc, &
                         & nYa - nYbc : nYb + nYbc, &
                         & nZa - nZbc : nZb + nZbc))
-         ALLOCATE(Phi3a(nXa - nXbc : nXb + nXbc, &
-                      & nYa - nYbc : nYb + nYbc, &
-                      & nZa - nZbc : nZb + nZbc))
          ALLOCATE(V3a(3, & 
                          & nXa - nXbc : nXb + nXbc, &
                          & nYa - nYbc : nYb + nYbc, &
@@ -1024,25 +1020,19 @@
 
                CALL pmca_density(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
                   & nZb, nZbc, Psi3a, Rho3a)
-
-!               CALL pmca_phase(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
-!                  & nZb, nZbc, Psi3a, Phi3a)
-!               CALL pmca_velocity2(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
-!                  & nZb, nZbc, dX, dY, dZ, Phi3a, V3a)
-!               CALL pmca_current_density2(nXa, nXb, nXbc, nYa, nYb, &
-!                  & nYbc, nZa, nZb, nZbc, Rho3a, V3a, J3a)
-
                CALL pmca_current_density(nXa, nXb, nXbc, nYa, nYb, &
                   & nYbc, nZa, nZb, nZbc, dX, dY, dZ, Psi3a, GradPsi3a,&
                   & J3a)
-
+               CALL pmca_velocity(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
+                  & nZb, nZbc, dX, dY, dZ, Rho3a, REAL(J3a), V3a)
                CALL pmca_compute_currents(mpiRank, MPI_MASTER, mpiReal,&
                   & mpiError, 1, nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
                   & nZb, nZbc, nZ, dX, dY, dZ, Xa, Ya, Za, Zc, REAL(J3a))
                CALL pmca_write_currents(mpiRank, MPI_MASTER, tN)
-
-!               CALL pmca_compute_velocities()
-!               CALL pmca_write_velocities()
+               CALL pmca_compute_velocities(mpiRank, MPI_MASTER, mpiReal,&
+                  & mpiError, 1, nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
+                  & nZb, nZbc, nZ, dX, dY, dZ, Xa, Ya, Za, Zc, V3a)
+               CALL pmca_write_velocities(mpiRank, MPI_MASTER, tN)
 
             END IF 
 
@@ -1396,7 +1386,6 @@
       IF (pmcaOn .EQV. .TRUE.) THEN
 
          DEALLOCATE(Rho3a)
-         DEALLOCATE(Phi3a)
          DEALLOCATE(V3a)
          DEALLOCATE(GradPsi3a)
          DEALLOCATE(J3a)

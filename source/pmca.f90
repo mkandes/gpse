@@ -1,4 +1,3 @@
-!  ======================================================================
 ! NAME
 !
 !     pmca [ pmca ] - Probability and Mass Current Analysis Module
@@ -43,7 +42,7 @@
 !
 ! LAST UPDATED
 !
-!     Sunday, November 24th, 2019
+!     Saturday, January 4th, 2019
 !
 ! ----------------------------------------------------------------------
 
@@ -77,11 +76,6 @@
 
 ! --- VARIABLE DECLARATIONS --------------------------------------------
 
-      REAL, PRIVATE :: pmcaV12 = 0.0
-      REAL, PRIVATE :: pmcaV34 = 0.0
-      REAL, PRIVATE :: pmcaV41 = 0.0
-      REAL, PRIVATE :: pmcaV23 = 0.0
-
       REAL, PRIVATE :: pmcaI12 = 0.0
       REAL, PRIVATE :: pmcaI34 = 0.0
       REAL, PRIVATE :: pmcaI41 = 0.0
@@ -92,22 +86,30 @@
       REAL, PRIVATE :: pmcaI3 = 0.0
       REAL, PRIVATE :: pmcaI4 = 0.0
 
+      REAL, PRIVATE :: pmcaV12 = 0.0
+      REAL, PRIVATE :: pmcaV34 = 0.0
+      REAL, PRIVATE :: pmcaV41 = 0.0
+      REAL, PRIVATE :: pmcaV23 = 0.0
+
+      REAL, PRIVATE :: pmcaV1 = 0.0
+      REAL, PRIVATE :: pmcaV2 = 0.0
+      REAL, PRIVATE :: pmcaV3 = 0.0
+      REAL, PRIVATE :: pmcaV4 = 0.0
+
 ! --- VARIABLE DEFINITIONS ---------------------------------------------
 !      
 ! --- SUBROUTINE DECLARATIONS ------------------------------------------
 
-      PUBLIC :: pmca_compute_velocities
-      PUBLIC :: pmca_write_velocities
-
       PUBLIC :: pmca_compute_currents
       PUBLIC :: pmca_write_currents
+
+      PUBLIC :: pmca_compute_velocities
+      PUBLIC :: pmca_write_velocities
 
       PUBLIC :: pmca_density
       PUBLIC :: pmca_phase
       PUBLIC :: pmca_velocity
-      PUBLIC :: pmca_velocity2
       PUBLIC :: pmca_current_density
-      PUBLIC :: pmca_current_density2
       PUBLIC :: pmca_quantum_potential
       PUBLIC :: pmca_vorticity
 
@@ -122,28 +124,13 @@
 ! --- FUNCTION DECLARATIONS --------------------------------------------
 
       PRIVATE :: pmca_current_3d_rect
+      PRIVATE :: pmca_velocity_3d_rect
 
 ! --- FUNCTION DEFINITIONS ---------------------------------------------
 !
 ! ----------------------------------------------------------------------
 
       CONTAINS
-
-! ----------------------------------------------------------------------
-
-      SUBROUTINE pmca_compute_velocities()
-      IMPLICIT NONE
-
-      RETURN
-      END SUBROUTINE
-
-! ----------------------------------------------------------------------
-
-      SUBROUTINE pmca_write_velocities()
-      IMPLICIT NONE
-
-      RETURN
-      END SUBROUTINE
 
 ! ----------------------------------------------------------------------
 
@@ -176,13 +163,13 @@
       IF (pmcaQuadRule == 1) THEN
 
          pmcaI = pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc,&
-            & nZa, nZb, nZbc, nZ, dX, dY, dZ, 0.0, 0.0, 0.0, Ya(nYb), &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, dX, dX, dY, Ya(nYb), &
             & Zc(1), Zc(nZ), Xa, Ya, Za, Zc, J3)
          CALL MPI_REDUCE(pmcaI, pmcaI12, 1, mpiReal, MPI_SUM, &
             & mpiMaster, MPI_COMM_WORLD, mpiError)
 
          pmcaI = pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-            & nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa(nXa), 0.0, 0.0, 0.0, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa(nXa), 0.0, dY, dY, &
             & Zc(1), Zc(nZ), Xa, Ya, Za, Zc, J3)
          CALL MPI_REDUCE(pmcaI, pmcaI23, 1, mpiReal, MPI_SUM, &
             & mpiMaster, MPI_COMM_WORLD, mpiError)
@@ -194,19 +181,19 @@
             & mpiMaster, MPI_COMM_WORLD, mpiError)
 
          pmcaI = pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-            & nZa, nZb, nZbc, nZ, dX, dY, dZ, 0.0, Xa(nXb), 0.0, 0.0, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, dX, Xa(nXb), 0.0, 0.0, &
             & Zc(1), Zc(nZ), Xa, Ya, Za, Zc, J3)
          CALL MPI_REDUCE(pmcaI, pmcaI41, 1, mpiReal, MPI_SUM, &
             & mpiMaster, MPI_COMM_WORLD, mpiError)
 
          pmcaI = pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-            & nZa, nZb, nZbc, nZ, dX, dY, dZ, 0.0, Xa(nXb), 0.0, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, dX, Xa(nXb), dY, &
             & Ya(nYb), 0.0, 0.0, Xa, Ya, Za, Zc, J3)
          CALL MPI_REDUCE(pmcaI, pmcaI1, 1, mpiReal, MPI_SUM, &
             & mpiMaster, MPI_COMM_WORLD, mpiError)
 
          pmcaI = pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-            & nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa(nXa), 0.0, 0.0, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa(nXa), 0.0, dY, &
             & Ya(nYb), 0.0, 0.0, Xa, Ya, Za, Zc, J3)
          CALL MPI_REDUCE(pmcaI, pmcaI2, 1, mpiReal, MPI_SUM, &
             & mpiMaster, MPI_COMM_WORLD, mpiError)
@@ -218,7 +205,7 @@
             & mpiMaster, MPI_COMM_WORLD, mpiError)
 
          pmcaI = pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-            & nZa, nZb, nZbc, nZ, dX, dY, dZ, 0.0, Xa(nXb), Ya(nYa), &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, dX, Xa(nXb), Ya(nYa), &
             & 0.0, 0.0, 0.0, Xa, Ya, Za, Zc, J3)
          CALL MPI_REDUCE(pmcaI, pmcaI4, 1, mpiReal, MPI_SUM, &
             & mpiMaster, MPI_COMM_WORLD, mpiError)
@@ -246,12 +233,124 @@
 !     Write computed currents to file from mpiMaster
       IF ( mpiRank == mpiMaster ) THEN
 
-         OPEN(UNIT=990, FILE='pmca.output', ACCESS='APPEND', &
+         OPEN(UNIT=990, FILE='pmca-currents.output', ACCESS='APPEND', &
             & ACTION='WRITE', FORM='FORMATTED', STATUS='UNKNOWN')
          WRITE(UNIT=990, FMT='(9(F23.15))') tN, pmcaI1, &
             & pmcaI12, pmcaI2, pmcaI23, pmcaI3, pmcaI34, pmcaI4, &
             & pmcaI41
          CLOSE(UNIT=990, STATUS='KEEP')
+
+      END IF
+
+      RETURN
+      END SUBROUTINE
+
+! ----------------------------------------------------------------------
+
+      SUBROUTINE pmca_compute_velocities(mpiRank, mpiMaster, mpiReal, &
+         & mpiError, pmcaQuadRule, nXa, nXb, nXbc, nYa, nYb, nYbc, nZa,&
+         & nZb, nZbc, nZ, dX, dY, dZ, Xa, Ya, Za, Zc, V3)
+      IMPLICIT NONE
+
+      INTEGER, INTENT(IN) :: mpiRank, mpiMaster, mpiReal
+      INTEGER, INTENT(INOUT) :: mpiError
+      INTEGER, INTENT(IN) :: pmcaQuadRule
+      INTEGER, INTENT(IN) :: nXa, nXb, nXbc
+      INTEGER, INTENT(IN) :: nYa, nYb, nYbc
+      INTEGER, INTENT(IN) :: nZa, nZb, nZbc, nZ
+
+      REAL, INTENT (IN) :: dX, dY, dZ
+
+      REAL, DIMENSION(nXa - nXbc : nXb + nXbc), INTENT(IN) :: Xa
+      REAL, DIMENSION(nYa - nYbc : nYb + nYbc), INTENT(IN) :: Ya
+      REAL, DIMENSION(nZa - nZbc : nZb + nZbc), INTENT(IN) :: Za
+      REAL, DIMENSION(  1 - nZbc : nZ  + nZbc), INTENT(IN) :: Zc
+
+      REAL, DIMENSION(3, &
+                    & nXa - nXbc : nXb + nXbc, &
+                    & nYa - nYbc : nYb + nYbc, &
+                    & nZa - nZbc : nZb + nZbc) :: V3
+
+      REAL :: pmcaV = 0.0 ! temporary, local slab velocity variable
+
+      IF (pmcaQuadRule == 1) THEN
+
+         pmcaV = pmca_velocity_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc,&
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, dX, dX, dY, Ya(nYb), &
+            & Zc(1), Zc(nZ), Xa, Ya, Za, Zc, V3)
+         CALL MPI_REDUCE(pmcaV, pmcaV12, 1, mpiReal, MPI_SUM, &
+            & mpiMaster, MPI_COMM_WORLD, mpiError)
+
+         pmcaV = pmca_velocity_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa(nXa), 0.0, dY, dY, &
+            & Zc(1), Zc(nZ), Xa, Ya, Za, Zc, V3)
+         CALL MPI_REDUCE(pmcaV, pmcaV23, 1, mpiReal, MPI_SUM, &
+            & mpiMaster, MPI_COMM_WORLD, mpiError)
+
+         pmcaV = pmca_velocity_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, 0.0, 0.0, Ya(nYa), 0.0, &
+            & Zc(1), Zc(nZ), Xa, Ya, Za, Zc, V3)
+         CALL MPI_REDUCE(pmcaV, pmcaV34, 1, mpiReal, MPI_SUM, &
+            & mpiMaster, MPI_COMM_WORLD, mpiError)
+
+         pmcaV = pmca_velocity_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, dX, Xa(nXb), 0.0, 0.0, &
+            & Zc(1), Zc(nZ), Xa, Ya, Za, Zc, V3)
+         CALL MPI_REDUCE(pmcaV, pmcaV41, 1, mpiReal, MPI_SUM, &
+            & mpiMaster, MPI_COMM_WORLD, mpiError)
+
+         pmcaV = pmca_velocity_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, dX, Xa(nXb), dY, &
+            & Ya(nYb), 0.0, 0.0, Xa, Ya, Za, Zc, V3)
+         CALL MPI_REDUCE(pmcaV, pmcaV1, 1, mpiReal, MPI_SUM, &
+            & mpiMaster, MPI_COMM_WORLD, mpiError)
+
+         pmcaV = pmca_velocity_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa(nXa), 0.0, dY, &
+            & Ya(nYb), 0.0, 0.0, Xa, Ya, Za, Zc, V3)
+         CALL MPI_REDUCE(pmcaV, pmcaV2, 1, mpiReal, MPI_SUM, &
+            & mpiMaster, MPI_COMM_WORLD, mpiError)
+
+         pmcaV = pmca_velocity_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa(nXa), 0.0, Ya(nYa), &
+            & 0.0, 0.0, 0.0, Xa, Ya, Za, Zc, V3)
+         CALL MPI_REDUCE(pmcaV, pmcaV3, 1, mpiReal, MPI_SUM, &
+            & mpiMaster, MPI_COMM_WORLD, mpiError)
+
+         pmcaV = pmca_velocity_3d_rect(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+            & nZa, nZb, nZbc, nZ, dX, dY, dZ, dX, Xa(nXb), Ya(nYa), &
+            & 0.0, 0.0, 0.0, Xa, Ya, Za, Zc, V3)
+         CALL MPI_REDUCE(pmcaV, pmcaV4, 1, mpiReal, MPI_SUM, &
+            & mpiMaster, MPI_COMM_WORLD, mpiError)
+
+      ELSE
+
+         WRITE(UNIT=ERROR_UNIT, FMT = *) 'gpse: pmca_compute_velocities: &
+            & ERROR - pmcaQuadRule is not supported.'
+         STOP
+
+      END IF
+
+      RETURN
+      END SUBROUTINE
+
+! ----------------------------------------------------------------------
+
+      SUBROUTINE pmca_write_velocities(mpiRank, mpiMaster, tN)
+      IMPLICIT NONE
+
+      INTEGER, INTENT(IN) :: mpiRank, mpiMaster
+
+      REAL, INTENT (IN) :: tN
+
+!     Write computed currents to file from mpiMaster
+      IF ( mpiRank == mpiMaster ) THEN
+
+         OPEN(UNIT=991, FILE='pmca-velocities.output', ACCESS='APPEND',&
+            & ACTION='WRITE', FORM='FORMATTED', STATUS='UNKNOWN')
+         WRITE(UNIT=991, FMT='(9(F23.15))') tN, pmcaV1, pmcaV12, &
+            & pmcaV2, pmcaV23, pmcaV3, pmcaV34, pmcaV4, pmcaV41
+         CLOSE(UNIT=991, STATUS='KEEP')
 
       END IF
 
@@ -376,42 +475,25 @@
       REAL, DIMENSION(3, &
                     & nXa - nXbc : nXb + nXbc, &
                     & nYa - nYbc : nYb + nYbc, &
-                    & nZa - nZbc : nZb + nZbc), INTENT(IN) :: V3
-
-      RETURN
-      END SUBROUTINE
-
-! ----------------------------------------------------------------------
-
-      SUBROUTINE pmca_velocity2(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
-         & nZb, nZbc, dX, dY, dZ, Phi3, V3)
-      IMPLICIT NONE
-
-      INTEGER, INTENT(IN) :: nXa
-      INTEGER, INTENT(IN) :: nXb
-      INTEGER, INTENT(IN) :: nXbc
-      INTEGER, INTENT(IN) :: nYa
-      INTEGER, INTENT(IN) :: nYb
-      INTEGER, INTENT(IN) :: nYbc
-      INTEGER, INTENT(IN) :: nZa
-      INTEGER, INTENT(IN) :: nZb
-      INTEGER, INTENT(IN) :: nZbc
-
-      REAL, INTENT(IN) :: dX
-      REAL, INTENT(IN) :: dY
-      REAL, INTENT(IN) :: dZ
-
-      REAL, DIMENSION(nXa - nXbc : nXb + nXbc, &
-                    & nYa - nYbc : nYb + nYbc, &
-                    & nZa - nZbc : nZb + nZbc), INTENT(IN) :: Phi3
-
-      REAL, DIMENSION(3, &
-                    & nXa - nXbc : nXb + nXbc, &
-                    & nYa - nYbc : nYb + nYbc, &
                     & nZa - nZbc : nZb + nZbc), INTENT(INOUT) :: V3
 
-      CALL pmca_grad_f_real_3d_rect_cd2(nXa, nXb, nXbc, nYa, nYb, &
-         & nYbc, nZa, nZb, nZbc, dX, dY, dZ, Phi3, V3)
+      INTEGER :: i, j, k, l
+
+      V3 = 0.0
+
+      !$OMP PARALLEL DO IF (nZa /= nZb) DEFAULT(SHARED) SCHEDULE(STATIC)
+      DO l = nZa, nZb
+!$OMP    PARALLEL DO IF (nZa == nZb) DEFAULT(SHARED) SCHEDULE(STATIC)
+         DO k = nYa, nYb
+            DO j = nXa, nXb
+               DO i = 1, 3
+                  V3(i,j,k,l) = J3(i,j,k,l) / Rho3(j,k,l)
+               END DO
+            END DO
+         END DO
+!$OMP    END PARALLEL DO
+      END DO
+!$OMP END PARALLEL DO
 
       RETURN
       END SUBROUTINE
@@ -446,66 +528,17 @@
 
       J3 = CMPLX(0.0,0.0)
 
-      CALL pmca_grad_f_cmplx_3d_rect_cd2(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, dX, dY, dZ, Psi3, GradPsi3)
+      CALL pmca_grad_f_cmplx_3d_rect_cd2(nXa, nXb, nXbc, nYa, nYb, &
+         & nYbc, nZa, nZb, nZbc, dX, dY, dZ, Psi3, GradPsi3)
       J3(1,:,:,:) = CONJG(Psi3) * GradPsi3(1,:,:,:)
       J3(2,:,:,:) = CONJG(Psi3) * GradPsi3(2,:,:,:)
       J3(3,:,:,:) = CONJG(Psi3) * GradPsi3(3,:,:,:)
-      CALL pmca_grad_f_cmplx_3d_rect_cd2(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, dX, dY, dZ, CONJG(Psi3), GradPsi3)
+      CALL pmca_grad_f_cmplx_3d_rect_cd2(nXa, nXb, nXbc, nYa, nYb, &
+         & nYbc, nZa, nZb, nZbc, dX, dY, dZ, CONJG(Psi3), GradPsi3)
       J3(1,:,:,:) = J3(1,:,:,:) - Psi3 * GradPsi3(1,:,:,:)
       J3(2,:,:,:) = J3(2,:,:,:) - Psi3 * GradPsi3(2,:,:,:)
       J3(3,:,:,:) = J3(3,:,:,:) - Psi3 * GradPsi3(3,:,:,:)
-      J3 = CMPLX(0.0,0.5) * J3
-
-      RETURN
-      END SUBROUTINE
-
-! ----------------------------------------------------------------------
-
-      SUBROUTINE pmca_current_density2(nXa, nXb, nXbc, nYa, nYb, nYbc, &
-         & nZa, nZb, nZbc, Rho3, V3, J3)
-      IMPLICIT NONE
-
-      INTEGER, INTENT(IN) :: nXa
-      INTEGER, INTENT(IN) :: nXb
-      INTEGER, INTENT(IN) :: nXbc
-      INTEGER, INTENT(IN) :: nYa
-      INTEGER, INTENT(IN) :: nYb
-      INTEGER, INTENT(IN) :: nYbc
-      INTEGER, INTENT(IN) :: nZa
-      INTEGER, INTENT(IN) :: nZb
-      INTEGER, INTENT(IN) :: nZbc
-
-      REAL, DIMENSION(nXa - nXbc : nXb + nXbc, &
-                    & nYa - nYbc : nYb + nYbc, &
-                    & nZa - nZbc : nZb + nZbc), INTENT(IN) :: Rho3
-
-      REAL, DIMENSION(3, &
-                    & nXa - nXbc : nXb + nXbc, &
-                    & nYa - nYbc : nYb + nYbc, &
-                    & nZa - nZbc : nZb + nZbc), INTENT(INOUT) :: V3
-
-      REAL, DIMENSION(3, &
-                    & nXa - nXbc : nXb + nXbc, &
-                    & nYa - nYbc : nYb + nYbc, &
-                    & nZa - nZbc : nZb + nZbc), INTENT(INOUT) :: J3
-
-      INTEGER :: j, k, l
-
-      J3 = 0.0
-
-!$OMP PARALLEL DO IF (nZa /= nZb) DEFAULT(SHARED) SCHEDULE(STATIC)
-      DO l = nZa , nZb
-!$OMP    PARALLEL DO IF (nZa == nZb) DEFAULT(SHARED) SCHEDULE(STATIC)
-         DO k = nYa , nYb
-            DO j = nXa , nXb
-               J3(1,j,k,l) = Rho3(j,k,l) * V3(1,j,k,l)
-               J3(2,j,k,l) = Rho3(j,k,l) * V3(2,j,k,l)
-               J3(3,j,k,l) = Rho3(j,k,l) * V3(3,j,k,l)
-            END DO
-         END DO
-!$OMP    END PARALLEL DO
-      END DO
-!$OMP END PARALLEL DO
+      J3 = CMPLX(0.0,-0.5) * J3
 
       RETURN
       END SUBROUTINE
@@ -637,8 +670,8 @@
 ! ----------------------------------------------------------------------
 
       REAL FUNCTION pmca_current_3d_rect(nXa, nXb, nXbc, nYa, nYb, &
-         & nYbc, nZa, nZb, nZbc, nZ, dX, dY, dZ, xI, xF, yI, yF, zI, zF,&
-         & Xa, Ya, Za, Zc, J3) RESULT(pmcaI)
+         & nYbc, nZa, nZb, nZbc, nZ, dX, dY, dZ, xI, xF, yI, yF, zI, &
+         & zF, Xa, Ya, Za, Zc, J3) RESULT(pmcaI)
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: nXa, nXb, nXbc
@@ -702,6 +735,7 @@
          nZfL = nZb
       END IF
 
+!     Compute surface integrals
       IF (nXiG == nXfG) THEN
 
          DO l = nZiL, nZfL
@@ -736,6 +770,113 @@
       ELSE
 
          WRITE(UNIT=ERROR_UNIT, FMT = *) 'gpse: pmca_current_3d_rect: &
+            & ERROR - Surface integral must currently lie in one of &
+            & the Cartesian planes.'
+         STOP
+
+      END IF
+
+      RETURN
+      END FUNCTION
+
+! ----------------------------------------------------------------------
+
+      REAL FUNCTION pmca_velocity_3d_rect(nXa, nXb, nXbc, nYa, nYb, &
+         & nYbc, nZa, nZb, nZbc, nZ, dX, dY, dZ, xI, xF, yI, yF, zI, &
+         & zF, Xa, Ya, Za, Zc, V3) RESULT(pmcaV)
+      IMPLICIT NONE
+
+      INTEGER, INTENT(IN) :: nXa, nXb, nXbc
+      INTEGER, INTENT(IN) :: nYa, nYb, nYbc
+      INTEGER, INTENT(IN) :: nZa, nZb, nZbc, nZ
+
+      REAL, INTENT(IN) :: dX, dY, dZ
+
+      REAL, INTENT(IN) :: xI, xF
+      REAL, INTENT(IN) :: yI, yF
+      REAL, INTENT(IN) :: zI, zF
+
+      REAL, DIMENSION(nXa - nXbc : nXb + nXbc), INTENT(IN) :: Xa
+      REAL, DIMENSION(nYa - nYbc : nYb + nYbc), INTENT(IN) :: Ya
+      REAL, DIMENSION(nZa - nZbc : nZb + nZbc), INTENT(IN) :: Za
+      REAL, DIMENSION(  1 - nZbc : nZ  + nZbc), INTENT(IN) :: Zc
+
+
+      REAL, DIMENSION(3, &
+                    & nXa - nXbc : nXb + nXbc, &
+                    & nYa - nYbc : nYb + nYbc, &
+                    & nZa - nZbc : nZb + nZbc), INTENT(IN) :: V3
+
+      INTEGER :: j, k, l
+
+      INTEGER :: nXiG = -1, nXfG = -1
+      INTEGER :: nYiG = -1, nYfG = -1
+      INTEGER :: nZiG = -1, nZfG = -1
+      INTEGER :: nZiL = -1, nZfL = -1
+
+      pmcaV = 0.0
+
+!     Search for global location of integration limits in x, y, and z
+      nXiG = grid_linear_search(nXa, nXb, nXbc, xI, Xa)
+      nXfG = grid_linear_search(nXa, nXb, nXbc, xF, Xa)
+
+      nYiG = grid_linear_search(nYa, nYb, nYbc, yI, Ya)
+      nYfG = grid_linear_search(nYa, nYb, nYbc, yF, Ya)
+
+      nZiG = grid_linear_search(1, nZ, nZbc, zI, Zc)
+      nZfG = grid_linear_search(1, nZ, nZbc, zF, Zc)
+
+!     Search for slab-local location of integration limits in z
+      IF ((nZa <= nZiG).AND.(nZiG <= nZb)) THEN
+         nZiL = nZiG
+      ELSE IF ((nZa > nZiG).AND.(nZa < nZfG)) THEN
+         nZiL = nZa
+      END IF
+
+      IF ((nZa <= nZfG).AND.(nZfG <= nZb)) THEN
+         nZfL = nZfG
+      ELSE IF ((nZb > nZiG).AND.(nZb < nZfG)) then
+         nZfL = nZb
+      END IF
+
+!     Compute surface integrals
+      IF (nXiG == nXfG) THEN
+
+         DO l = nZiL, nZfL
+            DO k = nYiG, nYfG
+               pmcaV = pmcaV + V3(1,nXiG,k,l)
+            END DO
+         END DO
+         pmcaV = pmcaV * dY * dZ
+         pmcaV = pmcaV / ((Ya(nYfG) - Ya(nYiG)) * (Zc(nZfG) - Zc(nZiG)))
+
+      ELSE IF (nYiG == nYfG) THEN
+
+         DO l = nZiL, nZfL
+            DO j = nXiG, nXfG
+               pmcaV = pmcaV + V3(2,j,nYiG,l)
+            END DO
+         END DO
+         pmcaV = pmcaV * dX * dZ
+         pmcaV = pmcaV / ((Xa(nXfG) - Xa(nXiG)) * (Zc(nZfG) - Zc(nZiG)))
+
+      ELSE IF (nZiG == nZfG) THEN
+
+         IF ((nZiG == nZiL).AND.(nZfG == nZfL)) THEN
+
+            DO k = nYiG, nYfG
+               DO j = nXiG, nXfG
+                  pmcaV = pmcaV + V3(3,j,k,nZiG)
+               END DO
+            END DO
+            pmcaV = pmcaV * dX * dY
+            pmcaV = pmcaV / ((Xa(nXfG) - Xa(nXiG)) * (Ya(nYfG) - Ya(nYiG)))
+
+         END IF
+
+      ELSE
+
+         WRITE(UNIT=ERROR_UNIT, FMT = *) 'gpse: pmca_velocity_3d_rect: &
             & ERROR - Surface integral must currently lie in one of &
             & the Cartesian planes.'
          STOP
