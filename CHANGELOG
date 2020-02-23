@@ -2,11 +2,14 @@ CHANGELOG : GPSE
 
 dev
 
-    * reorganize main time propagation/simulation loop to allow wave 
-      function data to be reprocessed; i.e., allow users to read in wave
-      functions from a previous simulation and recompute expectation 
-      values, probability currents, average velocities, etc.
     * support for large file sizes (> 2GB) with MPI-I/O
+
+2020/02/16 v0.6.5
+
+    + reorganized main time propagation/simulation loop to allow wave
+      function data to be reprocessed; i.e., allows users to read in
+      wave functions from a previous simulation and recompute 
+      expectation values, probability currents, average velocities, etc.
 
 2020/01/04 v0.6.4
 
