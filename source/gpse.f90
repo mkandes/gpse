@@ -89,7 +89,7 @@
 !
 ! LAST UPDATED
 !
-!     Saturday, January 4th, 2020
+!     Sunday, February 16th, 2020
 !
 ! ----------------------------------------------------------------------
 
@@ -159,9 +159,9 @@
 
 ! --- PARAMETER DECLARATIONS  ------------------------------------------
 
-      CHARACTER(LEN=*), PARAMETER :: GPSE_VERSION_NUMBER = '0.6.4'
+      CHARACTER(LEN=*), PARAMETER :: GPSE_VERSION_NUMBER = '0.6.5'
       CHARACTER(LEN=*), PARAMETER :: GPSE_LAST_UPDATED = &
-         & 'Saturday, January 4th, 2020'
+         & 'Sunday, February 16th, 2020'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -185,6 +185,7 @@
       LOGICAL :: itpOn = .FALSE.
       LOGICAL :: chkptOn = .FALSE.
       LOGICAL :: pmcaOn = .FALSE.
+      LOGICAL :: reanOn = .FALSE.
 
 ! --- LOGICAL VARIABLE DEFINITIONS -------------------------------------
 !
@@ -199,6 +200,9 @@
 !        the probability and mass current analysis is performed during 
 !        a simulation. This option requires a significant amount of 
 !        additional memory compared to a more standard simulation.
+!
+!     reanOn is a LOGICAL input variable used as a flag to determine if
+!        gpse is being run only to reanalyze existing wave function data.
 !
 ! --- CHARACTER VARIABLE DECLARATIONS ----------------------------------
 
@@ -660,7 +664,7 @@
       REAL, ALLOCATABLE, DIMENSION(:, : ) :: Psi2b
 
       REAL, ALLOCATABLE, DIMENSION(:,:,:) :: Rho3a
-      REAL, ALLOCATABLE, DIMENSION(:,:,:) :: Phi3a
+      !REAL, ALLOCATABLE, DIMENSION(:,:,:) :: Phi3a
       REAL, ALLOCATABLE, DIMENSION(:,:,:,:) :: V3a
 
       COMPLEX, ALLOCATABLE, DIMENSION(:, :, :) :: K1
@@ -743,7 +747,7 @@
 !
 ! --- NAMELIST DECLARATIONS --------------------------------------------
 
-      NAMELIST /gpseIn/ itpOn, chkptOn, pmcaOn, rk4Lambda, fdOrder, &
+      NAMELIST /gpseIn/ itpOn, chkptOn, pmcaOn, reanOn, rk4Lambda, fdOrder, &
          & nTsteps, nTwrite, nX, nY, nZ, dNx, dNy, dNz, t0, tF, xO, yO,&
          & zO, dT, dX, dY, dZ, xOrrf, yOrrf, zOrrf, wX, wY, wZ, gS, &
          & psiInput, psiOutput, psiFileNo, psiFileNoChkpt, psiInit, &
@@ -796,12 +800,12 @@
       CALL mpi_bcast_inputs(MPI_MASTER, mpiInt, mpiReal, mpiCmplx, &
          & mpiError)
 
-!     run simulation using imaginary time propagation
+!     Run simulation using imaginary time propagation
       IF (itpOn .EQV. .TRUE.) THEN
 
          dTz = CMPLX(0.0, -dT)
 
-!     run simulation in real (normal) time
+!     Run simulation in real (normal) time
       ELSE
 
          dTz = CMPLX(dT, 0.0)
@@ -814,13 +818,13 @@
       nYb = nY
       nZa = 1 + mpiRank * FLOOR(REAL(nZ / mpiProcesses))
 
-!     include any remaining z-axis grid points on last MPI process
+!     Include any remaining z-axis grid points on last MPI process
       IF ((mpiRank + 1) == mpiProcesses) THEN
 
          nZb = (mpiRank + 1) * FLOOR(REAL(nZ / mpiProcesses)) &
             & + MODULO(nZ, mpiProcesses)
 
-!     all other MPI processes have same number of z-axis grid points
+!     All other MPI processes have same number of z-axis grid points
       ELSE
 
          nZb = (mpiRank + 1) * FLOOR(REAL(nZ / mpiProcesses))
@@ -862,20 +866,20 @@
       IF (pmcaOn .EQV. .TRUE.) THEN
 
          ALLOCATE(Rho3a(nXa - nXbc : nXb + nXbc, &
-                        & nYa - nYbc : nYb + nYbc, &
-                        & nZa - nZbc : nZb + nZbc))
+                      & nYa - nYbc : nYb + nYbc, &
+                      & nZa - nZbc : nZb + nZbc))
          ALLOCATE(V3a(3, & 
-                         & nXa - nXbc : nXb + nXbc, &
-                         & nYa - nYbc : nYb + nYbc, &
-                         & nZa - nZbc : nZb + nZbc))
+                    & nXa - nXbc : nXb + nXbc, &
+                    & nYa - nYbc : nYb + nYbc, &
+                    & nZa - nZbc : nZb + nZbc))
          ALLOCATE(GradPsi3a(3, &
-                         & nXa - nXbc : nXb + nXbc, &
-                         & nYa - nYbc : nYb + nYbc, &
-                         & nZa - nZbc : nZb + nZbc))
+                          & nXa - nXbc : nXb + nXbc, &
+                          & nYa - nYbc : nYb + nYbc, &
+                          & nZa - nZbc : nZb + nZbc))
          ALLOCATE(J3a(3, &
-                         & nXa - nXbc : nXb + nXbc, &
-                         & nYa - nYbc : nYb + nYbc, &
-                         & nZa - nZbc : nZb + nZbc))
+                    & nXa - nXbc : nXb + nXbc, &
+                    & nYa - nYbc : nYb + nYbc, &
+                    & nZa - nZbc : nZb + nZbc))
 
       END IF
 
@@ -898,7 +902,7 @@
       CALL grid_regular_axis(nZ, nZa, nZb, nZbc, zO, dZ, Za)
       CALL grid_regular_axis(nZ, 1, nZ, nZbc, zO, dZ, Zc )
 
-!     compute initial wave function from available analytic expression
+!     Compute initial wave function from available analytic expression
       IF (psiInput == 0) THEN
 
          CALL psi_init(psiInit, nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
@@ -908,32 +912,35 @@
          CALL evua_normalize(MPI_MASTER, mpiReal, mpiError, nXa, nXb, &
             & nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, dX, dY, dZ, Psi3a)
 
-!     read initial wave function from binary file on MPI_MASTER
+!     Read initial wave function from binary file on MPI_MASTER
       ELSE IF (psiInput == 1) THEN
 
          psiFilePos = 1 ! initialize file position
 
-!        read and initialize first block of wave function values from 
+!        Read and initialize first block of wave function values from 
 !        binary file on MPI_MASTER
          IF (mpiRank == MPI_MASTER) THEN
             CALL io_read_bin_psi(psiFileNo, psiFilePos, nXa, nXb, nXbc,&
                & nYa, nYb, nYbc, nZa, nZb, nZbc, Psi3a)
          END IF
 
-!        loop over mpiDesination ranks that are not equal to MPI_MASTER
+!        Loop over mpiDesination ranks that are not equal to MPI_MASTER
          DO mpiDestination = 1, mpiProcesses - 1
-!           read in next block of wave function values from binary file
+
+!           Read in next block of wave function values from binary file
 !           on MPI_MASTER
             IF (mpiRank == MPI_MASTER) THEN
                CALL io_read_bin_psi(psiFileNo, psiFilePos, nXa, nXb, &
                   & nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, Psi3b)
             END IF
-!           send read block from MPI_MASTER to mpiRank equal to mpiDestination
+
+!           Send read block from MPI_MASTER to mpiRank equal to mpiDestination
             CALL mpi_copy_psi(mpiRank, MPI_MASTER, mpiDestination, nXa,&
                & nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, Psi3b)
+
          END DO
 
-!        after all blocks have been sent, copy wave function values into Psi3a; 
+!        After all blocks have been sent, copy wave function values into Psi3a; 
 !        MPI_MASTER block was read into Psi3a directly
          IF (mpiRank /= MPI_MASTER) THEN
             Psi3a = Psi3b
@@ -965,7 +972,7 @@
       CALL psi_boost(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, &
          & xOpsi, yOpsi, zOpsi, pXpsi, pYpsi, pZpsi, Xa, Ya, Za, Psi3a)
 
-!     compute initial external potential from known analytic expression
+!     Compute initial external potential from known analytic expression
       IF (vexInput == 0) THEN
 
          CALL vex_init(vexInit, nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
@@ -975,11 +982,9 @@
       ELSE
 
          IF (mpiRank == MPI_MASTER) THEN
-
             WRITE(UNIT = ERROR_UNIT, FMT = *) &
                & 'gpse : ERROR - vexInput not recognized.'
             STOP
-
          END IF 
 
       END IF
@@ -989,407 +994,595 @@
 
 ! --- BEGIN MAIN TIME PROPAGATION LOOP ---------------------------------
 
-      tN = t0 ! initialize simulation time
+!     Initialize simulation time
+      tN = t0
 
-      DO n = 0, nTsteps
+      IF (reanOn .EQV. .FALSE.) THEN ! start main simulation time 
+                                     ! propagation loop
 
-         CALL MPI_BARRIER(MPI_COMM_WORLD, mpiError)
-
-         IF (MODULO(n, nTwrite) == 0) THEN ! compute partial 
-!        relations to file from MPI_MASTER; write wave function and 
-!        external potential to file from MPI_MASTER
-
-!           Compute partial base expectation values locally on each MPI 
-!           process; reduce partial base expectation values from all MPI
-!           processes to MPI_MASTER to get full base expectation values
-            CALL evua_compute_base(MPI_MASTER, mpiReal, mpiError, 1, &
-               & fdOrder, nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, &
-               & nZbc, xO, yO, zO, dX, dY, dZ, gS, Xa, Ya, Za, Vex3a, &
-               & Psi3a)
-
-!           Compute derived expectation values, uncertainties from base
-            CALL evua_compute_derived(mpiRank, MPI_MASTER, wX, wY, wZ)
-
-!           Write expectation values, undertainties and uncertainty 
-!           relations to file from MPI_MASTER
-            CALL evua_write_all(mpiRank, MPI_MASTER, tN, wX, wY, wZ)
-
-!           Write probability / mass currents and average velocities to 
-!           file from MPI_MASTER.
-            IF (pmcaOn .EQV. .TRUE.) THEN
-
-               CALL pmca_density(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
-                  & nZb, nZbc, Psi3a, Rho3a)
-               CALL pmca_current_density(nXa, nXb, nXbc, nYa, nYb, &
-                  & nYbc, nZa, nZb, nZbc, dX, dY, dZ, Psi3a, GradPsi3a,&
-                  & J3a)
-               CALL pmca_velocity(nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
-                  & nZb, nZbc, dX, dY, dZ, Rho3a, REAL(J3a), V3a)
-               CALL pmca_compute_currents(mpiRank, MPI_MASTER, mpiReal,&
-                  & mpiError, 1, nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
-                  & nZb, nZbc, nZ, dX, dY, dZ, Xa, Ya, Za, Zc, REAL(J3a))
-               CALL pmca_write_currents(mpiRank, MPI_MASTER, tN)
-               CALL pmca_compute_velocities(mpiRank, MPI_MASTER, mpiReal,&
-                  & mpiError, 1, nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, &
-                  & nZb, nZbc, nZ, dX, dY, dZ, Xa, Ya, Za, Zc, V3a)
-               CALL pmca_write_velocities(mpiRank, MPI_MASTER, tN)
-
-            END IF 
-
-            IF ( psiOutput == 1 ) THEN ! Write wave function to file from MPI_MASTER using streaming I/O binary with partial reduce
-
-               Psi3b = Psi3a
-               psiFilePos = 1 
-               DO mpiSource = 0 , mpiProcesses - 1
-
-                  CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , &
-                     & Psi3b )
-                  IF ( mpiRank == MPI_MASTER ) THEN
-
-                     CALL io_write_bin_psi ( psiFileNo , psiFilePos , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , &
-                        & Psi3b )
-
+         DO n = 0, nTsteps
+   
+            CALL MPI_BARRIER(MPI_COMM_WORLD, mpiError)
+   
+!           Compute partial relations to file from MPI_MASTER; write 
+!           wave function and external potential to file from MPI_MASTER
+            IF (MODULO(n, nTwrite) == 0) THEN 
+   
+!              Compute partial base expectation values locally on each 
+!              MPI process; reduce partial base expectation values from
+!              all MPI processes to MPI_MASTER to get full base 
+!              expectation values
+               CALL evua_compute_base(MPI_MASTER, mpiReal, mpiError, 1,&
+                  & fdOrder, nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, &
+                  & nZbc, xO, yO, zO, dX, dY, dZ, gS, Xa, Ya, Za, &
+                  & Vex3a, Psi3a)
+   
+!              Compute derived expectation values, uncertainties from base
+               CALL evua_compute_derived(mpiRank, MPI_MASTER, wX, wY, wZ)
+   
+!              Write expectation values, undertainties and uncertainty 
+!              relations to file from MPI_MASTER
+               CALL evua_write_all(mpiRank, MPI_MASTER, tN, wX, wY, wZ)
+   
+!              Write probability / mass currents and average velocities
+!              to file from MPI_MASTER.
+               IF (pmcaOn .EQV. .TRUE.) THEN
+   
+                  CALL pmca_density(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+                     & nZa, nZb, nZbc, Psi3a, Rho3a)
+                  CALL pmca_current_density(nXa, nXb, nXbc, nYa, nYb, &
+                     & nYbc, nZa, nZb, nZbc, dX, dY, dZ, Psi3a, &
+                     & GradPsi3a, J3a)
+                  CALL pmca_velocity(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+                     & nZa, nZb, nZbc, dX, dY, dZ, Rho3a, REAL(J3a), &
+                     & V3a)
+                  CALL pmca_compute_currents(mpiRank, MPI_MASTER, &
+                     & mpiReal, mpiError, 1, nXa, nXb, nXbc, nYa, nYb, &
+                     & nYbc, nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa, Ya, &
+                     & Za, Zc, REAL(J3a))
+                  CALL pmca_write_currents(mpiRank, MPI_MASTER, tN)
+                  CALL pmca_compute_velocities(mpiRank, MPI_MASTER, &
+                     & mpiReal, mpiError, 1, nXa, nXb, nXbc, nYa, nYb, &
+                     & nYbc, nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa, Ya, &
+                     & Za, Zc, V3a)
+                  CALL pmca_write_velocities(mpiRank, MPI_MASTER, tN)
+   
+               END IF 
+   
+!              Write wave function to file from MPI_MASTER using
+!              streaming I/O binary with partial reduce
+               IF (psiOutput == 1) THEN
+   
+                  Psi3b = Psi3a
+                  psiFilePos = 1 
+   
+                  DO mpiSource = 0, mpiProcesses - 1
+   
+                     CALL mpi_copy_psi(mpiRank, mpiSource, MPI_MASTER, &
+                        & nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, &
+                        & nZbc, Psi3b)
+                     IF (mpiRank == MPI_MASTER) THEN
+                        CALL io_write_bin_psi(psiFileNo, psiFilePos, &
+                           & nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, &
+                           & nZbc, Psi3b)
+                     END IF
+   
+                  END DO
+   
+                  psiFileNo = psiFileNo + 1
+   
+!              Write the wave function to a legacy VTK file from
+!              MPI_MASTER using streaming I/O with partial reduce
+               ELSE IF (psiOutput == 2) THEN
+   
+                  Zb = Za
+                  Psi3b = Psi3a
+                  psiFilePos = 1 ! initialize file position
+   
+                  IF (mpiRank == MPI_MASTER) THEN
+   
+                     CALL io_write_vtk_header('psi-', psiFileNo, &
+                        & psiFilePos, nX, nY, nZ, dNx, dNy, dNz)
+                     CALL io_write_vtk_xcoordinates('psi-', psiFileNo, &
+                        & psiFilePos, nX, nXa, nXb, nXbc, dNx, Xa)
+                     CALL io_write_vtk_ycoordinates('psi-', psiFileNo, &
+                        & psiFilePos, nY, nYa, nYb, nYbc, dNy, Ya)
+   
                   END IF
-
-               END DO
-               psiFileNo = psiFileNo + 1
-
-            ELSE IF ( psiOutput == 2 ) THEN ! Write the wave function to a legacy VTK file from MPI_MASTER using streaming I/O
-                                            ! with partial reduce
-               Zb = Za
-               Psi3b = Psi3a
-               psiFilePos = 1 ! initialize file position
-               IF ( mpiRank == MPI_MASTER ) THEN
-
-                  CALL io_write_vtk_header ( 'psi-', psiFileNo , psiFilePos , nX , nY , nZ , dNx , dNy , dNz )
-                  CALL io_write_vtk_xcoordinates ( 'psi-' , psiFileNo , psiFilePos , nX , nXa , nXb , nXbc , dNx , Xa )
-                  CALL io_write_vtk_ycoordinates ( 'psi-' , psiFileNo , psiFilePos , nY , nYa , nYb , nYbc , dNy , Ya )
-
-               END IF
-               DO mpiSource = 0 , mpiProcesses - 1
-
-                  CALL mpi_copy_q ( mpiRank , mpiSource , MPI_MASTER , nZ , nZa , nZb , nZbc , Zb )
-                  IF ( mpiRank == MPI_MASTER ) THEN
-
-                     CALL io_write_vtk_zcoordinates ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nZ , nZa , nZb , nZbc , dNz , Zb )
-
-                  END IF
-
-               END DO
-               DO mpiSource = 0 , mpiProcesses - 1
-
-                  CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , &
-                     & Psi3b )
-                  IF ( mpiRank == MPI_MASTER ) THEN
-
-                     CALL io_write_vtk_repsi ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , dNx , nY , &
-                        & nYa , nYb , nYbc , dNy , nZ , nZa , nZb , nZbc , dNz , Psi3b )
-
-                  END IF
-
-               END DO
-               Psi3b = Psi3a
-               DO mpiSource = 0 , mpiProcesses - 1
-
-                  CALL mpi_copy_psi ( mpiRank , mpiSource , MPI_MASTER , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , &
-                     & Psi3b )
-                  IF ( mpiRank == MPI_MASTER ) THEN 
-
-                     CALL io_write_vtk_impsi ( 'psi-' , psiFileNo , psiFilePos , mpiSource , nX , nXa , nXb , nXbc , dNx , nY , &
-                        & nYa , nYb , nYbc , dNy , nZ , nZa , nZb , nZbc , dNz , Psi3b )
-
-                  END IF
-
-               END DO
-               psiFileNo = psiFileNo + 1
-
-            ELSE IF ( psiOutput == 3 ) THEN ! Use simple parallel I/O to write out the complete wave function simultaneously to many
-                                            ! legacy VTK files that only contain a single, one-dimensional slab of the wave function
-                                            ! overseen by an MPI process
-
-               CALL io_write_vtk ( 'psi-', psiFileNo, mpiRank, nX, nXa,&
-                  & nXb, nXbc, dNx, nY, nYa, nYb, nYbc, dNy, nZ, nZa,  &
-                  & nZb, nZbc, dNz, Xa, Ya, Za, Psi3a )
-               psiFileNo = psiFileNo + 1
-
-            ELSE IF ( psiOutput == 4 ) THEN ! Use MPI-I/O to write the wave function out to a single binary file in parallel
-
-               WRITE ( UNIT = fileUnitChar, FMT = '(I4.4)' ) psiFileNo
-               CALL MPI_FILE_OPEN ( MPI_COMM_WORLD, &
-                  & TRIM ( 'psi-'//fileUnitChar//'.bin' ), &
-                  & MPI_MODE_CREATE + MPI_MODE_WRONLY, MPI_INFO_NULL, &
-                  & mpiFileHandle, mpiError )
-               DO l = nZa, nZb
-                  DO k = nYa, nYb
-                     mpiOffset = 2*CMPLX_DEFAULT_KIND*nX*((k-1)+nY*(l-1))
-                     CALL MPI_FILE_WRITE_AT ( mpiFileHandle, mpiOffset, &
-                        & Psi3a(nXa,k,l), nX, mpiCmplx, mpiStatus, &
-                        & mpiError )
+   
+                  DO mpiSource = 0,  mpiProcesses - 1
+   
+                     CALL mpi_copy_q(mpiRank, mpiSource, MPI_MASTER, &
+                        & nZ, nZa, nZb, nZbc, Zb)
+                     IF (mpiRank == MPI_MASTER) THEN
+                        CALL io_write_vtk_zcoordinates('psi-', &
+                           & psiFileNo, psiFilePos, mpiSource, nZ, nZa,&
+                           & nZb, nZbc, dNz, Zb)
+                     END IF
+   
+                  END DO
+   
+                  DO mpiSource = 0, mpiProcesses - 1
+   
+                     CALL mpi_copy_psi(mpiRank, mpiSource, MPI_MASTER, &
+                        & nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, &
+                        & nZbc, Psi3b)
+                     IF (mpiRank == MPI_MASTER) THEN
+                        CALL io_write_vtk_repsi('psi-', psiFileNo, &
+                           & psiFilePos, mpiSource, nX, nXa, nXb, &
+                           & nXbc, dNx, nY, nYa, nYb, nYbc, dNy, nZ, &
+                           & nZa, nZb, nZbc, dNz, Psi3b)
+                     END IF
+   
+                  END DO
+   
+                  Psi3b = Psi3a
+   
+                  DO mpiSource = 0, mpiProcesses - 1
+   
+                     CALL mpi_copy_psi(mpiRank, mpiSource, MPI_MASTER, &
+                        & nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, &
+                        & nZbc, Psi3b)
+                     IF (mpiRank == MPI_MASTER) THEN 
+                        CALL io_write_vtk_impsi('psi-', psiFileNo, &
+                           & psiFilePos, mpiSource, nX, nXa, nXb, &
+                           & nXbc, dNx, nY, nYa, nYb, nYbc, dNy, nZ, &
+                           & nZa, nZb, nZbc, dNz, Psi3b)
+                     END IF
+   
+                  END DO
+   
+                  psiFileNo = psiFileNo + 1
+   
+!              Use simple parallel I/O to write out the complete wave
+!              function simultaneously to many legacy VTK files that
+!              only contain a single, one-dimensional slab of the wave
+!              function overseen by an MPI process
+               ELSE IF (psiOutput == 3) THEN
+   
+                  CALL io_write_vtk('psi-', psiFileNo, mpiRank, nX, &
+                     & nXa, nXb, nXbc, dNx, nY, nYa, nYb, nYbc, dNy, &
+                     & nZ, nZa, nZb, nZbc, dNz, Xa, Ya, Za, Psi3a)
+                  psiFileNo = psiFileNo + 1
+   
+!              Use MPI-I/O to write the wave function out to a single
+!              binary file in parallel
+               ELSE IF (psiOutput == 4) THEN
+   
+                  WRITE(UNIT=fileUnitChar, FMT='(I4.4)') psiFileNo
+                  CALL MPI_FILE_OPEN ( MPI_COMM_WORLD, &
+                     & TRIM ( 'psi-'//fileUnitChar//'.bin' ), &
+                     & MPI_MODE_CREATE + MPI_MODE_WRONLY, &
+                     & MPI_INFO_NULL, mpiFileHandle, mpiError )
+                  DO l = nZa, nZb
+                     DO k = nYa, nYb
+                        mpiOffset = 2*CMPLX_DEFAULT_KIND*nX*((k-1)+nY*(l-1))
+                        CALL MPI_FILE_WRITE_AT(mpiFileHandle, &
+                           & mpiOffset, Psi3a(nXa,k,l), nX, mpiCmplx, &
+                           & mpiStatus, mpiError)
+                     ENDDO
                   ENDDO
-               ENDDO
-               CALL MPI_FILE_CLOSE ( mpiFileHandle, mpiError )
-               psiFileNo = psiFileNo + 1
-
-            ELSE IF ( psiOutput == 5 ) THEN ! Compute the integrated, two-dimensional density profiles of the wave function in the 
-                                            ! (x,y)-, (x,z)-, and (y,z)-planes and then write each density profile to its own 
-                                            ! gnuplot (.splot) formatted file 
-
-               ALLOCATE ( Psi2a ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc ) )
-               ALLOCATE ( Psi2b ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc ) )
-
-               Psi3b = Psi3a
-               Psi2a = 0.0
-               Psi2b = 0.0
-               DO l = nZa , nZb
-
-                  DO k = nYa , nYb
-
-                     DO j = nXa , nXb
-
-                        Psi2b ( j , k ) = Psi2b ( j , k ) + ABS ( Psi3b ( j , k , l ) )**2
-
+                  CALL MPI_FILE_CLOSE(mpiFileHandle, mpiError)
+   
+                  psiFileNo = psiFileNo + 1
+   
+!              Compute the integrated, two-dimensional density profiles
+!              of the wave function in the (x,y)-, (x,z)-, and 
+!              (y,z)-planes and then write each density profile to its
+!              own gnuplot (.splot) formatted file
+               ELSE IF (psiOutput == 5) THEN
+   
+                  ALLOCATE(Psi2a(nXa - nXbc : nXb + nXbc, &
+                               & nYa - nYbc : nYb + nYbc))
+                  ALLOCATE(Psi2b(nXa - nXbc : nXb + nXbc, &
+                               & nYa - nYbc : nYb + nYbc))
+   
+                  Psi3b = Psi3a
+                  Psi2a = 0.0
+                  Psi2b = 0.0
+   
+                  DO l = nZa, nZb
+                     DO k = nYa, nYb
+                        DO j = nXa, nXb
+                           Psi2b(j, k) = Psi2b(j, k) + ABS(Psi3b(j, k, l))**2
+                        END DO
                      END DO
-
                   END DO
-
-               END DO
-               Psi2b = Psi2b * dZ
-               CALL MPI_REDUCE ( Psi2b , Psi2a , ( nXb - nXa + 1 ) * ( nYb - nYa + 1 ), mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
- 
-               IF ( mpiRank == MPI_MASTER ) THEN
-
-                  CALL io_write_splot_psi2 ( 'psi2xy-' , psiFileNo , nXa , nXb , nXbc , nYa , nYb , nYbc , Xa , Ya , Psi2a )
-
-               END IF
-
-               DEALLOCATE ( Psi2b )
-               DEALLOCATE ( Psi2a )
-
-               ALLOCATE ( Psi2a ( nXa - nXbc : nXb + nXbc , 1 - nZbc : nZ + nZbc ) )
-               ALLOCATE ( Psi2b ( nXa - nXbc : nXb + nXbc , 1 - nZbc : nZ + nZbc ) )
-
-               Psi3b = Psi3a
-               Psi2a = 0.0
-               Psi2b = 0.0
-               DO l = nZa , nZb
-
-                  DO k = nYa , nYb
-
-                     DO j = nXa , nXb
-
-                        Psi2b ( j , l ) = Psi2b ( j , l ) + ABS ( Psi3b ( j , k , l ) )**2 
-
+                  Psi2b = Psi2b * dZ
+   
+                  CALL MPI_REDUCE(Psi2b, Psi2a, (nXb - nXa + 1) * &
+                     & (nYb - nYa + 1), mpiReal, MPI_SUM, MPI_MASTER, &
+                     & MPI_COMM_WORLD, mpiError)
+    
+                  IF (mpiRank == MPI_MASTER) THEN
+                     CALL io_write_splot_psi2('psi2xy-', psiFileNo, &
+                        & nXa, nXb, nXbc, nYa, nYb, nYbc, Xa, Ya, Psi2a)
+                  END IF
+   
+                  DEALLOCATE(Psi2b)
+                  DEALLOCATE(Psi2a)
+   
+                  ALLOCATE(Psi2a(nXa - nXbc : nXb + nXbc, &
+                               & 1 - nZbc : nZ + nZbc))
+                  ALLOCATE(Psi2b(nXa - nXbc : nXb + nXbc, &
+                               & 1 - nZbc : nZ + nZbc))
+   
+                  Psi3b = Psi3a
+                  Psi2a = 0.0
+                  Psi2b = 0.0
+   
+                  DO l = nZa, nZb
+                     DO k = nYa, nYb
+                        DO j = nXa, nXb
+                           Psi2b(j, l) = Psi2b(j, l) + ABS(Psi3b(j, k, l))**2 
+                        END DO
                      END DO
-
                   END DO
-
-               END DO
-               Psi2b = Psi2b * dY
-               CALL MPI_REDUCE ( Psi2b , Psi2a , ( nXb - nXa + 1 ) * nZ , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
- 
-               IF ( mpiRank == MPI_MASTER ) THEN 
-
-                  CALL io_write_splot_psi2 ( 'psi2xz-' , psiFileNo , nXa , nXb , nXbc , 1 , nZ , nZbc , Xa , Zc , Psi2a )
-
-               END IF
-
-               DEALLOCATE ( Psi2b )
-               DEALLOCATE ( Psi2a )
-
-               ALLOCATE ( Psi2a ( nYa - nYbc : nYb + nYbc , 1 - nZbc : nZ + nZbc ) )
-               ALLOCATE ( Psi2b ( nYa - nYbc : nYb + nYbc , 1 - nZbc : nZ + nZbc ) )
-
-               Psi3b = Psi3a
-               Psi2a = 0.0
-               Psi2b = 0.0
-               DO l = nZa , nZb
-
-                  DO k = nYa , nYb
-
-                     DO j = nXa , nXb
-
-                        Psi2b ( k , l ) = Psi2b ( k , l ) + ABS ( Psi3b ( j , k , l ) )**2 
-
+                  Psi2b = Psi2b * dY
+   
+                  CALL MPI_REDUCE(Psi2b, Psi2a, (nXb - nXa + 1) * nZ, &
+                     & mpiReal, MPI_SUM, MPI_MASTER, MPI_COMM_WORLD, &
+                     & mpiError)
+    
+                  IF (mpiRank == MPI_MASTER) THEN 
+                     CALL io_write_splot_psi2('psi2xz-', psiFileNo, &
+                        & nXa, nXb, nXbc, 1, nZ, nZbc, Xa, Zc, Psi2a)
+                  END IF
+   
+                  DEALLOCATE(Psi2b)
+                  DEALLOCATE(Psi2a)
+   
+                  ALLOCATE(Psi2a(nYa - nYbc : nYb + nYbc, &
+                               & 1 - nZbc : nZ + nZbc))
+                  ALLOCATE(Psi2b(nYa - nYbc : nYb + nYbc, &
+                               & 1 - nZbc : nZ + nZbc))
+   
+                  Psi3b = Psi3a
+                  Psi2a = 0.0
+                  Psi2b = 0.0
+   
+                  DO l = nZa, nZb
+                     DO k = nYa, nYb
+                        DO j = nXa, nXb
+                           Psi2b(k, l) = Psi2b(k, l) + ABS(Psi3b(j, k, l))**2 
+                        END DO
                      END DO
-
                   END DO
-
-               END DO
-               Psi2b = Psi2b * dX 
-               CALL MPI_REDUCE ( Psi2b , Psi2a , ( nYb - nYa + 1 ) * nZ , mpiReal , MPI_SUM , MPI_MASTER , MPI_COMM_WORLD , mpiError )
- 
-               IF ( mpiRank == MPI_MASTER ) THEN 
-
-                  CALL io_write_splot_psi2 ( 'psi2yz-' , psiFileNo , nYa , nYb , nYbc , 1 , nZ , nZbc , Ya , Zc , Psi2a )
-
+                  Psi2b = Psi2b * dX 
+   
+                  CALL MPI_REDUCE(Psi2b, Psi2a, (nYb - nYa + 1) * nZ, &
+                     & mpiReal, MPI_SUM, MPI_MASTER, MPI_COMM_WORLD, &
+                     & mpiError)
+    
+                  IF (mpiRank == MPI_MASTER) THEN 
+                     CALL io_write_splot_psi2('psi2yz-', psiFileNo, &
+                        & nYa, nYb, nYbc, 1, nZ, nZbc, Ya, Zc, Psi2a)
+                  END IF
+   
+                  DEALLOCATE(Psi2b)
+                  DEALLOCATE(Psi2a)
+   
+                  psiFileNo = psiFileNo + 1
+   
                END IF
-
-               DEALLOCATE ( Psi2b )
-               DEALLOCATE ( Psi2a )
-
-               psiFileNo = psiFileNo + 1
-
+   
             END IF
-
-         END IF
-
-         CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
-
-!        Compute 1st stage of generalized 4th-order Runge-Kutta (GRK4L): k_1 = f ( t_n , y_n )
-         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , &
-            & dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3a , K1 )
-!        Compute the intermediate wave function for the 2nd stage of the GRK4L method: y_n + 0.5 * dT * k_1
-!        Note that the intermediate wave function is only computed on the interior grid points assigned to each MPI process.
-         CALL grk4_y_3d_stgx ( 1 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , &
-            & Psi3a , Psi3b )
-!        Exchange boundary condition information among nearest neighbor processes
-         CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
-!        Compute V ( x , t_n + dT / 2 ), W ( t_n + dT / 2)
-         tN = t0 + ( REAL ( n ) + 0.5 ) * dT
-
-! ----------------------------------------------------------------------------------------------------------------------------------
-! What time dependence do we want to explore with Omega ( t )? 
-!
-!         Omega ( 1 ) = wXo ! for now, always do absolute rotation from initial state
-!         Omega ( 2 ) = wYo
-!         Omega ( 3 ) = wZo
-!
-!    ( 1 ) Spin up: Omega ( t = 0 ) = ( 0, 0 , 0 ) ----> Omega ( t ) = ( wXf , wYf , wZf ) tanh?
-!
-!    ( 2 ) Nutation: rocking back and forth, rotating about x-axis with a periodic twist
-!
-!         thetaXo = PI / 6.0 ! nutation amplitude
-!         nu = 0.2 ! nutation frequency
-!         thetaX = thetaXo * SIN ( nu * tN ) 
-!         R = rot_rx ( thetaX )
-!
-!    ( 3 ) Compton flip: 
-!
-!         tSigma = 10.0 ! flip time
-!         sigma = 1.0 ! flip rate
-!         thetaX = 0.5 * PI * ( ( TANH ( sigma * ( tN - tSigma ) ) / TANH ( 0.5 * sigma * ( tF - t0 ) ) ) + 1.0 )
-!         R = rot_rx ( thetaX )
-!
-!         Omega = MATMUL ( R , Omega )
-!         wX = Omega ( 1 )
-!         wY = Omega ( 2 )
-!         wZ = Omega ( 3 ) 
-! ----------------------------------------------------------------------------------------------------------------------------------
-
-!        Compute 2nd stage of GRK4: 
-!        k_2 = f ( t_n + 0.5 * dT , y_n + 0.5 * dT * k_1 )
-         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , &
-            & dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K2 )
-!        Compute intermediate wave function for 3rd stage of GRK4: 
-!        y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( 1 / lambda ) * dT * k_2
-         CALL grk4_y_3d_stgx ( 2 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , &
-            & Psi3a , Psi3b )
-!        Exchange boundary condition information among nearest neighbor processes
-         CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
-!        Compute stage three of GRK4:
-!        k_3 = f ( t_n + 0.5 * dT , y_n + ( 1 / 2 - 1 / lambda ) * dT * k_1 + ( 1 / lambda ) * dT * k_2
-         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , &
-            & dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K3 )
-!        Compute intermediate wave function for 4th stage of GRK4: 
-!        y_n + ( 1 - lambda / 2 ) * dT * k_2 + ( lambda / 2 ) * dT * k_3
-         CALL grk4_y_3d_stgx ( 3 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , &
-            & Psi3a , Psi3b )
-!        Exchange boundary condition information among nearest neighbor processes
-         CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
-!        Calculate V ( x , t_n + dT ), W ( t_n + dT )
-         tN = t0 + REAL ( n + 1 ) * dT
-
-! ----------------------------------------------------------------------------------------------------------------------------------
-! What time dependence do we want to explore with Omega ( t )? 
-!
-!         Omega ( 1 ) = wXo ! for now, always do absolute rotation from initial state
-!         Omega ( 2 ) = wYo
-!         Omega ( 3 ) = wZo
-!
-!    ( 1 ) Spin up: Omega ( t = 0 ) = ( 0, 0 , 0 ) ----> Omega ( t ) = ( wXf , wYf , wZf ) tanh?
-!
-!    ( 2 ) Nutation: rocking back and forth, rotating about x-axis with a periodic twist
-!
-!         thetaX = thetaXo * SIN ( nu * tN ) 
-!         R = rot_rx ( thetaX )
-!
-!    ( 3 ) Compton flip:
-!
-!         thetaX = 0.5 * PI * ( ( TANH ( sigma * ( tN - tSigma ) ) / TANH ( 0.5 * sigma * ( tF - t0 ) ) ) + 1.0 )
-!         R = rot_rx ( thetaX )
-!
-!         Omega = MATMUL ( R , Omega )
-!         wX = Omega ( 1 )
-!         wY = Omega ( 2 )
-!         wZ = Omega ( 3 )  
-! ----------------------------------------------------------------------------------------------------------------------------------
-
-!        Compute the fourth stage of GRK4:
-!        k_4 = f ( t_n + dT , y_n + ( 1 - lamda / 2 ) * dT * k_2 + ( lamda / 2) * dT * k_3 
-         CALL grk4_f_gp_3d_rrf_cdx ( fdOrder , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , xOrrf , yOrrf , zOrrf , &
-            & dX , dY , dZ , wX , wY , wZ , gS , Xa , Ya , Za , Vex3a , Psi3b , K4 )
-!        Compute wave function at nth+1 time step:
-!        y_{ n + 1 } = y_n + ( dT / 6 ) * [ k_1 + ( 4 - lambda ) * k_2 + lambda * k_3 + k_4 ]
-         CALL grk4_y_3d_stgx ( 4 , rk4Lambda , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dTz , K1 , K2 , K3 , K4 , &
-            & Psi3a , Psi3b )
-!        Exchange boundary condition information among nearest neighbor processes
-         CALL mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3b )
-!        Update wave function each time step: y_{ n + 1 } ---> y_n        
-         Psi3a = Psi3b
-!        If running in ITP mode, then also renormalize condensate wave function each time step
-         IF ( itpOn .EQV. .TRUE. ) THEN
-
-             CALL evua_normalize ( MPI_MASTER , mpiReal , mpiError , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , dX , &
-                & dY , dZ , Psi3a )
-
-         END IF
-
-      END DO
-
-      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
-
-      ! Write last wave function to a binary file using MPI/IO
-      !CALL MPI_FILE_OPEN ( MPI_COMM_WORLD, 'psi-501.bin', MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, mpiFileHandle, mpiError )
-      !DO l = nZa, nZb
-      !   DO k = nYa, nYb
-      !      mpiOffset = 2*CMPLX_DEFAULT_KIND*nX*((k-1)+nY*(l-1))
-      !      CALL MPI_FILE_WRITE_AT ( mpiFileHandle, mpiOffset, Psi3a(nXa,k,l), nX, mpiCmplx, mpiStatus, mpiError )
-      !   ENDDO
-      !ENDDO
-      !CALL MPI_FILE_CLOSE ( mpiFileHandle, mpiError )
-
-      ! Checkpoint last wave function in a binary file
-      IF ( chkptOn .EQV. .TRUE. ) THEN
-         Psi3b = Psi3a
-         psiFilePos = 1
-         DO mpiSource = 0, mpiProcesses - 1
-            CALL mpi_copy_psi(mpiRank, mpiSource, MPI_MASTER, nXa, nXb,&
-               & nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, Psi3b)
-            IF (mpiRank == MPI_MASTER) THEN
-               CALL io_write_bin_psi(psiFileNoChkpt, psiFilePos, nXa, &
-                  & nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, Psi3b)
+   
+            CALL MPI_BARRIER(MPI_COMM_WORLD, mpiError)
+   
+!           Compute 1st stage of generalized 4th-order 
+!           Runge-Kutta (GRK4L): k_1 = f(t_n, y_n)
+            CALL grk4_f_gp_3d_rrf_cdx(fdOrder, nXa, nXb, nXbc, nYa, &
+               & nYb, nYbc, nZa, nZb, nZbc, xOrrf, yOrrf, zOrrf, dX, &
+               & dY, dZ, wX, wY, wZ, gS, Xa, Ya, Za, Vex3a, Psi3a, K1)
+   
+!           Compute the intermediate wave function for the 2nd stage of 
+!           the GRK4L method: y_n + 0.5 * dT * k_1. Note that the 
+!           intermediate wave function is only computed on the interior 
+!           grid points assigned to each MPI process.
+            CALL grk4_y_3d_stgx(1, rk4Lambda, nXa, nXb, nXbc, nYa, nYb,&
+               & nYbc, nZa, nZb, nZbc, dTz, K1, K2, K3, K4, Psi3a, Psi3b)
+   
+!           Exchange boundary condition information among nearest 
+!           neighbor processes
+            CALL mpi_exchange_ghosts(nX, nXa, nXb, nXbc, nY, nYa, nYb, &
+               & nYbc, nZ, nZa, nZb, nZbc, Psi3b)
+   
+!           Compute V(x, t_n + dT/2), W(t_n + dT/2)
+            tN = t0 + (REAL(n) + 0.5) * dT
+   
+! ----------------------------------------------------------------------
+!   
+!            What time dependence do we want to explore with Omega(t)? 
+!   
+!            Omega(1) = wXo ! for now, always do absolute rotation from initial state
+!            Omega(2) = wYo
+!            Omega(3) = wZo
+!   
+!       ( 1 ) Spin up: Omega(t = 0) = (0, 0, 0) ----> Omega(t) = (wXf, wYf, wZf) tanh?
+!   
+!       ( 2 ) Nutation: rocking back and forth, rotating about x-axis with
+!             a periodic twist
+!   
+!            thetaXo = PI / 6.0 ! nutation amplitude
+!            nu = 0.2 ! nutation frequency
+!            thetaX = thetaXo * SIN (nu * tN) 
+!            R = rot_rx(thetaX)
+!   
+!       ( 3 ) Compton flip: 
+!   
+!            tSigma = 10.0 ! flip time
+!            sigma = 1.0 ! flip rate
+!            thetaX = 0.5 * PI * ((TANH(sigma * (tN - tSigma)) / TANH(0.5 * sigma * (tF - t0))) + 1.0)
+!            R = rot_rx(thetaX)
+!   
+!            Omega = MATMUL(R, Omega)
+!            wX = Omega(1)
+!            wY = Omega(2)
+!            wZ = Omega(3) 
+!   
+! ----------------------------------------------------------------------
+  
+!           Compute 2nd stage of GRK4: 
+!           k_2 = f(t_n + 0.5 * dT, y_n + 0.5 * dT * k_1)
+            CALL grk4_f_gp_3d_rrf_cdx(fdOrder, nXa, nXb, nXbc, nYa, &
+               & nYb, nYbc, nZa, nZb, nZbc, xOrrf, yOrrf, zOrrf, dX, &
+               & dY, dZ, wX, wY, wZ, gS, Xa, Ya, Za, Vex3a, Psi3b, K2)
+   
+!           Compute intermediate wave function for 3rd stage of GRK4: 
+!           y_n + (1/2 - 1/lambda) * dT * k_1 + (1/lambda) * dT * k_2
+            CALL grk4_y_3d_stgx(2, rk4Lambda, nXa, nXb, nXbc, nYa, nYb, &
+               & nYbc, nZa, nZb, nZbc, dTz, K1, K2, K3, K4, Psi3a, Psi3b)
+   
+!           Exchange boundary condition information among nearest neighbor
+!           processes
+            CALL mpi_exchange_ghosts(nX, nXa, nXb, nXbc, nY, nYa, nYb, &
+               & nYbc, nZ, nZa, nZb, nZbc, Psi3b)
+   
+!           Compute stage three of GRK4:
+!           k_3 = f(t_n + 0.5 * dT, y_n + (1/2 - 1/lambda) * dT * k_1 + (1/lambda) * dT * k_2
+            CALL grk4_f_gp_3d_rrf_cdx(fdOrder, nXa, nXb, nXbc, nYa, &
+               & nYb, nYbc, nZa, nZb, nZbc, xOrrf, yOrrf, zOrrf, dX, &
+               & dY, dZ, wX, wY, wZ, gS, Xa, Ya, Za, Vex3a, Psi3b, K3)
+   
+!           Compute intermediate wave function for 4th stage of GRK4: 
+!           y_n + (1 - lambda/2) * dT * k_2 + (lambda/2) * dT * k_3
+            CALL grk4_y_3d_stgx(3, rk4Lambda, nXa, nXb, nXbc, nYa, nYb,&
+               & nYbc, nZa, nZb, nZbc, dTz, K1, K2, K3, K4, Psi3a, Psi3b)
+   
+!           Exchange boundary condition information among nearest
+!           neighbor processes
+            CALL mpi_exchange_ghosts(nX, nXa, nXb, nXbc, nY, nYa, nYb, &
+               & nYbc, nZ, nZa, nZb, nZbc, Psi3b)
+   
+!           Calculate V(x, t_n + dT), W (t_n + dT)
+            tN = t0 + REAL(n + 1) * dT
+   
+! ----------------------------------------------------------------------
+!   
+!            What time dependence do we want to explore with Omega(t)? 
+!   
+!            Omega(1) = wXo ! for now, always do absolute rotation from initial state
+!            Omega(2) = wYo
+!            Omega(3) = wZo
+!   
+!       ( 1 ) Spin up: Omega(t = 0) = (0, 0, 0) ----> Omega(t) = (wXf, wYf, wZf) tanh?
+!   
+!       ( 2 ) Nutation: rocking back and forth, rotating about x-axis with
+!             a periodic twist
+!   
+!            thetaX = thetaXo * SIN(nu * tN) 
+!            R = rot_rx(thetaX)
+!   
+!       ( 3 ) Compton flip:
+!   
+!            thetaX = 0.5 * PI * ((TANH(sigma * (tN - tSigma)) / TANH(0.5 * sigma * (tF - t0))) + 1.0)
+!            R = rot_rx (thetaX)
+!   
+!            Omega = MATMUL(R, Omega)
+!            wX = Omega(1)
+!            wY = Omega(2)
+!            wZ = Omega(3)  
+!   
+! ----------------------------------------------------------------------
+   
+!           Compute the fourth stage of GRK4:
+!           k_4 = f(t_n + dT, y_n + (1 - lamda/2) * dT * k_2 + (lamda/2) * dT * k_3 
+            CALL grk4_f_gp_3d_rrf_cdx(fdOrder, nXa, nXb, nXbc, nYa, &
+               & nYb, nYbc, nZa, nZb, nZbc, xOrrf, yOrrf, zOrrf, dX, &
+               & dY, dZ, wX, wY, wZ, gS, Xa, Ya, Za, Vex3a, Psi3b, K4)
+   
+!           Compute wave function at nth+1 time step:
+!           y_{n+1} = y_n + (dT/6) * [k_1 + (4 - lambda) * k_2 + lambda * k_3 + k_4]
+            CALL grk4_y_3d_stgx(4, rk4Lambda, nXa, nXb, nXbc, nYa, nYb,&
+               & nYbc, nZa, nZb, nZbc, dTz, K1, K2, K3, K4, Psi3a, Psi3b)
+   
+!           Exchange boundary condition information among nearest 
+!           neighbor processes
+            CALL mpi_exchange_ghosts(nX, nXa, nXb, nXbc, nY, nYa, nYb, &
+               & nYbc, nZ, nZa, nZb, nZbc, Psi3b)
+   
+!           Update wave function each time step: y_{n+1} ---> y_n        
+            Psi3a = Psi3b
+   
+!           If running in ITP mode, then also renormalize condensate
+!           wave function each time step
+            IF (itpOn .EQV. .TRUE.) THEN
+                CALL evua_normalize(MPI_MASTER, mpiReal, mpiError, nXa,&
+                   & nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, dX, dY,&
+                   & dZ, Psi3a)
             END IF
+   
          END DO
+   
+         CALL MPI_BARRIER(MPI_COMM_WORLD, mpiError)
+   
+         ! Write last wave function to a binary file using MPI/IO
+         !CALL MPI_FILE_OPEN ( MPI_COMM_WORLD, 'psi-501.bin', MPI_MODE_CREATE+MPI_MODE_WRONLY, MPI_INFO_NULL, mpiFileHandle, mpiError )
+         !DO l = nZa, nZb
+         !   DO k = nYa, nYb
+         !      mpiOffset = 2*CMPLX_DEFAULT_KIND*nX*((k-1)+nY*(l-1))
+         !      CALL MPI_FILE_WRITE_AT ( mpiFileHandle, mpiOffset, Psi3a(nXa,k,l), nX, mpiCmplx, mpiStatus, mpiError )
+         !   ENDDO
+         !ENDDO
+         !CALL MPI_FILE_CLOSE ( mpiFileHandle, mpiError )
+   
+         ! Checkpoint last wave function in a binary file
+         IF (chkptOn .EQV. .TRUE.) THEN
+            Psi3b = Psi3a
+            psiFilePos = 1
+            DO mpiSource = 0, mpiProcesses - 1
+               CALL mpi_copy_psi(mpiRank, mpiSource, MPI_MASTER, nXa, &
+                  & nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, Psi3b)
+               IF (mpiRank == MPI_MASTER) THEN
+                  CALL io_write_bin_psi(psiFileNoChkpt, psiFilePos, &
+                     & nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, &
+                     & Psi3b)
+               END IF
+            END DO
+         END IF
+
+      ELSE ! reanOn = TRUE; reanalyze wave function data from a previous simulation
+
+         DO n = 0, nTsteps
+
+            CALL MPI_BARRIER(MPI_COMM_WORLD, mpiError)
+
+!           Read in existing wave function files for reanalysis at
+!           fixed period
+            IF (MODULO(n, nTwrite) == 0) THEN
+
+!              Read in existing wave function for reanalysis from file,
+!              starting with wave function from binary file on MPI_MASTER
+               IF (psiInput == 1) THEN
+
+!                 Initialize file position
+                  psiFilePos = 1
+
+!                 Read and initialize first block of wave function
+!                 values from binary file on MPI_MASTER
+                  IF (mpiRank == MPI_MASTER) THEN
+                     CALL io_read_bin_psi(psiFileNo, psiFilePos, nXa, &
+                        & nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, &
+                        & Psi3a)
+                  END IF
+
+!                 Loop over mpiDesination ranks that are not equal to
+!                 MPI_MASTER
+                  DO mpiDestination = 1, mpiProcesses - 1
+
+!                    Read in next block of wave function values from
+!                    binary file on MPI_MASTER
+                     IF (mpiRank == MPI_MASTER) THEN
+                        CALL io_read_bin_psi(psiFileNo, psiFilePos, &
+                           & nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, &
+                           & nZbc, Psi3b)
+                     END IF
+
+!                    Send read block from MPI_MASTER to mpiRank equal to
+!                    mpiDestination
+                     CALL mpi_copy_psi(mpiRank, MPI_MASTER, &
+                        & mpiDestination, nXa, nXb, nXbc, nYa, nYb, &
+                        & nYbc, nZa, nZb, nZbc, Psi3b)
+
+                  END DO
+
+!                 After all blocks have been sent, copy wave function
+!                 values into Psi3a; MPI_MASTER block was read into
+!                 Psi3a directly
+                  IF (mpiRank /= MPI_MASTER) THEN
+                     Psi3a = Psi3b
+                  END IF
+
+!              Use simple parallel I/O to read in the complete wave
+!              function simultaneously from many legacy VTK files that
+!              only contain a single, one-dimensional slab of the wave
+!              function overseen by an MPI process
+               ELSE IF (psiInput == 3) THEN
+
+                  CALL io_read_vtk('psi-', psiFileNo, mpiRank, nX, nXa,&
+                     & nXb, nXbc, dNx, nY, nYa, nYb, nYbc, dNy, nZ, &
+                     & nZa, nZb, nZbc, dNz, Xa, Ya, Za, Psi3a)
+
+               ELSE
+
+                  IF (mpiRank == MPI_MASTER) THEN
+                     WRITE(UNIT = ERROR_UNIT, FMT = *) &
+                     & 'gpse : ERROR - psiInput not recognized.'
+                     STOP
+                  END IF
+
+               END IF
+
+               CALL mpi_exchange_ghosts(nX, nXa, nXb, nXbc, nY, nYa, &
+                  & nYb, nYbc, nZ, nZa, nZb, nZbc, Psi3a)
+
+               psiFileNo = psiFileNo + 1
+
+!              Compute partial base expectation values locally on each
+!              MPI process; reduce partial base expectation values from
+!              all MPI processes to MPI_MASTER to get full base
+!              expectation values
+               CALL evua_compute_base(MPI_MASTER, mpiReal, mpiError, 1,&
+                  & fdOrder, nXa, nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, &
+                  & nZbc, xO, yO, zO, dX, dY, dZ, gS, Xa, Ya, Za, &
+                  & Vex3a, Psi3a)
+
+!              Compute derived expectation values, uncertainties from
+!              base
+               CALL evua_compute_derived(mpiRank, MPI_MASTER, wX, wY, wZ)
+
+!              Write expectation values, undertainties and uncertainty
+!              relations to file from MPI_MASTER
+               CALL evua_write_all(mpiRank, MPI_MASTER, tN, wX, wY, wZ)
+
+!              Write probability / mass currents and average velocities
+!              to file from MPI_MASTER.
+               IF (pmcaOn .EQV. .TRUE.) THEN
+
+                  CALL pmca_density(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+                     & nZa, nZb, nZbc, Psi3a, Rho3a)
+                  CALL pmca_current_density(nXa, nXb, nXbc, nYa, nYb, &
+                     & nYbc, nZa, nZb, nZbc, dX, dY, dZ, Psi3a, &
+                     & GradPsi3a, J3a)
+                  CALL pmca_velocity(nXa, nXb, nXbc, nYa, nYb, nYbc, &
+                     & nZa, nZb, nZbc, dX, dY, dZ, Rho3a, REAL(J3a), V3a)
+                  CALL pmca_compute_currents(mpiRank, MPI_MASTER, &
+                     & mpiReal, mpiError, 1, nXa, nXb, nXbc, nYa, nYb, &
+                     & nYbc, nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa, Ya, &
+                     & Za, Zc, REAL(J3a))
+                  CALL pmca_write_currents(mpiRank, MPI_MASTER, tN)
+                  CALL pmca_compute_velocities(mpiRank, MPI_MASTER, &
+                     & mpiReal, mpiError, 1, nXa, nXb, nXbc, nYa, nYb, &
+                     & nYbc, nZa, nZb, nZbc, nZ, dX, dY, dZ, Xa, Ya, &
+                     & Za, Zc, V3a)
+                  CALL pmca_write_velocities(mpiRank, MPI_MASTER, tN)
+
+               END IF
+
+            END IF
+
+            tN = t0 + REAL(n + 1) * dT
+
+         END DO
+
       END IF
 
-      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+      CALL MPI_BARRIER(MPI_COMM_WORLD, mpiError)
 
-! --- END MAIN TIME PROPAGATION LOOP / BEGIN CLEAN UP TO STOP ----------------------------------------------------------------------
+! --- END MAIN TIME PROPAGATION LOOP / BEGIN CLEAN UP TO STOP ----------
 
-      CALL DATE_AND_TIME ( stopDate , stopTime , stopZone , StopValues )
-      IF ( mpiRank == MPI_MASTER ) THEN
-
-         WRITE ( UNIT = OUTPUT_UNIT , FMT = * ) '#     RUN STOPPED @ ', stopTime, ' ON ', stopDate, ' ... '
-
+      CALL DATE_AND_TIME(stopDate, stopTime, stopZone, StopValues)
+      IF (mpiRank == MPI_MASTER) THEN
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#     RUN STOPPED @ ', &
+            & stopTime, ' ON ', stopDate, ' ... '
       END IF
 
       IF (pmcaOn .EQV. .TRUE.) THEN
-
          DEALLOCATE(Rho3a)
          DEALLOCATE(V3a)
          DEALLOCATE(GradPsi3a)
          DEALLOCATE(J3a)
-
       END IF
 
       DEALLOCATE(Psi3b)
@@ -1474,6 +1667,7 @@
          WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        itpOn     = ', itpOn
          WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        chkptOn   = ', chkptOn
          WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        pmcaOn    = ', pmcaOn
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        reanOn    = ', reanOn
          WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        rk4Lambda = ', rk4Lambda
          WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        fdOrder   = ', fdOrder
          WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        nTsteps   = ', nTsteps
@@ -1619,6 +1813,7 @@
       CALL MPI_BCAST(itpOn, 1, MPI_LOGICAL, mpiMaster, MPI_COMM_WORLD, mpiError)
       CALL MPI_BCAST(chkptOn, 1, MPI_LOGICAL, mpiMaster, MPI_COMM_WORLD, mpiError)
       CALL MPI_BCAST(pmcaOn, 1, MPI_LOGICAL, mpiMaster, MPI_COMM_WORLD, mpiError)
+      CALL MPI_BCAST(reanOn, 1, MPI_LOGICAL, mpiMaster, MPI_COMM_WORLD, mpiError)
       CALL MPI_BCAST(rk4Lambda, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
       CALL MPI_BCAST(fdOrder, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
       CALL MPI_BCAST(nTsteps, 1, mpiInt, mpiMaster, MPI_COMM_WORLD, mpiError)
@@ -1687,257 +1882,243 @@
 
 ! ----------------------------------------------------------------------
 
-      SUBROUTINE mpi_copy_q ( mpiRank , mpiSource , mpiDestination , nQ , nQa , nQb , nQbc , Q )
+      SUBROUTINE mpi_copy_q(mpiRank, mpiSource, mpiDestination, nQ, &
+         & nQa, nQb, nQbc, Q)
 
       IMPLICIT NONE
 
-      INTEGER, INTENT ( IN ) :: mpiRank
-      INTEGER, INTENT ( IN ) :: mpiSource
-      INTEGER, INTENT ( IN ) :: mpiDestination
-      INTEGER, INTENT ( IN ) :: nQ
-      INTEGER, INTENT ( IN ) :: nQa
-      INTEGER, INTENT ( IN ) :: nQb
-      INTEGER, INTENT ( IN ) :: nQbc 
+      INTEGER, INTENT(IN) :: mpiRank
+      INTEGER, INTENT(IN) :: mpiSource
+      INTEGER, INTENT(IN) :: mpiDestination
+      INTEGER, INTENT(IN) :: nQ
+      INTEGER, INTENT(IN) :: nQa
+      INTEGER, INTENT(IN) :: nQb
+      INTEGER, INTENT(IN) :: nQbc 
 
-      REAL, DIMENSION ( nQa - nQbc : nQb + nQbc ), INTENT ( INOUT ) :: Q
+      REAL, DIMENSION(nQa - nQbc : nQb + nQbc), INTENT(INOUT) :: Q
 
       INTEGER :: j
 
-      IF ( ( mpiRank == mpiDestination ) .AND. ( mpiRank /= mpiSource ) ) THEN
+      IF ((mpiRank == mpiDestination).AND.(mpiRank /= mpiSource)) THEN
 
-         DO j = nQa , nQb
-
-            CALL MPI_RECV ( Q ( j ) , 1 , mpiReal , mpiSource , mpiSource , MPI_COMM_WORLD , MpiStatus , mpiError )
-
+         DO j = nQa, nQb
+            CALL MPI_RECV(Q(j), 1, mpiReal, mpiSource, mpiSource, &
+               & MPI_COMM_WORLD, MpiStatus, mpiError) 
          END DO
 
-      ELSE IF ( ( mpiRank == mpiSource ) .AND. ( mpiRank /= mpiDestination ) ) THEN
+      ELSE IF ((mpiRank == mpiSource).AND.(mpiRank /= mpiDestination)) THEN
 
-         DO j = nQa , nQb
-
-            CALL MPI_SSEND ( Q ( j ) , 1 , mpiReal , mpiDestination , mpiRank , MPI_COMM_WORLD , mpiError )
-
+         DO j = nQa, nQb
+            CALL MPI_SSEND(Q(j), 1, mpiReal, mpiDestination, mpiRank, &
+               & MPI_COMM_WORLD, mpiError)
          END DO
 
       END IF
 
-      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+      CALL MPI_BARRIER(MPI_COMM_WORLD, mpiError)
 
       RETURN
-
       END SUBROUTINE
 
-! ----------------------------------------------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------
 
-      SUBROUTINE mpi_copy_vex ( mpiRank , mpiSource , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Vex3 ) 
+      SUBROUTINE mpi_copy_vex(mpiRank, mpiSource, mpiDestination, nXa, &
+         & nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, Vex3) 
 
       IMPLICIT NONE
 
-      INTEGER, INTENT ( IN ) :: mpiRank
-      INTEGER, INTENT ( IN ) :: mpiSource
-      INTEGER, INTENT ( IN ) :: mpiDestination
-      INTEGER, INTENT ( IN ) :: nXa
-      INTEGER, INTENT ( IN ) :: nXb
-      INTEGER, INTENT ( IN ) :: nXbc 
-      INTEGER, INTENT ( IN ) :: nYa
-      INTEGER, INTENT ( IN ) :: nYb
-      INTEGER, INTENT ( IN ) :: nYbc 
-      INTEGER, INTENT ( IN ) :: nZa
-      INTEGER, INTENT ( IN ) :: nZb
-      INTEGER, INTENT ( IN ) :: nZbc 
+      INTEGER, INTENT(IN) :: mpiRank
+      INTEGER, INTENT(IN) :: mpiSource
+      INTEGER, INTENT(IN) :: mpiDestination
+      INTEGER, INTENT(IN) :: nXa
+      INTEGER, INTENT(IN) :: nXb
+      INTEGER, INTENT(IN) :: nXbc 
+      INTEGER, INTENT(IN) :: nYa
+      INTEGER, INTENT(IN) :: nYb
+      INTEGER, INTENT(IN) :: nYbc 
+      INTEGER, INTENT(IN) :: nZa
+      INTEGER, INTENT(IN) :: nZb
+      INTEGER, INTENT(IN) :: nZbc 
 
-      REAL, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Vex3
+      REAL, DIMENSION(nXa - nXbc : nXb + nXbc, &
+                    & nYa - nYbc : nYb + nYbc, &
+                    & nZa - nZbc : nZb + nZbc), INTENT (INOUT) :: Vex3
 
       INTEGER :: j , k , l
 
-      IF ( ( mpiRank == mpiDestination ) .AND. ( mpiRank /= mpiSource ) ) THEN
+      IF ((mpiRank == mpiDestination).AND.(mpiRank /= mpiSource)) THEN
 
-         DO l = nZa , nZb
-
-            DO k = nYa , nYb
-
-               DO j = nXa , nXb
-
-                  CALL MPI_RECV ( Vex3 ( j , k , l ) , 1 , mpiReal , mpiSource , mpiSource , MPI_COMM_WORLD , MpiStatus , mpiError )
-
-               END DO ! possible alternative: no loop over j; call MPI_RECV ( Real3b ( nXa , nYa , l ) , nXb - nXa + 1 , ... )
-
+         DO l = nZa, nZb
+            DO k = nYa, nYb
+               DO j = nXa, nXb
+                  CALL MPI_RECV(Vex3(j, k, l), 1, mpiReal, mpiSource, &
+                     & mpiSource, MPI_COMM_WORLD, MpiStatus, mpiError)
+               END DO ! possible alternative: no loop over j; call 
+                      ! MPI_RECV(Real3b(nXa, nYa, l), nXb - nXa + 1, ...)
             END DO
-
          END DO
 
-      ELSE IF ( ( mpiRank == mpiSource ) .AND. ( mpiRank /= mpiDestination ) ) THEN
+      ELSE IF ((mpiRank == mpiSource).AND.(mpiRank /= mpiDestination)) THEN
 
-         DO l = nZa , nZb
-
-            DO k = nYa , nYb
-
-               DO j = nXa , nXb
-
-                  CALL MPI_SSEND ( Vex3 ( j , k , l ) , 1 , mpiReal , mpiDestination , mpiRank , MPI_COMM_WORLD , mpiError )
-
-               END DO ! possible alternative: no loop over j; call MPI_SSEND ( Real3a ( nXa , nYa , l ) , nXb - nXa + 1 , ... )
-
+         DO l = nZa, nZb
+            DO k = nYa, nYb
+               DO j = nXa, nXb
+                  CALL MPI_SSEND(Vex3(j, k, l), 1, mpiReal, &
+                     & mpiDestination, mpiRank, MPI_COMM_WORLD, &
+                     & mpiError)
+               END DO ! possible alternative: no loop over j; call 
+                      ! MPI_SSEND(Real3a(nXa, nYa, l), nXb - nXa + 1, ...)
             END DO
-
          END DO
 
       END IF
 
-      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+      CALL MPI_BARRIER(MPI_COMM_WORLD, mpiError)
 
       RETURN
- 
       END SUBROUTINE
 
-! ----------------------------------------------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------
 
-      SUBROUTINE mpi_copy_psi ( mpiRank , mpiSource , mpiDestination , nXa , nXb , nXbc , nYa , nYb , nYbc , nZa , nZb , nZbc , Psi3 )
+      SUBROUTINE mpi_copy_psi(mpiRank, mpiSource, mpiDestination, nXa, &
+         & nXb, nXbc, nYa, nYb, nYbc, nZa, nZb, nZbc, Psi3)
 
       IMPLICIT NONE
 
-      INTEGER, INTENT ( IN ) :: mpiRank
-      INTEGER, INTENT ( IN ) :: mpiSource
-      INTEGER, INTENT ( IN ) :: mpiDestination
-      INTEGER, INTENT ( IN ) :: nXa
-      INTEGER, INTENT ( IN ) :: nXb
-      INTEGER, INTENT ( IN ) :: nXbc 
-      INTEGER, INTENT ( IN ) :: nYa
-      INTEGER, INTENT ( IN ) :: nYb
-      INTEGER, INTENT ( IN ) :: nYbc 
-      INTEGER, INTENT ( IN ) :: nZa
-      INTEGER, INTENT ( IN ) :: nZb
-      INTEGER, INTENT ( IN ) :: nZbc 
+      INTEGER, INTENT(IN) :: mpiRank
+      INTEGER, INTENT(IN) :: mpiSource
+      INTEGER, INTENT(IN) :: mpiDestination
+      INTEGER, INTENT(IN) :: nXa
+      INTEGER, INTENT(IN) :: nXb
+      INTEGER, INTENT(IN) :: nXbc 
+      INTEGER, INTENT(IN) :: nYa
+      INTEGER, INTENT(IN) :: nYb
+      INTEGER, INTENT(IN) :: nYbc 
+      INTEGER, INTENT(IN) :: nZa
+      INTEGER, INTENT(IN) :: nZb
+      INTEGER, INTENT(IN) :: nZbc 
 
-      COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( IN ) :: Psi3
+      COMPLEX, DIMENSION(nXa - nXbc : nXb + nXbc, &
+                       & nYa - nYbc : nYb + nYbc, &
+                       & nZa - nZbc : nZb + nZbc), INTENT(IN) :: Psi3
 
-      INTEGER :: j , k , l
+      INTEGER :: j, k, l
 
-      IF ( ( mpiRank == mpiDestination ) .AND. ( mpiRank /= mpiSource ) ) THEN
+      IF ((mpiRank == mpiDestination).AND.(mpiRank /= mpiSource)) THEN
 
-         DO l = nZa , nZb
-
-            DO k = nYa , nYb
-
-               DO j = nXa , nXb
-
-                  CALL MPI_RECV ( Psi3 ( j , k , l ) , 1 , mpiCmplx , mpiSource , mpiSource , MPI_COMM_WORLD , MpiStatus , mpiError )
-
-               END DO ! possible alternative: no loop over j; call MPI_RECV ( Real3b ( nXa , nYa , l ) , nXb - nXa + 1 , ... )
-
+         DO l = nZa, nZb
+            DO k = nYa, nYb
+               DO j = nXa, nXb
+                  CALL MPI_RECV(Psi3(j, k, l), 1, mpiCmplx, mpiSource, &
+                     & mpiSource, MPI_COMM_WORLD, MpiStatus, mpiError)
+               END DO ! possible alternative: no loop over j; call 
+                      ! MPI_RECV(Real3b(nXa, nYa, l), nXb - nXa + 1, ... )
             END DO
-
          END DO
 
-      ELSE IF ( ( mpiRank == mpiSource ) .AND. ( mpiRank /= mpiDestination ) ) THEN
+      ELSE IF ((mpiRank == mpiSource).AND.(mpiRank /= mpiDestination)) THEN
 
-         DO l = nZa , nZb
+         DO l = nZa, nZb
+            DO k = nYa, nYb
+               DO j = nXa, nXb
+                  CALL MPI_SSEND(Psi3(j, k, l), 1, mpiCmplx, &
+                     & mpiDestination, mpiRank, MPI_COMM_WORLD, mpiError)
 
-            DO k = nYa , nYb
-
-               DO j = nXa , nXb
-
-                  CALL MPI_SSEND ( Psi3 ( j , k , l ) , 1 , mpiCmplx , mpiDestination , mpiRank , MPI_COMM_WORLD , mpiError )
-
-               END DO ! possible alternative: no loop over j; call MPI_SSEND ( Real3a ( nXa , nYa , l ) , nXb - nXa + 1 , ... )
-
+               END DO ! possible alternative: no loop over j; call 
+                      ! MPI_SSEND(Real3a(nXa, nYa, l), nXb - nXa + 1, ...)
             END DO
-
          END DO
 
       END IF
 
-      CALL MPI_BARRIER ( MPI_COMM_WORLD , mpiError )
+      CALL MPI_BARRIER(MPI_COMM_WORLD, mpiError)
 
       RETURN
-
       END SUBROUTINE
 
-! ----------------------------------------------------------------------------------------------------------------------------------
+! ----------------------------------------------------------------------
 
-      SUBROUTINE mpi_exchange_ghosts ( nX , nXa , nXb , nXbc , nY , nYa , nYb , nYbc , nZ , nZa , nZb , nZbc , Psi3 ) 
+      SUBROUTINE mpi_exchange_ghosts(nX, nXa, nXb, nXbc, nY, nYa, nYb, &
+         & nYbc, nZ, nZa, nZb, nZbc, Psi3) 
 
       IMPLICIT NONE
 
-      INTEGER, INTENT ( IN ) :: nX
-      INTEGER, INTENT ( IN ) :: nXa
-      INTEGER, INTENT ( IN ) :: nXb
-      INTEGER, INTENT ( IN ) :: nXbc
-      INTEGER, INTENT ( IN ) :: nY
-      INTEGER, INTENT ( IN ) :: nYa
-      INTEGER, INTENT ( IN ) :: nYb
-      INTEGER, INTENT ( IN ) :: nYbc
-      INTEGER, INTENT ( IN ) :: nZ
-      INTEGER, INTENT ( IN ) :: nZa
-      INTEGER, INTENT ( IN ) :: nZb
-      INTEGER, INTENT ( IN ) :: nZbc
+      INTEGER, INTENT(IN) :: nX
+      INTEGER, INTENT(IN) :: nXa
+      INTEGER, INTENT(IN) :: nXb
+      INTEGER, INTENT(IN) :: nXbc
+      INTEGER, INTENT(IN) :: nY
+      INTEGER, INTENT(IN) :: nYa
+      INTEGER, INTENT(IN) :: nYb
+      INTEGER, INTENT(IN) :: nYbc
+      INTEGER, INTENT(IN) :: nZ
+      INTEGER, INTENT(IN) :: nZa
+      INTEGER, INTENT(IN) :: nZb
+      INTEGER, INTENT(IN) :: nZbc
 
-      COMPLEX, DIMENSION ( nXa - nXbc : nXb + nXbc , nYa - nYbc : nYb + nYbc , nZa - nZbc : nZb + nZbc ), INTENT ( INOUT ) :: Psi3
+      COMPLEX, DIMENSION(nXa - nXbc : nXb + nXbc, &
+                       & nYa - nYbc : nYb + nYbc, &
+                       & nZa - nZbc : nZb + nZbc), INTENT(INOUT) :: Psi3
 
-      IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN 
+      IF (MODULO(mpiRank, 2) == 0) THEN 
 
-         IF ( mpiRank /= mpiProcesses - 1 ) THEN 
-
-            CALL MPI_SEND ( Psi3 ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 0 , MPI_COMM_WORLD, &
-               & mpiError )
-
+         IF (mpiRank /= mpiProcesses - 1) THEN 
+            CALL MPI_SEND(Psi3(nXa, nYa, nZb + 1 - nZbc), &
+               & nX * nY * nZbc, mpiCmplx, mpiRank + 1, 0, &
+               & MPI_COMM_WORLD, mpiError)
          END IF
 
-         IF ( mpiRank /= MPI_MASTER ) THEN 
-
-            CALL MPI_RECV ( Psi3 ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 1 , MPI_COMM_WORLD , &
-               & MpiStatus , mpiError )
-
+         IF (mpiRank /= MPI_MASTER) THEN 
+            CALL MPI_RECV(Psi3(nXa, nYa, nZa - nZbc), nX * nY * nZbc, &
+               & mpiCmplx, mpiRank - 1, 1, MPI_COMM_WORLD, MpiStatus, &
+               & mpiError)
          END IF
 
       ELSE 
 
-         CALL MPI_RECV ( Psi3 ( nXa , nYa , nZa - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 0 , MPI_COMM_WORLD , &
-            & MpiStatus , mpiError )
+         CALL MPI_RECV(Psi3(nXa, nYa, nZa - nZbc), nX * nY * nZbc, &
+            & mpiCmplx, mpiRank - 1, 0, MPI_COMM_WORLD, MpiStatus, &
+            & mpiError)
 
-         IF ( mpiRank /= mpiProcesses - 1 ) THEN 
-
-            CALL MPI_SEND ( Psi3 ( nXa , nYa , nZb + 1 - nZbc ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 1 , MPI_COMM_WORLD , &
-               & mpiError )
-
+         IF (mpiRank /= mpiProcesses - 1) THEN 
+            CALL MPI_SEND(Psi3(nXa, nYa, nZb + 1 - nZbc), &
+               & nX * nY * nZbc, mpiCmplx, mpiRank + 1, 1, &
+               & MPI_COMM_WORLD, mpiError)
          END IF
 
       END IF
 
-      IF ( MODULO ( mpiRank , 2 ) == 0 ) THEN
+      IF (MODULO(mpiRank, 2) == 0) THEN
 
-         IF ( mpiRank /= MPI_MASTER ) THEN
-
-            CALL MPI_SEND ( Psi3 ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 2 , MPI_COMM_WORLD , mpiError )
-
+         IF (mpiRank /= MPI_MASTER) THEN
+            CALL MPI_SEND(Psi3(nXa, nYa, nZa), nX * nY * nZbc, &
+               & mpiCmplx, mpiRank - 1, 2, MPI_COMM_WORLD, mpiError)
          END IF
 
-         IF ( mpiRank /= mpiProcesses - 1 ) THEN
-
-            CALL MPI_RECV ( Psi3 ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 3 , MPI_COMM_WORLD , &
-               & MpiStatus , mpiError )
-
+         IF (mpiRank /= mpiProcesses - 1) THEN
+            CALL MPI_RECV(Psi3(nXa, nYa, nZb + 1), nX * nY * nZbc, &
+               & mpiCmplx, mpiRank + 1, 3, MPI_COMM_WORLD, MpiStatus, &
+               & mpiError)
          END IF
 
       ELSE
 
-         IF ( mpiRank /= mpiProcesses - 1 ) THEN
-
-            CALL MPI_RECV ( Psi3 ( nXa , nYa , nZb + 1 ) , nX * nY * nZbc , mpiCmplx , mpiRank + 1 , 2 , MPI_COMM_WORLD , &
-               & MpiStatus , mpiError )
-
+         IF (mpiRank /= mpiProcesses - 1) THEN
+            CALL MPI_RECV(Psi3(nXa, nYa, nZb + 1), nX * nY * nZbc, &
+               & mpiCmplx, mpiRank + 1, 2, MPI_COMM_WORLD, MpiStatus, &
+               & mpiError)
          END IF
 
-         CALL MPI_SEND ( Psi3 ( nXa , nYa , nZa ) , nX * nY * nZbc , mpiCmplx , mpiRank - 1 , 3 , MPI_COMM_WORLD , mpiError )
+         CALL MPI_SEND(Psi3(nXa, nYa, nZa), nX * nY * nZbc, mpiCmplx, &
+            & mpiRank - 1, 3, MPI_COMM_WORLD, mpiError)
 
       END IF
 
       RETURN
-
       END SUBROUTINE
 
 ! ----------------------------------------------------------------------
 
       END PROGRAM
 
-!!! ======================================================================
+! ======================================================================
