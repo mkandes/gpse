@@ -85,11 +85,11 @@
 !
 ! COPYRIGHT
 !     
-!     Copyright (c) 2014, 2015, 2016, 2017, 2018, 2019, 2020 Martin Charles Kandes
+!     Copyright (c) 2014 - 2021 Martin Charles Kandes
 !
 ! LAST UPDATED
 !
-!     Sunday, February 16th, 2020
+!     Monday, August 2nd, 2021
 !
 ! ----------------------------------------------------------------------
 
@@ -159,9 +159,9 @@
 
 ! --- PARAMETER DECLARATIONS  ------------------------------------------
 
-      CHARACTER(LEN=*), PARAMETER :: GPSE_VERSION_NUMBER = '0.6.5'
+      CHARACTER(LEN=*), PARAMETER :: GPSE_VERSION_NUMBER = '0.6.6'
       CHARACTER(LEN=*), PARAMETER :: GPSE_LAST_UPDATED = &
-         & 'Sunday, February 16th, 2020'
+         & 'Monday, August 2nd, 2021'
 
       INTEGER, PARAMETER :: MPI_MASTER = 0
 
@@ -1675,6 +1675,9 @@
          WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        nX        = ', nX
          WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        nY        = ', nY
          WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        nZ        = ', nZ
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        dNx       = ', dNx
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        dNy       = ', dNy
+         WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        dNz       = ', dNz
          WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        t0        = ', t0
          WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        tF        = ', tF
          WRITE(UNIT=OUTPUT_UNIT, FMT=*) '#        xO        = ', xO

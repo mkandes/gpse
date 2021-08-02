@@ -4,6 +4,10 @@ dev
 
     * support for large file sizes (> 2GB) with MPI-I/O
 
+2021/08/02 v0.6.6
+
+    + include dNx, dNy, and dNz settings in standard output
+
 2020/02/16 v0.6.5
 
     + reorganized main time propagation/simulation loop to allow wave
